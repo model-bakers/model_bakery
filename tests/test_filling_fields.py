@@ -12,7 +12,7 @@ from django.db import connection
 from django.db.models import fields, ImageField, FileField
 
 from model_bakery import baker
-from model_bakery.gis import MOMMY_GIS
+from model_bakery.gis import BAKER_GIS
 from model_bakery.random_gen import gen_related
 from tests.generic import generators, models
 
@@ -42,8 +42,8 @@ def person(db):
 @pytest.fixture()
 def custom_cfg():
     yield None
-    if hasattr(settings, 'MOMMY_CUSTOM_FIELDS_GEN'):
-        delattr(settings, 'MOMMY_CUSTOM_FIELDS_GEN')
+    if hasattr(settings, 'BAKER_CUSTOM_FIELDS_GEN'):
+        delattr(settings, 'BAKER_CUSTOM_FIELDS_GEN')
     baker.generators.add('tests.generic.fields.CustomFieldWithGenerator', None)
     baker.generators.add('django.db.models.fields.CharField', None)
 
@@ -282,7 +282,7 @@ class TestFillingCustomFields():
     def test_uses_generator_defined_on_settings_for_custom_field(self, custom_cfg):
         """Should use the function defined in settings as a generator"""
         generator_dict = {'tests.generic.fields.CustomFieldWithGenerator': generators.gen_value_string}
-        setattr(settings, 'MOMMY_CUSTOM_FIELDS_GEN', generator_dict)
+        setattr(settings, 'BAKER_CUSTOM_FIELDS_GEN', generator_dict)
         obj = baker.make(models.CustomFieldWithGeneratorModel)
         assert "value" == obj.custom_value
 
@@ -292,7 +292,7 @@ class TestFillingCustomFields():
             'tests.generic.fields.CustomFieldWithGenerator':
                 'tests.generic.generators.gen_value_string'
         }
-        setattr(settings, 'MOMMY_CUSTOM_FIELDS_GEN', generator_dict)
+        setattr(settings, 'BAKER_CUSTOM_FIELDS_GEN', generator_dict)
         obj = baker.make(models.CustomFieldWithGeneratorModel)
         assert "value" == obj.custom_value
 
@@ -301,7 +301,7 @@ class TestFillingCustomFields():
         generator_dict = {
             'tests.generic.fields.CustomForeignKey': 'model_bakery.random_gen.gen_related'
         }
-        setattr(settings, 'MOMMY_CUSTOM_FIELDS_GEN', generator_dict)
+        setattr(settings, 'BAKER_CUSTOM_FIELDS_GEN', generator_dict)
         obj = baker.make(models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com")
         assert 'a@b.com' == obj.custom_fk.email
 
@@ -395,14 +395,14 @@ class TestPostgreSQLFieldsFilling:
         assert person.hstore_data == {}
 
 
-@pytest.mark.skipif(not MOMMY_GIS, reason="GIS support required for GIS fields")
+@pytest.mark.skipif(not BAKER_GIS, reason="GIS support required for GIS fields")
 class TestGisFieldsFilling():
 
     def assertGeomValid(self, geom):
         assert geom.valid is True, geom.valid_reason
 
     def test_fill_PointField_valid(self, person):
-        print(MOMMY_GIS)
+        print(BAKER_GIS)
         self.assertGeomValid(person.point)
 
     def test_fill_LineStringField_valid(self, person):

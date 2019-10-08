@@ -173,10 +173,10 @@ def is_iterator(value):
 
 def _custom_baker_class():
     """
-    Returns custom baker class specified by MOMMY_CUSTOM_CLASS in the django
+    Returns custom baker class specified by BAKER_CUSTOM_CLASS in the django
     settings, or None if no custom class is defined
     """
-    custom_class_string = getattr(settings, 'MOMMY_CUSTOM_CLASS', None)
+    custom_class_string = getattr(settings, 'BAKER_CUSTOM_CLASS', None)
     if custom_class_string is None:
         return None
 
@@ -205,7 +205,7 @@ class Baker(object):
     @classmethod
     def create(cls, _model, make_m2m=False, create_files=False):
         """
-        Factory which creates the baker class defined by the MOMMY_CUSTOM_CLASS setting
+        Factory which creates the baker class defined by the BAKER_CUSTOM_CLASS setting
         """
         baker_class = _custom_baker_class() or cls
         return baker_class(_model, make_m2m, create_files)
@@ -228,7 +228,7 @@ class Baker(object):
 
     def init_type_mapping(self):
         self.type_mapping = generators.get_type_mapping()
-        generators_from_settings = getattr(settings, 'MOMMY_CUSTOM_FIELDS_GEN', {})
+        generators_from_settings = getattr(settings, 'BAKER_CUSTOM_FIELDS_GEN', {})
         for k, v in generators_from_settings.items():
             field_class = import_if_str(k)
             generator = import_if_str(v)

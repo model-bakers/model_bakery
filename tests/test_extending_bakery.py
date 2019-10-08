@@ -96,17 +96,17 @@ class TestCustomizeBakerClassViaSettings:
         assert baker_instance.__class__ == baker.Baker
 
     def test_create_fail_on_custom_baker_load_error(self, settings):
-        settings.MOMMY_CUSTOM_CLASS = 'invalid_module.invalid_class'
+        settings.BAKER_CUSTOM_CLASS = 'invalid_module.invalid_class'
         with pytest.raises(CustomBakerNotFound):
             baker.Baker.create(Person)
 
     @pytest.mark.parametrize('cls', [ClassWithoutMake, ClassWithoutPrepare])
     def test_create_fail_on_missing_required_functions(self, settings, cls):
-        settings.MOMMY_CUSTOM_CLASS = self.class_to_import_string(cls)
+        settings.BAKER_CUSTOM_CLASS = self.class_to_import_string(cls)
         with pytest.raises(InvalidCustomBaker):
             baker.Baker.create(Person)
 
     @pytest.mark.parametrize('cls', [BakerSubclass, BakerDuck])
     def test_create_succeeds_with_valid_custom_baker(self, settings, cls):
-        settings.MOMMY_CUSTOM_CLASS = self.class_to_import_string(cls)
+        settings.BAKER_CUSTOM_CLASS = self.class_to_import_string(cls)
         assert baker.Baker.create(Person).__class__ == cls

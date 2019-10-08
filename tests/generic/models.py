@@ -6,7 +6,7 @@ import datetime as base_datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
-from model_bakery.gis import MOMMY_GIS
+from model_bakery.gis import BAKER_GIS
 
 from django.core.files.storage import FileSystemStorage
 
@@ -26,7 +26,7 @@ except ImportError:
 else:
     has_pil = True
 
-if MOMMY_GIS:
+if BAKER_GIS:
     from django.contrib.gis.db import models
 else:
     from django.db import models
@@ -98,7 +98,7 @@ class Person(models.Model):
         # Skip PostgreSQL-related fields
         pass
 
-    if MOMMY_GIS:
+    if BAKER_GIS:
         geom = models.GeometryField()
         point = models.PointField()
         line_string = models.LineStringField()
