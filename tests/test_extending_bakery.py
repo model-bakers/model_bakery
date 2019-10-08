@@ -15,8 +15,8 @@ def gen_age():
     return 18
 
 
-class KidBaker(baker.Baker):
-    age_list = range(4, 12)
+class ExperientBaker(baker.Baker):
+    age_list = range(40, 60)
     attr_mapping = {'age': gen_from_list(age_list)}
 
 
@@ -31,9 +31,9 @@ class SadPeopleBaker(baker.Baker):
 @pytest.mark.django_db
 class TestSimpleExtendBaker:
     def test_list_generator_respects_values_from_list(self):
-        baker_ = KidBaker(Person)
+        baker_ = ExperientBaker(Person)
         kid = baker_.make()
-        assert kid.age in KidBaker.age_list
+        assert kid.age in ExperientBaker.age_list
 
 
 @pytest.mark.django_db
