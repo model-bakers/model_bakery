@@ -1,0 +1,15 @@
+*.pyc
+*.swp
+*.swo
+*.kpf
+bin/
+include/
+lib/
+local/
+share/
+*.egg-info/
+.idea
+.tox
+build/
+lib64
+pyvenv.cfg

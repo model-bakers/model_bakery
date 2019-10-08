@@ -1,0 +1,8 @@
+-r requirements.txt
+pillow
+pre-commit
+pytest
+pytest-django
+sphinx
+tox
+wheel
