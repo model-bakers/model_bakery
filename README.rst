@@ -1,16 +1,16 @@
-============================================
-Model Mommy: Smart fixtures for better tests
-============================================
+=============================================
+Model Bakery: Smart fixtures for better tests
+=============================================
 
-*Model-mommy* offers you a smart way to create fixtures for testing in Django.
+*Model-bakery* offers you a smart way to create fixtures for testing in Django.
 With a simple and powerful API you can create many objects with a single line of code.
 
-.. image:: https://travis-ci.org/berinhard/model_mommy.svg?branch=master
-    :target: https://travis-ci.org/berinhard/model_mommy
+.. image:: https://travis-ci.org/berinhard/model_bakery.svg?branch=master
+    :target: https://travis-ci.org/berinhard/model_bakery
     :alt: Test Status
 
-.. image:: https://badge.fury.io/py/model_mommy.svg
-    :target: https://badge.fury.io/py/model_mommy
+.. image:: https://badge.fury.io/py/model_bakery.svg
+    :target: https://badge.fury.io/py/model_bakery
     :alt: Latest PyPI version
 
 Install
@@ -18,21 +18,21 @@ Install
 
 .. code-block:: console
 
-    pip install model_mommy
+    pip install model_bakery
 
 
 Usage and Info
 ==============
 
-*     http://model-mommy.readthedocs.org/
+*     http://model-bakery.readthedocs.org/
 
 
 Maintainers
 ===========
 
 *     Ana Paula Gomes - https://github.com/anapaulagomes/
-*     Rustem Saiargaliev - https://github.com/amureki/
 *     Bernardo Fontes - https://github.com/berinhard/
+*     Rustem Saiargaliev - https://github.com/amureki/
 
 
 Creator

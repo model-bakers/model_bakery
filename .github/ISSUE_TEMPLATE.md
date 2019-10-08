@@ -26,4 +26,4 @@ How to reproduce this issue.
 
 Python:
 Django:
-Model Mommy:
+Model Bakery:
