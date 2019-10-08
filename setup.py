@@ -18,7 +18,7 @@ setuptools.setup(
     test_suite='runtests.runtests',
     author="vandersonmota",
     author_email="vandersonmota@gmail.com",
-    url="http://github.com/vandersonmota/model_bakery",
+    url="http://github.com/berinhard/model_bakery",
     license="Apache 2.0",
     description="Smart object creation facility for Django.",
     long_description=open(join(dirname(__file__), "README.rst")).read(),
