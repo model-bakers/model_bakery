@@ -164,6 +164,15 @@ File: test_model.py ::
             """
             self.rex = mommy.make('family.Dog', make_m2m=True)
 
+Explicit M2M Relationships
+--------------------------
+If you want to, you can prepare your own set of related object and pass it to model_mommy. Here's an example:
+
+File: test_models.py ::
+    dogs_set = mommy.prepare(models.Dog, _quantity=2)
+    home = mommy.make(models.Home, owner=owner, dogs=dogs_set)
+
+
 Defining some attributes
 ------------------------
 

@@ -28,7 +28,6 @@ You can override this behavior by:
     kid = mommy.make(Kid, _fill_optional=True)
 
 
-
 When shouldn't you let mommy generate things for you?
 -----------------------------------------------------
 
@@ -106,6 +105,15 @@ Examples:
 
     # in your settings.py file:
     MOMMY_CUSTOM_CLASS = 'code.path.CustomMommy'
+
+
+Additionaly, if you want to your created instance to be returned respecting one of your custom ModelManagers, you can use the `_from_manager` parameter as the example bellow:
+
+
+.. code-block:: python
+
+    movie = mommy.make(Movie, title='Old Boys', _from_manager='availables')  # This will use the Movie.availables model manager
+
 
 Save method custom parameters
 -----------------------------
