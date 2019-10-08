@@ -326,8 +326,8 @@ class TestBakerCreatesAssociatedModels():
         assert kid.name == 'Mike'
 
     def test_creating_person_from_factory_using_paramters(self):
-        person_mom = baker.Baker(models.Person)
-        person = person_mom.make(happy=False, age=20, gender='M', name='John')
+        person_baker_ = baker.Baker(models.Person)
+        person = person_baker_.make(happy=False, age=20, gender='M', name='John')
         assert person.age == 20
         assert person.happy == False
         assert person.name == 'John'
