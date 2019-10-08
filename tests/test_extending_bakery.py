@@ -2,7 +2,7 @@ import pytest
 
 from model_bakery import baker
 from model_bakery.random_gen import gen_from_list
-from model_bakery.exceptions import CustomMommyNotFound, InvalidCustomMommy
+from model_bakery.exceptions import CustomBakerNotFound, InvalidCustomBaker
 from tests.generic.models import Person
 
 
@@ -15,32 +15,32 @@ def gen_age():
     return 18
 
 
-class KidMommy(baker.Mommy):
+class KidBaker(baker.Baker):
     age_list = range(4, 12)
     attr_mapping = {'age': gen_from_list(age_list)}
 
 
-class TeenagerMommy(baker.Mommy):
+class TeenagerBaker(baker.Baker):
     attr_mapping = {'age': gen_age}
 
 
-class SadPeopleMommy(baker.Mommy):
+class SadPeopleBaker(baker.Baker):
     attr_mapping = {'happy': gen_opposite, 'unhappy': gen_opposite}
 
 
 @pytest.mark.django_db
-class TestSimpleExtendMommy:
+class TestSimpleExtendBaker:
     def test_list_generator_respects_values_from_list(self):
-        mom = KidMommy(Person)
+        mom = KidBaker(Person)
         kid = mom.make()
-        assert kid.age in KidMommy.age_list
+        assert kid.age in KidBaker.age_list
 
 
 @pytest.mark.django_db
-class TestLessSimpleExtendMommy:
+class TestLessSimpleExtendBaker:
     def test_nonexistent_required_field(self):
         gen_opposite.required = ['house']
-        mom = SadPeopleMommy(Person)
+        mom = SadPeopleBaker(Person)
         with pytest.raises(AttributeError):
             mom.make()
 
@@ -48,14 +48,14 @@ class TestLessSimpleExtendMommy:
         gen_opposite.required = ['default']
         happy_field = Person._meta.get_field('happy')
         unhappy_field = Person._meta.get_field('unhappy')
-        mom = SadPeopleMommy(Person)
+        mom = SadPeopleBaker(Person)
         person = mom.make()
         assert person.happy is not happy_field.default
         assert person.unhappy is not unhappy_field.default
 
     @pytest.mark.parametrize('value', [18, 18.5, [], {}, True])
     def test_fail_pass_non_string_to_generator_required(self, value):
-        mom = TeenagerMommy(Person)
+        mom = TeenagerBaker(Person)
 
         gen_age.required = [value]
         with pytest.raises(ValueError):
@@ -72,11 +72,11 @@ class ClassWithoutPrepare:
         pass
 
 
-class MommySubclass(baker.Mommy):
+class BakerSubclass(baker.Baker):
     pass
 
 
-class MommyDuck:
+class BakerDuck:
     def __init__(*args, **kwargs):
         pass
 
@@ -87,26 +87,26 @@ class MommyDuck:
         pass
 
 
-class TestCustomizeMommyClassViaSettings:
+class TestCustomizeBakerClassViaSettings:
     def class_to_import_string(self, class_to_convert):
         return '%s.%s' % (self.__module__, class_to_convert.__name__)
 
     def test_create_vanilla_baker_used_by_default(self):
-        baker_instance = baker.Mommy.create(Person)
-        assert baker_instance.__class__ == baker.Mommy
+        baker_instance = baker.Baker.create(Person)
+        assert baker_instance.__class__ == baker.Baker
 
     def test_create_fail_on_custom_baker_load_error(self, settings):
         settings.MOMMY_CUSTOM_CLASS = 'invalid_module.invalid_class'
-        with pytest.raises(CustomMommyNotFound):
-            baker.Mommy.create(Person)
+        with pytest.raises(CustomBakerNotFound):
+            baker.Baker.create(Person)
 
     @pytest.mark.parametrize('cls', [ClassWithoutMake, ClassWithoutPrepare])
     def test_create_fail_on_missing_required_functions(self, settings, cls):
         settings.MOMMY_CUSTOM_CLASS = self.class_to_import_string(cls)
-        with pytest.raises(InvalidCustomMommy):
-            baker.Mommy.create(Person)
+        with pytest.raises(InvalidCustomBaker):
+            baker.Baker.create(Person)
 
-    @pytest.mark.parametrize('cls', [MommySubclass, MommyDuck])
+    @pytest.mark.parametrize('cls', [BakerSubclass, BakerDuck])
     def test_create_succeeds_with_valid_custom_baker(self, settings, cls):
         settings.MOMMY_CUSTOM_CLASS = self.class_to_import_string(cls)
-        assert baker.Mommy.create(Person).__class__ == cls
+        assert baker.Baker.create(Person).__class__ == cls

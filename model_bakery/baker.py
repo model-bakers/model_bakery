@@ -16,7 +16,7 @@ from django.db.models.fields.proxy import OrderWrt
 from . import generators, random_gen
 from .exceptions import (
     ModelNotFound, AmbiguousModelName, InvalidQuantityException, RecipeIteratorEmpty,
-    CustomMommyNotFound, InvalidCustomMommy
+    CustomBakerNotFound, InvalidCustomBaker
 )
 from .utils import import_from_str, import_if_str
 
@@ -41,7 +41,7 @@ def make(_model, _quantity=None, make_m2m=False, _save_kwargs=None, _refresh_aft
     which fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
-    baker = Mommy.create(_model, make_m2m=make_m2m, create_files=_create_files)
+    baker = Baker.create(_model, make_m2m=make_m2m, create_files=_create_files)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
@@ -68,7 +68,7 @@ def prepare(_model, _quantity=None, _save_related=False, **attrs):
     It fill the fields with random values or you can specify
     which fields you want to define its values by yourself.
     """
-    baker = Mommy.create(_model)
+    baker = Baker.create(_model)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
@@ -97,7 +97,7 @@ def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new
 
 class ModelFinder(object):
     """
-    Encapsulates all the logic for finding a model to Mommy.
+    Encapsulates all the logic for finding a model to Baker.
     """
     _unique_models = None
     _ambiguous_models = None
@@ -185,20 +185,20 @@ def _custom_baker_class():
 
         for required_function_name in ['make', 'prepare']:
             if not hasattr(baker_class, required_function_name):
-                raise InvalidCustomMommy(
-                    'Custom Mommy classes must have a "%s" function' % required_function_name
+                raise InvalidCustomBaker(
+                    'Custom Baker classes must have a "%s" function' % required_function_name
                 )
 
         return baker_class
     except ImportError:
-        raise CustomMommyNotFound("Could not find custom baker class '%s'" % custom_class_string)
+        raise CustomBakerNotFound("Could not find custom baker class '%s'" % custom_class_string)
 
 
-class Mommy(object):
+class Baker(object):
     attr_mapping = {}
     type_mapping = None
 
-    # Note: we're using one finder for all Mommy instances to avoid
+    # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
 
@@ -242,7 +242,7 @@ class Mommy(object):
         **attrs
     ):
         """Creates and persists an instance of the model associated
-        with Mommy instance."""
+        with Baker instance."""
         params = {
             'commit': True,
             'commit_related': True,
@@ -255,7 +255,7 @@ class Mommy(object):
 
     def prepare(self, _save_related=False, **attrs):
         """Creates, but does not persist, an instance of the model
-        associated with Mommy instance."""
+        associated with Baker instance."""
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
     def get_fields(self):

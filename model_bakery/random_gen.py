@@ -46,8 +46,8 @@ def gen_image_field():
 def gen_from_list(L):
     '''Makes sure all values of the field are generated from the list L
     Usage:
-    from baker import Mommy
-    class KidMommy(Mommy):
+    from baker import Baker
+    class KidBaker(Baker):
       attr_mapping = {'some_field':gen_from_list([A, B, C])}
     '''
     return lambda: choice(list(L))

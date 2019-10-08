@@ -39,18 +39,18 @@ class TestsModelFinder():
 
     def test_raise_model_not_found(self):
         with pytest.raises(ModelNotFound):
-            baker.Mommy('non_existing.Model')
+            baker.Baker('non_existing.Model')
 
         with pytest.raises(ModelNotFound):
-            baker.Mommy('NonExistingModel')
+            baker.Baker('NonExistingModel')
 
 
 @pytest.mark.django_db
-class TestsMommyCreatesSimpleModel():
+class TestsBakerCreatesSimpleModel():
 
     def test_consider_real_django_fields_only(self):
         id_ = models.ModelWithImpostorField._meta.get_field('id')
-        with patch.object(baker.Mommy, 'get_fields') as mock:
+        with patch.object(baker.Baker, 'get_fields') as mock:
             f = Manager()
             f.name = 'foo'
             mock.return_value = [id_, f]
@@ -98,7 +98,7 @@ class TestsMommyCreatesSimpleModel():
 
 
 @pytest.mark.django_db
-class TestsMommyRepeatedCreatesSimpleModel():
+class TestsBakerRepeatedCreatesSimpleModel():
 
     def test_make_should_create_objects_respecting_quantity_parameter(self):
         people = baker.make(models.Person, _quantity=5)
@@ -133,7 +133,7 @@ class TestsMommyRepeatedCreatesSimpleModel():
 
 
 @pytest.mark.django_db
-class TestMommyPrepareSavingRelatedInstances():
+class TestBakerPrepareSavingRelatedInstances():
 
     def test_default_behaviour_for_and_fk(self):
         dog = baker.prepare(models.Dog)
@@ -172,7 +172,7 @@ class TestMommyPrepareSavingRelatedInstances():
 
 
 @pytest.mark.django_db
-class TestMommyCreatesAssociatedModels():
+class TestBakerCreatesAssociatedModels():
 
     def test_dependent_models_with_ForeignKey(self):
         dog = baker.make(models.Dog)
@@ -326,7 +326,7 @@ class TestMommyCreatesAssociatedModels():
         assert kid.name == 'Mike'
 
     def test_creating_person_from_factory_using_paramters(self):
-        person_mom = baker.Mommy(models.Person)
+        person_mom = baker.Baker(models.Person)
         person = person_mom.make(happy=False, age=20, gender='M', name='John')
         assert person.age == 20
         assert person.happy == False
@@ -540,7 +540,7 @@ class TestSkipDefaultsTestCase():
 
 
 @pytest.mark.django_db
-class TestMommyHandlesModelWithNext():
+class TestBakerHandlesModelWithNext():
 
     def test_creates_instance_for_model_with_next(self):
         instance = baker.make(
@@ -555,7 +555,7 @@ class TestMommyHandlesModelWithNext():
 
 
 @pytest.mark.django_db
-class TestMommyHandlesModelWithList():
+class TestBakerHandlesModelWithList():
 
     def test_creates_instance_for_model_with_list(self):
         instance = baker.make(models.BaseModelForList, fk=["foo"])
@@ -565,7 +565,7 @@ class TestMommyHandlesModelWithList():
 
 
 @pytest.mark.django_db
-class TestMommyGeneratesIPAdresses():
+class TestBakerGeneratesIPAdresses():
 
     def test_create_model_with_valid_ips(self):
         form_data = {
@@ -577,7 +577,7 @@ class TestMommyGeneratesIPAdresses():
 
 
 @pytest.mark.django_db
-class TestMommyAllowsSaveParameters():
+class TestBakerAllowsSaveParameters():
 
     def test_allows_save_kwargs_on_baker_make(self):
         owner = baker.make(models.Person)
@@ -594,7 +594,7 @@ class TestMommyAllowsSaveParameters():
 
 
 @pytest.mark.django_db
-class TestMommyAutomaticallyRefreshFromDB():
+class TestBakerAutomaticallyRefreshFromDB():
 
     def test_refresh_from_db_if_true(self):
         person = baker.make(models.Person, birthday='2017-02-01', _refresh_after_create=True)
@@ -615,7 +615,7 @@ class TestMommyAutomaticallyRefreshFromDB():
 
 
 @pytest.mark.django_db
-class TestMommyMakeCanFetchInstanceFromDefaultManager():
+class TestBakerMakeCanFetchInstanceFromDefaultManager():
 
     def test_annotation_within_manager_get_queryset_are_run_on_make(self):
         '''Test that a custom model Manager can be used within make().
