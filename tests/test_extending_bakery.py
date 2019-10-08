@@ -1,8 +1,8 @@
 import pytest
 
-from model_mommy import mommy
-from model_mommy.random_gen import gen_from_list
-from model_mommy.exceptions import CustomMommyNotFound, InvalidCustomMommy
+from model_bakery import baker
+from model_bakery.random_gen import gen_from_list
+from model_bakery.exceptions import CustomMommyNotFound, InvalidCustomMommy
 from tests.generic.models import Person
 
 
@@ -15,16 +15,16 @@ def gen_age():
     return 18
 
 
-class KidMommy(mommy.Mommy):
+class KidMommy(baker.Mommy):
     age_list = range(4, 12)
     attr_mapping = {'age': gen_from_list(age_list)}
 
 
-class TeenagerMommy(mommy.Mommy):
+class TeenagerMommy(baker.Mommy):
     attr_mapping = {'age': gen_age}
 
 
-class SadPeopleMommy(mommy.Mommy):
+class SadPeopleMommy(baker.Mommy):
     attr_mapping = {'happy': gen_opposite, 'unhappy': gen_opposite}
 
 
@@ -72,7 +72,7 @@ class ClassWithoutPrepare:
         pass
 
 
-class MommySubclass(mommy.Mommy):
+class MommySubclass(baker.Mommy):
     pass
 
 
@@ -91,22 +91,22 @@ class TestCustomizeMommyClassViaSettings:
     def class_to_import_string(self, class_to_convert):
         return '%s.%s' % (self.__module__, class_to_convert.__name__)
 
-    def test_create_vanilla_mommy_used_by_default(self):
-        mommy_instance = mommy.Mommy.create(Person)
-        assert mommy_instance.__class__ == mommy.Mommy
+    def test_create_vanilla_baker_used_by_default(self):
+        baker_instance = baker.Mommy.create(Person)
+        assert baker_instance.__class__ == baker.Mommy
 
-    def test_create_fail_on_custom_mommy_load_error(self, settings):
+    def test_create_fail_on_custom_baker_load_error(self, settings):
         settings.MOMMY_CUSTOM_CLASS = 'invalid_module.invalid_class'
         with pytest.raises(CustomMommyNotFound):
-            mommy.Mommy.create(Person)
+            baker.Mommy.create(Person)
 
     @pytest.mark.parametrize('cls', [ClassWithoutMake, ClassWithoutPrepare])
     def test_create_fail_on_missing_required_functions(self, settings, cls):
         settings.MOMMY_CUSTOM_CLASS = self.class_to_import_string(cls)
         with pytest.raises(InvalidCustomMommy):
-            mommy.Mommy.create(Person)
+            baker.Mommy.create(Person)
 
     @pytest.mark.parametrize('cls', [MommySubclass, MommyDuck])
-    def test_create_succeeds_with_valid_custom_mommy(self, settings, cls):
+    def test_create_succeeds_with_valid_custom_baker(self, settings, cls):
         settings.MOMMY_CUSTOM_CLASS = self.class_to_import_string(cls)
-        assert mommy.Mommy.create(Person).__class__ == cls
+        assert baker.Mommy.create(Person).__class__ == cls

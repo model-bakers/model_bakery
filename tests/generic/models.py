@@ -6,7 +6,7 @@ import datetime as base_datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
-from model_mommy.gis import MOMMY_GIS
+from model_bakery.gis import MOMMY_GIS
 
 from django.core.files.storage import FileSystemStorage
 
@@ -16,7 +16,7 @@ from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKe
 from .fields import (
     CustomFieldWithGenerator, CustomFieldWithoutGenerator, FakeListField, CustomForeignKey
 )
-from model_mommy.timezone import smart_datetime as datetime
+from model_bakery.timezone import smart_datetime as datetime
 
 # check whether or not PIL is installed
 try:
@@ -181,7 +181,7 @@ class DummyDecimalModel(models.Model):
 
 
 class UnsupportedField(models.Field):
-    description = "I'm bad company, mommy doesn't know me"
+    description = "I'm bad company, baker doesn't know me"
 
     def __init__(self, *args, **kwargs):
         super(UnsupportedField, self).__init__(*args, **kwargs)
@@ -309,7 +309,7 @@ class MovieManager(models.Manager):
         '''Annotate queryset with an alias field 'name'.
 
         We want to test whether this annotation has been run after
-        calling mommy.make().
+        calling baker.make().
 
         '''
         return (
