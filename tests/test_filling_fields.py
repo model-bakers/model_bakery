@@ -350,7 +350,7 @@ class TestFillingImageFileField():
         field = models.DummyImageFieldModel._meta.get_field('image_field')
         assert isinstance(field, ImageField)
         import time
-        path = "%s/%s/mock-img.jpeg" % (gettempdir(), time.strftime('%Y/%m/%d'))
+        path = "%s/%s/mock_img.jpeg" % (gettempdir(), time.strftime('%Y/%m/%d'))
 
         # These require the file to exist in earlier versions of Django
         assert abspath(path) == abspath(dummy.image_field.path)
