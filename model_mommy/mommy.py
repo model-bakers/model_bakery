@@ -23,7 +23,7 @@ from .utils import import_from_str, import_if_str
 recipes = None
 
 # FIXME: use pkg_resource
-mock_file_jpeg = join(dirname(__file__), 'mock-img.jpeg')
+mock_file_jpeg = join(dirname(__file__), 'mock_img.jpeg')
 mock_file_txt = join(dirname(__file__), 'mock_file.txt')
 
 MAX_MANY_QUANTITY = 5

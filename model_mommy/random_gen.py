@@ -37,7 +37,7 @@ def gen_file_field():
 
 
 def gen_image_field():
-    name = 'mock-img.jpeg'
+    name = 'mock_img.jpeg'
     file_path = abspath(join(dirname(__file__), name))
     with open(file_path, 'rb') as f:
         return get_content_file(f.read(), name=name)
