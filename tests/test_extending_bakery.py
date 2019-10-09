@@ -31,7 +31,7 @@ class SadPeopleBaker(baker.Baker):
 @pytest.mark.django_db
 class TestSimpleExtendBaker:
     def test_list_generator_respects_values_from_list(self):
-        baker_ = ExperientBaker(Person)
+        experient_baker = ExperientBaker(Person)
         kid = baker_.make()
         assert kid.age in ExperientBaker.age_list
 
