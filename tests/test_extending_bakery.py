@@ -32,7 +32,8 @@ class SadPeopleBaker(baker.Baker):
 class TestSimpleExtendBaker:
     def test_list_generator_respects_values_from_list(self):
         experient_baker = ExperientBaker(Person)
-        kid = baker_.make()
+        experient_baker = baker_.make()
+        assert experient_baker.age in ExperientBaker.age_list
         assert kid.age in ExperientBaker.age_list
 
 
