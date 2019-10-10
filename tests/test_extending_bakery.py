@@ -30,37 +30,37 @@ class SadPeopleBaker(baker.Baker):
 
 @pytest.mark.django_db
 class TestSimpleExtendBaker:
+
     def test_list_generator_respects_values_from_list(self):
-        experient_baker = ExperientBaker(Person)
-        experient_baker = baker_.make()
+        experient_bakers_factory = ExperientBaker(Person)
+        experient_baker = experient_bakers_factory.make()
         assert experient_baker.age in ExperientBaker.age_list
-        assert kid.age in ExperientBaker.age_list
 
 
 @pytest.mark.django_db
 class TestLessSimpleExtendBaker:
     def test_nonexistent_required_field(self):
         gen_opposite.required = ['house']
-        baker_ = SadPeopleBaker(Person)
+        sad_people_factory = SadPeopleBaker(Person)
         with pytest.raises(AttributeError):
-            baker_.make()
+            sad_people_factory.make()
 
     def test_string_to_generator_required(self):
         gen_opposite.required = ['default']
         happy_field = Person._meta.get_field('happy')
         unhappy_field = Person._meta.get_field('unhappy')
-        baker_ = SadPeopleBaker(Person)
-        person = baker_.make()
+        sad_people_factory = SadPeopleBaker(Person)
+        person = sad_people_factory.make()
         assert person.happy is not happy_field.default
         assert person.unhappy is not unhappy_field.default
 
     @pytest.mark.parametrize('value', [18, 18.5, [], {}, True])
     def test_fail_pass_non_string_to_generator_required(self, value):
-        baker_ = TeenagerBaker(Person)
+        teens_bakers_factory = TeenagerBaker(Person)
 
         gen_age.required = [value]
         with pytest.raises(ValueError):
-            baker_.make()
+            teens_bakers_factory.make()
 
 
 class ClassWithoutMake:
