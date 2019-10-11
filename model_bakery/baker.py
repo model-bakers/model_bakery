@@ -16,7 +16,7 @@ from django.db.models.fields.proxy import OrderWrt
 from . import generators, random_gen
 from .exceptions import (
     ModelNotFound, AmbiguousModelName, InvalidQuantityException, RecipeIteratorEmpty,
-    CustomMommyNotFound, InvalidCustomMommy
+    CustomBakerNotFound, InvalidCustomBaker
 )
 from .utils import import_from_str, import_if_str
 
@@ -41,20 +41,20 @@ def make(_model, _quantity=None, make_m2m=False, _save_kwargs=None, _refresh_aft
     which fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
-    mommy = Mommy.create(_model, make_m2m=make_m2m, create_files=_create_files)
+    baker = Baker.create(_model, make_m2m=make_m2m, create_files=_create_files)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
     if _quantity:
         return [
-            mommy.make(
+            baker.make(
                 _save_kwargs=_save_kwargs,
                 _refresh_after_create=_refresh_after_create,
                 **attrs
             )
             for _ in range(_quantity)
         ]
-    return mommy.make(
+    return baker.make(
         _save_kwargs=_save_kwargs,
         _refresh_after_create=_refresh_after_create,
         **attrs
@@ -68,27 +68,27 @@ def prepare(_model, _quantity=None, _save_related=False, **attrs):
     It fill the fields with random values or you can specify
     which fields you want to define its values by yourself.
     """
-    mommy = Mommy.create(_model)
+    baker = Baker.create(_model)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
     if _quantity:
-        return [mommy.prepare(_save_related=_save_related, **attrs) for i in range(_quantity)]
+        return [baker.prepare(_save_related=_save_related, **attrs) for i in range(_quantity)]
     else:
-        return mommy.prepare(_save_related=_save_related, **attrs)
+        return baker.prepare(_save_related=_save_related, **attrs)
 
 
 def _recipe(name):
     app, recipe_name = name.rsplit('.', 1)
-    return import_from_str('.'.join((app, 'mommy_recipes', recipe_name)))
+    return import_from_str('.'.join((app, 'baker_recipes', recipe_name)))
 
 
-def make_recipe(mommy_recipe_name, _quantity=None, **new_attrs):
-    return _recipe(mommy_recipe_name).make(_quantity=_quantity, **new_attrs)
+def make_recipe(baker_recipe_name, _quantity=None, **new_attrs):
+    return _recipe(baker_recipe_name).make(_quantity=_quantity, **new_attrs)
 
 
-def prepare_recipe(mommy_recipe_name, _quantity=None, _save_related=False, **new_attrs):
-    return _recipe(mommy_recipe_name).prepare(
+def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new_attrs):
+    return _recipe(baker_recipe_name).prepare(
         _quantity=_quantity,
         _save_related=_save_related,
         **new_attrs
@@ -97,7 +97,7 @@ def prepare_recipe(mommy_recipe_name, _quantity=None, _save_related=False, **new
 
 class ModelFinder(object):
     """
-    Encapsulates all the logic for finding a model to Mommy.
+    Encapsulates all the logic for finding a model to Baker.
     """
     _unique_models = None
     _ambiguous_models = None
@@ -171,44 +171,44 @@ def is_iterator(value):
     return hasattr(value, '__next__')
 
 
-def _custom_mommy_class():
+def _custom_baker_class():
     """
-    Returns custom mommy class specified by MOMMY_CUSTOM_CLASS in the django
+    Returns custom baker class specified by BAKER_CUSTOM_CLASS in the django
     settings, or None if no custom class is defined
     """
-    custom_class_string = getattr(settings, 'MOMMY_CUSTOM_CLASS', None)
+    custom_class_string = getattr(settings, 'BAKER_CUSTOM_CLASS', None)
     if custom_class_string is None:
         return None
 
     try:
-        mommy_class = import_from_str(custom_class_string)
+        baker_class = import_from_str(custom_class_string)
 
         for required_function_name in ['make', 'prepare']:
-            if not hasattr(mommy_class, required_function_name):
-                raise InvalidCustomMommy(
-                    'Custom Mommy classes must have a "%s" function' % required_function_name
+            if not hasattr(baker_class, required_function_name):
+                raise InvalidCustomBaker(
+                    'Custom Baker classes must have a "%s" function' % required_function_name
                 )
 
-        return mommy_class
+        return baker_class
     except ImportError:
-        raise CustomMommyNotFound("Could not find custom mommy class '%s'" % custom_class_string)
+        raise CustomBakerNotFound("Could not find custom baker class '%s'" % custom_class_string)
 
 
-class Mommy(object):
+class Baker(object):
     attr_mapping = {}
     type_mapping = None
 
-    # Note: we're using one finder for all Mommy instances to avoid
+    # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
 
     @classmethod
     def create(cls, _model, make_m2m=False, create_files=False):
         """
-        Factory which creates the mommy class defined by the MOMMY_CUSTOM_CLASS setting
+        Factory which creates the baker class defined by the BAKER_CUSTOM_CLASS setting
         """
-        mommy_class = _custom_mommy_class() or cls
-        return mommy_class(_model, make_m2m, create_files)
+        baker_class = _custom_baker_class() or cls
+        return baker_class(_model, make_m2m, create_files)
 
     def __init__(self, _model, make_m2m=False, create_files=False):
         self.make_m2m = make_m2m
@@ -228,7 +228,7 @@ class Mommy(object):
 
     def init_type_mapping(self):
         self.type_mapping = generators.get_type_mapping()
-        generators_from_settings = getattr(settings, 'MOMMY_CUSTOM_FIELDS_GEN', {})
+        generators_from_settings = getattr(settings, 'BAKER_CUSTOM_FIELDS_GEN', {})
         for k, v in generators_from_settings.items():
             field_class = import_if_str(k)
             generator = import_if_str(v)
@@ -242,7 +242,7 @@ class Mommy(object):
         **attrs
     ):
         """Creates and persists an instance of the model associated
-        with Mommy instance."""
+        with Baker instance."""
         params = {
             'commit': True,
             'commit_related': True,
@@ -255,7 +255,7 @@ class Mommy(object):
 
     def prepare(self, _save_related=False, **attrs):
         """Creates, but does not persist, an instance of the model
-        associated with Mommy instance."""
+        associated with Baker instance."""
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
     def get_fields(self):
@@ -471,7 +471,7 @@ class Mommy(object):
         elif field.has_default():
             return field.default
         else:
-            raise TypeError('%s is not supported by mommy.' % field.__class__)
+            raise TypeError('%s is not supported by baker.' % field.__class__)
 
         # attributes like max_length, decimal_places are taken into account when
         # generating the value.
@@ -497,7 +497,7 @@ def get_required_values(generator, field):
     if hasattr(generator, 'required'):
         for item in generator.required:
 
-            if callable(item):  # mommy can deal with the nasty hacking too!
+            if callable(item):  # baker can deal with the nasty hacking too!
                 key, value = item(field)
                 rt[key] = value
 
@@ -506,7 +506,7 @@ def get_required_values(generator, field):
 
             else:
                 raise ValueError("Required value '%s' is of wrong type. \
-                                  Don't make mommy sad." % str(item))
+                                  Don't make baker sad." % str(item))
 
     return rt
 

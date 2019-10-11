@@ -18,9 +18,9 @@ class InvalidQuantityException(Exception):
     pass
 
 
-class CustomMommyNotFound(Exception):
+class CustomBakerNotFound(Exception):
     pass
 
 
-class InvalidCustomMommy(Exception):
+class InvalidCustomBaker(Exception):
     pass

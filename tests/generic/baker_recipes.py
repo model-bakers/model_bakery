@@ -1,8 +1,8 @@
 # ATTENTION: Recipes defined for testing purposes only
 from decimal import Decimal
-from model_mommy.recipe import Recipe, foreign_key, seq
-from model_mommy.recipe import related
-from model_mommy.timezone import now
+from model_bakery.recipe import Recipe, foreign_key, seq
+from model_bakery.recipe import related
+from model_bakery.timezone import now
 from tests.generic.models import TEST_TIME, Person, Dog, DummyDefaultFieldsModel, \
     DummyUniqueIntegerFieldModel
 

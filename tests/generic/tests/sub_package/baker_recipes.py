@@ -1,4 +1,4 @@
-from model_mommy.recipe import Recipe
+from model_bakery.recipe import Recipe
 from tests.generic.models import Person
 
 from datetime import date, datetime
