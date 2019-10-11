@@ -71,7 +71,6 @@ Contents:
    basic_usage
    how_bakery_behaves
    recipes
-   know_issues
    extensions
 
 
