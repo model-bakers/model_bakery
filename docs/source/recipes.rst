@@ -9,7 +9,7 @@ for your models.
 
 It's also possible to store the Recipes in a module called *baker_recipes.py*
 at your app's root directory. This recipes can later be used with the
-`make_recipe` function: ::
+``make_recipe`` function: ::
 
     shop/
       migrations/
@@ -101,7 +101,7 @@ File: **test_model.py** ::
 Recipes with foreign keys
 -------------------------
 
-You can define `foreign_key` relations:
+You can define ``foreign_key`` relations:
 
 .. code-block:: python
 
@@ -120,16 +120,16 @@ You can define `foreign_key` relations:
         customer=foreign_key(customer)
     )
 
-Notice that `customer` is a *recipe*.
+Notice that ``customer`` is a *recipe*.
 
 You may be thinking: "I can put the Customer model instance directly in the owner field". That's not recommended.
 
-Using the `foreign_key` is important for 2 reasons:
+Using the ``foreign_key`` is important for 2 reasons:
 
 * Semantics. You'll know that attribute is a foreign key when you're reading;
-* The associated instance will be created only when you call `make_recipe` and not during recipe definition;
+* The associated instance will be created only when you call ``make_recipe`` and not during recipe definition;
 
-You can also use `related`, when you want two or more models to share the same parent:
+You can also use ``related``, when you want two or more models to share the same parent:
 
 .. code-block:: python
 
@@ -143,9 +143,9 @@ You can also use `related`, when you want two or more models to share the same p
         purchasehistory_set=related('history', 'history'),
     )
 
-Note this will only work when calling `make_recipe` because the related manager requires the objects in the related_set to be persisted. That said, calling `prepare_recipe` the related_set will be empty.
+Note this will only work when calling ``make_recipe`` because the related manager requires the objects in the related_set to be persisted. That said, calling ``prepare_recipe`` the related_set will be empty.
 
-If you want to set m2m relationship you can use `related` as well:
+If you want to set m2m relationship you can use ``related`` as well:
 
 .. code-block:: python
 
@@ -163,7 +163,7 @@ If you want to set m2m relationship you can use `related` as well:
 Recipes with callables
 ----------------------
 
-It's possible to use *callables* as recipe's attribute value.
+It's possible to use ``callables`` as recipe's attribute value.
 
 .. code-block:: python
 
@@ -176,7 +176,7 @@ It's possible to use *callables* as recipe's attribute value.
         birthday=date.today,
     )
 
-When you call `make_recipe`, *Baker* will set the attribute to the value returned by the callable.
+When you call ``make_recipe``, Model Bakery will set the attribute to the value returned by the callable.
 
 
 Recipes with iterators
@@ -193,12 +193,12 @@ You can also use *iterators* (including *generators*) to provide multiple values
         name=cycle(names)
     )
 
-*Baker* will use the next value in the *iterator* every time you create a model from the recipe.
+Model Bakery will use the next value in the *iterator* every time you create a model from the recipe.
 
 Sequences in recipes
 --------------------
 
-Sometimes, you have a field with an unique value and using `make` can cause random errors. Also, passing an attribute value just to avoid uniqueness validation problems can be tedious. To solve this you can define a sequence with `seq`
+Sometimes, you have a field with an unique value and using ``make`` can cause random errors. Also, passing an attribute value just to avoid uniqueness validation problems can be tedious. To solve this you can define a sequence with ``seq``
 
 .. code-block:: python
 
@@ -225,7 +225,7 @@ Sometimes, you have a field with an unique value and using `make` can cause rand
 
 This will append a counter to strings to avoid uniqueness problems and it will sum the counter with numerical values.
 
-Sequences and iterables can be used not only for recipes, but with `baker.make` as well:
+Sequences and iterables can be used not only for recipes, but with ``baker.make`` as well:
 
 .. code-block:: python
 
@@ -245,7 +245,7 @@ Sequences and iterables can be used not only for recipes, but with `baker.make` 
     >>> 'Chad2'
     >>> 'Chad3'
 
-You can also provide an optional `increment_by` argument which will modify incrementing behaviour. This can be an integer, float, Decimal or timedelta.
+You can also provide an optional ``increment_by`` argument which will modify incrementing behaviour. This can be an integer, float, Decimal or timedelta.
 
 .. code-block:: python
 
@@ -281,7 +281,7 @@ You can also provide an optional `increment_by` argument which will modify incre
 Overriding recipe definitions
 -----------------------------
 
-Passing values when calling `make_recipe` or `prepare_recipe` will override the recipe rule.
+Passing values when calling ``make_recipe`` or ``prepare_recipe`` will override the recipe rule.
 
 .. code-block:: python
 

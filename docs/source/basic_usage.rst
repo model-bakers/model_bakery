@@ -165,7 +165,7 @@ Related objects fields are also reachable by their name or related names in a ve
 Creating Files
 --------------
 
-Model Bakery does not create files for FileField types. If you need to have the files created, you can pass the flag `_create_files=True` (defaults to `False`) to either `baker.make` or `baker.make_recipe`.
+Model Bakery does not create files for FileField types. If you need to have the files created, you can pass the flag ``_create_files=True`` (defaults to ``False``) to either ``baker.make`` or ``baker.make_recipe``.
 
 **Important**: the lib does not do any kind of file clean up, so it's up to you to delete the files created by it.
 
@@ -181,9 +181,9 @@ If you don't need a persisted object, Model Bakery can handle this for you as we
 
     customer = baker.prepare('shop.Customer')
 
-It works like `make` method, but it doesn't persist the instance neither the related instances.
+It works like ``make`` method, but it doesn't persist the instance neither the related instances.
 
-If you want to persist only the related instances but not your model, you can use the `_save_related` parameter for it:
+If you want to persist only the related instances but not your model, you can use the ``_save_related`` parameter for it:
 
 .. code-block:: python
 
@@ -196,7 +196,7 @@ If you want to persist only the related instances but not your model, you can us
 More than one instance
 ----------------------
 
-If you need to create more than one instance of the model, you can use the `_quantity` parameter for it:
+If you need to create more than one instance of the model, you can use the ``_quantity`` parameter for it:
 
 .. code-block:: python
 
@@ -205,7 +205,7 @@ If you need to create more than one instance of the model, you can use the `_qua
     customers = baker.make('shop.Customer', _quantity=3)
     assert len(customers) == 3
 
-It also works with `prepare`:
+It also works with ``prepare``:
 
 .. code-block:: python
 

@@ -26,7 +26,7 @@ model_bakery supports Django >= 1.11 and Python >= 3.5
 Install
 =======
 
-Install it with `pip`
+Install it with ``pip``
 
 .. code-block:: console
 
