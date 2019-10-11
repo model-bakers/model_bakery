@@ -1,7 +1,7 @@
-How mommy behaves?
+How Baker behaves?
 ==================
 
-By default, *model-mommy* skips fields with `null=True` or `blank=True`. Also if a field has a *default* value, it will be used.
+By default, *model_bakery* skips fields with `null=True` or `blank=True`. Also if a field has a *default* value, it will be used.
 
 You can override this behavior by:
 
@@ -10,30 +10,29 @@ You can override this behavior by:
 .. code-block:: python
 
     # from "Basic Usage" page, assume all fields either null=True or blank=True
-    from .models import Kid
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    kid = mommy.make(Kid, happy=True, bio='Happy kid')
+    customer = baker.make('shop.Customer', happy=True, bio='Happy customer')
 
 2. Passing `_fill_optional` with a list of fields to fill with random data
 
 .. code-block:: python
 
-    kid = mommy.make(Kid, _fill_optional=['happy', 'bio'])
+    customer = baker.make('shop.Customer', _fill_optional=['happy', 'bio'])
 
 3. Passing `_fill_optional=True` to fill all fields with random data
 
 .. code-block:: python
 
-    kid = mommy.make(Kid, _fill_optional=True)
+    customer = baker.make('shop.Customer', _fill_optional=True)
 
 
-When shouldn't you let mommy generate things for you?
+When shouldn't you let Baker generate things for you?
 -----------------------------------------------------
 
 If you have fields with special validation, you should set their values by yourself.
 
-*Model-mommy* should handle fields that:
+*model_baker* should handle fields that:
 
 1. don't matter for the test you're writing;
 2. don't require special validation (like unique, etc);
@@ -43,12 +42,13 @@ If you have fields with special validation, you should set their values by yours
 Currently supported fields
 --------------------------
 
-* BooleanField, IntegerField, BigIntegerField, SmallIntegerField, PositiveIntegerField, PositiveSmallIntegerField, FloatField, DecimalField
-* CharField, TextField, BinaryField, SlugField, URLField, EmailField, IPAddressField, GenericIPAddressField
+* BooleanField, NullBooleanField, IntegerField, BigIntegerField, SmallIntegerField, PositiveIntegerField, PositiveSmallIntegerField, FloatField, DecimalField
+* CharField, TextField, BinaryField, SlugField, URLField, EmailField, IPAddressField, GenericIPAddressField, ContentType
 * ForeignKey, OneToOneField, ManyToManyField (even with through model)
-* DateField, DateTimeField, TimeField
+* DateField, DateTimeField, TimeField, DurationField
 * FileField, ImageField
 * JSONField, ArrayField, HStoreField
+* CICharField, CIEmailField, CITextField
 
 Require ``django.contrib.gis`` in ``INSTALLED_APPS``:
 
@@ -57,20 +57,20 @@ Require ``django.contrib.gis`` in ``INSTALLED_APPS``:
 Custom fields
 -------------
 
-Model-mommy allows you to define generators methods for your custom fields or overrides its default generators.
-This could be achieved by specifing the field and generator function for the `generators.add` function.
+Model_baker allows you to define generators methods for your custom fields or overrides its default generators.
+This can be achieved by specifing the field and generator function for the `generators.add` function.
 Both can be the real python objects imported in settings or just specified as import path string.
 
 Examples:
 
 .. code-block:: python
 
-    from model_mommy import mommy
+    from model_bakery import baker
 
     def gen_func():
         return 'value'
 
-    mommy.generators.add('test.generic.fields.CustomField', gen_func)
+    baker.generators.add('test.generic.fields.CustomField', gen_func)
 
 .. code-block:: python
 
@@ -79,32 +79,32 @@ Examples:
         return 'value'
 
     # in your tests.py file:
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    mommy.generators.add('test.generic.fields.CustomField', 'code.path.gen_func')
+    baker.generators.add('test.generic.fields.CustomField', 'code.path.gen_func')
 
-Customizing Mommy
+Customizing Baker
 -----------------
 
-In some rare cases, you might need to customize the way Mommy behaves.
-This can be achieved by creating a new class and specifying it in your settings files. It is likely that you will want to extend Mommy, however the minimum requirement is that the custom class have `make` and `prepare` functions.
-In order for the custom class to be used, make sure to use the `model_mommy.mommy.make` and `model_mommy.mommy.prepare` functions, and not `model_mommy.mommy.Mommy` directly.
+In some rare cases, you might need to customize the way Baker base class behaves.
+This can be achieved by creating a new class and specifying it in your settings files. It is likely that you will want to extend Baker, however the minimum requirement is that the custom class have `make` and `prepare` functions.
+In order for the custom class to be used, make sure to use the `model_bakery.baker.make` and `model_bakery.baker.prepare` functions, and not `model_bakery.baker.Baker` directly.
 
 Examples:
 
 .. code-block:: python
 
     # in the module code.path:
-    class CustomMommy(mommy.Mommy)
+    class CustomBaker(baker.Baker)
         def get_fields(self):
             return [
                 field
-                for field in super(CustomMommy, self).get_fields()
+                for field in super(CustomBaker, self).get_fields()
                 if not field isinstance CustomField
             ]
 
     # in your settings.py file:
-    MOMMY_CUSTOM_CLASS = 'code.path.CustomMommy'
+    BAKER_CUSTOM_CLASS = 'code.path.CustomBaker'
 
 
 Additionaly, if you want to your created instance to be returned respecting one of your custom ModelManagers, you can use the `_from_manager` parameter as the example bellow:
@@ -112,13 +112,13 @@ Additionaly, if you want to your created instance to be returned respecting one 
 
 .. code-block:: python
 
-    movie = mommy.make(Movie, title='Old Boys', _from_manager='availables')  # This will use the Movie.availables model manager
+    movie = baker.make(Movie, title='Old Boys', _from_manager='availables')  # This will use the Movie.availables model manager
 
 
 Save method custom parameters
 -----------------------------
 
-If you have overwritten the `save` method for a model, you can pass custom parameters to it using model mommy. Example:
+If you have overwritten the `save` method for a model, you can pass custom parameters to it using model_baker. Example:
 
 .. code-block:: python
 
@@ -130,7 +130,7 @@ If you have overwritten the `save` method for a model, you can pass custom param
             self.created_by = user
             return super(ProjectWithCustomSave, self).save(*args, **kwargs)
 
-    #with model mommy:
-    user = mommy.make(settings.AUTH_USER_MODEL)
-    project = mommy.make(ProjectWithCustomSave, _save_kwargs={'user': user})
+    #with model baker:
+    user = baker.make(settings.AUTH_USER_MODEL)
+    project = baker.make(ProjectWithCustomSave, _save_kwargs={'user': user})
     assert user == project.user
