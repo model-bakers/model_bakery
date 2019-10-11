@@ -1,7 +1,7 @@
-How Baker behaves?
-==================
+How Model Bakery behaves?
+=========================
 
-By default, *model_bakery* skips fields with `null=True` or `blank=True`. Also if a field has a *default* value, it will be used.
+By default, Model Bakery skips fields with `null=True` or `blank=True`. Also if a field has a *default* value, it will be used.
 
 You can override this behavior by:
 
@@ -32,7 +32,7 @@ When shouldn't you let Baker generate things for you?
 
 If you have fields with special validation, you should set their values by yourself.
 
-*model_baker* should handle fields that:
+Model Bakery should handle fields that:
 
 1. don't matter for the test you're writing;
 2. don't require special validation (like unique, etc);
@@ -57,7 +57,7 @@ Require ``django.contrib.gis`` in ``INSTALLED_APPS``:
 Custom fields
 -------------
 
-Model_baker allows you to define generators methods for your custom fields or overrides its default generators.
+Model Bakery allows you to define generators methods for your custom fields or overrides its default generators.
 This can be achieved by specifing the field and generator function for the `generators.add` function.
 Both can be the real python objects imported in settings or just specified as import path string.
 
@@ -118,7 +118,7 @@ Additionaly, if you want to your created instance to be returned respecting one 
 Save method custom parameters
 -----------------------------
 
-If you have overwritten the `save` method for a model, you can pass custom parameters to it using model_baker. Example:
+If you have overwritten the `save` method for a model, you can pass custom parameters to it using Model Bakery. Example:
 
 .. code-block:: python
 

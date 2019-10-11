@@ -1,30 +1,28 @@
 Recipes
 =======
 
-If you're not comfortable with random data or even you just want to
+If you're not comfortable with random data or even if you just want to
 improve the semantics of the generated data, there's hope for you.
 
-You can define a **recipe**, which is a set of rules to generate data
+You can define a **Recipe**, which is a set of rules to generate data
 for your models.
 
 It's also possible to store the Recipes in a module called *baker_recipes.py*
 at your app's root directory. This recipes can later be used with the
 `make_recipe` function: ::
 
-    fixtures/
-    migrations/
-    templates/
-    tests/
-    __init__.py
-    admin.py
-    managers.py
-    models.py
-    baker_recipes.py
-    urls.py
-    views.py
+    shop/
+      migrations/
+      __init__.py
+      admin.py
+      apps.py
+      baker_recipes.py   <--- where you should place your Recipes
+      models.py
+      tests.py
+      views.py
 
 
-File: baker_recipes.py ::
+File: **baker_recipes.py** ::
 
     from model_bakery.recipe import Recipe
     from shop.models import Customer
@@ -43,17 +41,15 @@ File: baker_recipes.py ::
     You don't have to declare all the fields if you don't want to. Omitted fields will be generated automatically.
 
 
-File: test_model.py ::
+File: **test_model.py** ::
 
     from django.test import TestCase
 
     from model_bakery import baker
 
-    # Relative imports of the 'app-name' package
     from shop.models import Customer, Contact
 
     class CustomerTestModel(TestCase):
-        """Class to test the model Customer"""
 
         def setUp(self):
             # Load the recipe 'customer_joe' from 'shop/baker_recipes.py'
@@ -74,18 +70,14 @@ Another examples
 
     You can use the _quantity parameter as well if you want to create more than one object from a single recipe.
 
-.. note::
 
-    You can define recipes locally to your module or test case as well. This can be useful for cases where a particular set of values may be unique to a particular test case, but used repeatedly there.
+You can define recipes locally to your module or test case as well. This can be useful for cases where a particular set of values may be unique to a particular test case, but used repeatedly there. For example:
 
-
-Look:
-
-File: baker_recipes.py ::
+File: **baker_recipes.py** ::
 
     company_recipe = Recipe(Company, name='WidgetCo')
 
-File: test_model.py ::
+File: **test_model.py** ::
 
     class EmployeeTest(TestCase):
         def setUp(self):
@@ -130,7 +122,7 @@ You can define `foreign_key` relations:
 
 Notice that `customer` is a *recipe*.
 
-You may be thinking: "I can put the Person model instance directly in the owner field". That's not recommended.
+You may be thinking: "I can put the Customer model instance directly in the owner field". That's not recommended.
 
 Using the `foreign_key` is important for 2 reasons:
 

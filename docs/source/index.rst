@@ -1,19 +1,17 @@
 Model Bakery: Smart fixtures for better tests
 =============================================
 
-Model_bakery offers you a smart way to create fixtures for testing in Django.
+Model Bakery offers you a smart way to create fixtures for testing in Django.
 
 With a simple and powerful API you can create many objects with a single line of code.
 
-Model_bakery is a rename of the legacy `model_bakery's project <https://pypi.org/project/model_bakery/>`_.
+Model Bakery is a rename of the legacy `model_mommy's project <https://pypi.org/project/model_mommy/>`_.
 
 
 Contributing to Model Bakery
 ============================
 
-As an open source project, Model Bakery welcomes contributions of many forms
-
-Examples of contributions include:
+As an open source project, Model Bakery welcomes contributions of many forms. Examples of contributions include:
 
 * Code Patches
 * Documentation improvements
@@ -23,14 +21,16 @@ Examples of contributions include:
 Compatibility
 =============
 
-model_bakery supports Django >= 1.11 and Python 3
+model_bakery supports Django >= 1.11 and Python >= 3.5
 
 Install
 =======
 
-Run the command above ::
+Install it with `pip`
 
-    pip install model_bakery
+.. code-block:: console
+
+    $ pip install model_bakery
 
 Contributing
 ============
@@ -39,20 +39,20 @@ Contributing
 
 .. code-block:: console
 
-    pip install virtualenvwrapper
-    mkvirtualenv model_bakery --no-site-packages --distribute
+    $ pip install virtualenvwrapper
+    $ mkvirtualenv model_bakery
 
 2. Install the requirements.
 
 .. code-block:: console
 
-    pip install -r dev_requirements.txt
+    $ pip install -r dev_requirements.txt
 
 3. Run the tests.
 
 .. code-block:: console
 
-    make test
+    $ make test
 
 
 Doubts? Loved it? Hated it? Suggestions?
@@ -72,12 +72,3 @@ Contents:
    recipes
    how_bakery_behaves
    extensions
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
