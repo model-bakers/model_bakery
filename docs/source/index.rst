@@ -69,12 +69,9 @@ Contents:
    :maxdepth: 4
 
    basic_usage
-   how_bakery_behaves
    recipes
+   how_bakery_behaves
    extensions
-
-
-
 
 
 Indices and tables

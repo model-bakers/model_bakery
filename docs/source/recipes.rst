@@ -4,10 +4,10 @@ Recipes
 If you're not comfortable with random data or even you just want to
 improve the semantics of the generated data, there's hope for you.
 
-You can define a recipe, which is a set of rules to generate data
-for your models. 
+You can define a **recipe**, which is a set of rules to generate data
+for your models.
 
-It's also possible to store the Recipes in a module called *mommy_recipes.py*
+It's also possible to store the Recipes in a module called *baker_recipes.py*
 at your app's root directory. This recipes can later be used with the
 `make_recipe` function: ::
 
@@ -19,23 +19,23 @@ at your app's root directory. This recipes can later be used with the
     admin.py
     managers.py
     models.py
-    mommy_recipes.py
+    baker_recipes.py
     urls.py
     views.py
 
 
-File: mommy_recipes.py ::
+File: baker_recipes.py ::
 
-    from model_mommy.recipe import Recipe
-    from family.models import Person
+    from model_bakery.recipe import Recipe
+    from shop.models import Customer
 
-    person = Recipe(
-        Person,
-        name = 'John Doe',
-        nickname = 'joe',
-        age = 18,
-        birthday = date.today(),
-        appointment = datetime.now()
+    customer_joe = Recipe(
+        Customer,
+        name='John Doe',
+        nickname='joe',
+        age=18,
+        birthday=date.today(),
+        last_shopping=datetime.now()
     )
 
 .. note::
@@ -47,42 +47,25 @@ File: test_model.py ::
 
     from django.test import TestCase
 
-    from model_mommy import mommy
-    from model_mommy.recipe import Recipe, foreign_key
+    from model_bakery import baker
 
     # Relative imports of the 'app-name' package
-    from .models import Person, Contact
+    from shop.models import Customer, Contact
 
-    class PersonTestModel(TestCase):
-        """Class to test the model Person"""
+    class CustomerTestModel(TestCase):
+        """Class to test the model Customer"""
 
         def setUp(self):
-            # Load the recipe 'person' from 'family/mommy_recipes.py'
-            self.person_one = mommy.make_recipe(
-                'family.person'
+            # Load the recipe 'customer_joe' from 'shop/baker_recipes.py'
+            self.customer_one = baker.make_recipe(
+                'shop.customer_joe'
             )
-
-            self.person_simpsons = Recipe(
-                Person,
-                name='Moe',
-            )
-
-            self.contact = Recipe(
-                Contact,
-                person=foreign_key(self.person_simpsons),
-                tel='3333333eeeeR'
-            )
-    
-        def test_kind_contact_create_instance(self):
-            """True if create instance"""
-            contact = self.contact.make()
-            self.assertIsInstance(contact, Contact)
 
 Or if you don't want a persisted instance: ::
 
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    mommy.prepare_recipe('family.person')
+    baker.prepare_recipe('shop.customer_joe')
 
 
 Another examples
@@ -92,13 +75,13 @@ Another examples
     You can use the _quantity parameter as well if you want to create more than one object from a single recipe.
 
 .. note::
-    
+
     You can define recipes locally to your module or test case as well. This can be useful for cases where a particular set of values may be unique to a particular test case, but used repeatedly there.
 
 
-Look: 
+Look:
 
-File: mommy_recipes.py ::
+File: baker_recipes.py ::
 
     company_recipe = Recipe(Company, name='WidgetCo')
 
@@ -109,7 +92,7 @@ File: test_model.py ::
             self.employee_recipe = Recipe(
                 Employee,
                 name=seq('Employee '),
-                company=company_recipe.make()
+                company=baker.make_recipe('app.company_recipe')
             )
 
         def test_employee_list(self):
@@ -130,24 +113,22 @@ You can define `foreign_key` relations:
 
 .. code-block:: python
 
-    from model_mommy.recipe import Recipe, foreign_key
-    from family.models import Person, Dog
+    from model_bakery.recipe import Recipe, foreign_key
+    from shop.models import Customer, PurchaseHistory
 
-
-    person = Recipe(Person,
-        name = 'John Doe',
-        nickname = 'joe',
-        age = 18,
-        birthday = date.today(),
-        appointment = datetime.now()
+    customer = Recipe(Customer,
+        name='John Doe',
+        nickname='joe',
+        age=18,
+        birthday=date.today(),
+        appointment=datetime.now()
     )
 
-    dog = Recipe(Dog,
-        breed = 'Pug',
-        owner = foreign_key(person)
+    history = Recipe(PurchaseHistory,
+        customer=foreign_key(customer)
     )
 
-Notice that `person` is a *recipe*.
+Notice that `customer` is a *recipe*.
 
 You may be thinking: "I can put the Person model instance directly in the owner field". That's not recommended.
 
@@ -161,16 +142,13 @@ You can also use `related`, when you want two or more models to share the same p
 .. code-block:: python
 
 
-    from model_mommy.recipe import related, Recipe
+    from model_bakery.recipe import related, Recipe
+    from shop.models import Customer, PurchaseHistory
 
-    dog = Recipe(Dog,
-        breed = 'Pug',
-    )
-    other_dog = Recipe(Dog,
-        breed = 'Boxer',
-    )
-    person_with_three_dogs = Recipe(Person,
-        dog_set = related('dog', 'other_dog')
+    history = Recipe(PurchaseHistory)
+    customer_with_2_histories = Recipe(Customer,
+        name='Albert',
+        purchasehistory_set=related('history', 'history'),
     )
 
 Note this will only work when calling `make_recipe` because the related manager requires the objects in the related_set to be persisted. That said, calling `prepare_recipe` the related_set will be empty.
@@ -179,21 +157,14 @@ If you want to set m2m relationship you can use `related` as well:
 
 .. code-block:: python
 
-    class Dog(models.Model):
-        owner = models.ForeignKey('Person')
-        breed = models.CharField(max_length=50)
-        created = models.DateTimeField(auto_now_add=True)
-        friends_with = models.ManyToManyField('Dog')
+    from model_bakery.recipe import related, Recipe
 
+    prod_1 = Recipe(Product, name='Pencil')
+    prod_2 = Recipe(Product, name='Pen')
+    history = Recipe(PurchaseHistory)
 
-    from model_mommy.recipe import related, Recipe
-
-    dog = Recipe(Dog,
-        breed = 'Pug',
-    )
-
-    dog_with_friends = dog.extend(
-        friends_with=related(dog, dog),
+    history_with_prods = history.extend(
+        products=related(prod_1, prod_2)
     )
 
 
@@ -205,14 +176,15 @@ It's possible to use *callables* as recipe's attribute value.
 .. code-block:: python
 
     from datetime import date
-    from model_mommy.recipe import Recipe
-    from family.models import Person
+    from model_bakery.recipe import Recipe
+    from shop.models import Customer
 
-    person = Recipe(Person,
-        birthday = date.today,
+    customer = Recipe(
+        Customer,
+        birthday=date.today,
     )
 
-When you call `make_recipe`, *Mommy* will set the attribute to the value returned by the callable.
+When you call `make_recipe`, *Baker* will set the attribute to the value returned by the callable.
 
 
 Recipes with iterators
@@ -224,12 +196,12 @@ You can also use *iterators* (including *generators*) to provide multiple values
 
     from itertools import cycle
 
-    colors = ['red', 'green', 'blue', 'yellow']
-    person = Recipe(Person,
-        favorite_color = cycle(colors)
+    names = ['Ada Lovelace', 'Grace Hopper', 'Ida Rhodes', 'Barbara Liskov']
+    customer = Recipe(Customer,
+        name=cycle(names)
     )
 
-*Mommy* will use the next value in the *iterator* every time you create a model from the recipe.
+*Baker* will use the next value in the *iterator* every time you create a model from the recipe.
 
 Sequences in recipes
 --------------------
@@ -239,21 +211,21 @@ Sometimes, you have a field with an unique value and using `make` can cause rand
 .. code-block:: python
 
 
-    from model_mommy.recipe import Recipe, seq
-    from family.models import Person
+    from model_bakery.recipe import Recipe, seq
+    from shop.models import Customer
 
-    person = Recipe(Person,
-        name = seq('Joe'),
-        age = seq(15)
+    customer = Recipe(Customer,
+        name=seq('Joe'),
+        age=seq(15)
     )
 
-    p = mommy.make_recipe('myapp.person')
+    p = baker.make_recipe('shop.customer')
     p.name
     >>> 'Joe1'
     p.age
     >>> 16
 
-    p = mommy.make_recipe('myapp.person')
+    p = baker.make_recipe('shop.customer')
     p.name
     >>> 'Joe2'
     p.age
@@ -261,22 +233,22 @@ Sometimes, you have a field with an unique value and using `make` can cause rand
 
 This will append a counter to strings to avoid uniqueness problems and it will sum the counter with numerical values.
 
-Sequences can be used not only for recipes, but with `mommy.make` as well:
+Sequences and iterables can be used not only for recipes, but with `baker.make` as well:
 
 .. code-block:: python
 
 
-    # it can be imported directly from model_mommy
-    from model_mommy import seq
-    from model_mommy import mommy
+    # it can be imported directly from model_bakery
+    from model_bakery import seq
+    from model_bakery import baker
 
-    p = mommy.make('Person', name=seq('Joe'))
+    p = baker.make('Customer', name=seq('Joe'))
     p.name
     >>> 'Joe1'
 
-    people = mommy.make('Person', name=seq('Chad'), _quantity=3)
-    for person in people:
-        print(person.name)
+    customers = baker.make('Customer', name=seq('Chad'), _quantity=3)
+    for customer in customers:
+        print(customer.name)
     >>> 'Chad1'
     >>> 'Chad2'
     >>> 'Chad3'
@@ -287,18 +259,18 @@ You can also provide an optional `increment_by` argument which will modify incre
 
 
     from datetime import date, timedelta
-    from model_mommy.recipe import Recipe, seq
-    from family.models import Person
+    from model_bakery.recipe import Recipe, seq
+    from shop.models import Customer
 
 
-    person = Recipe(Person,
-        age = seq(15, increment_by=3)
-        height_ft = seq(5.5, increment_by=.25)
+    customer = Recipe(Customer,
+        age=seq(15, increment_by=3)
+        height_ft=seq(5.5, increment_by=.25)
         # assume today's date is 21/07/2014
-        appointment = seq(date(2014, 7, 21), timedelta(days=1))
+        appointment=seq(date(2014, 7, 21), timedelta(days=1))
     )
 
-    p = mommy.make_recipe('myapp.person')
+    p = baker.make_recipe('shop.customer')
     p.age
     >>> 18
     p.height_ft
@@ -306,7 +278,7 @@ You can also provide an optional `increment_by` argument which will modify incre
     p.appointment
     >>> datetime.date(2014, 7, 22)
 
-    p = mommy.make_recipe('myapp.person')
+    p = baker.make_recipe('shop.customer')
     p.age
     >>> 21
     p.height_ft
@@ -321,9 +293,9 @@ Passing values when calling `make_recipe` or `prepare_recipe` will override the 
 
 .. code-block:: python
 
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    mommy.make_recipe('model_mommy.person', name='Peter Parker')
+    baker.make_recipe('shop.customer', name='Ada Lovelace')
 
 This is useful when you have to create multiple objects and you have some unique field, for instance.
 
@@ -334,10 +306,12 @@ If you need to reuse and override existent recipe call extend method:
 
 .. code-block:: python
 
-    dog = Recipe(Dog,
-        breed = 'Pug',
-        owner = foreign_key(person)
+    customer = Recipe(
+        Customer,
+        bio='Some customer bio',
+        age=30,
+        happy=True,
     )
-    extended_dog = dog.extend(
-        breed = 'Super basset',
+    sad_customer = customer.extend(
+        happy=False,
     )
