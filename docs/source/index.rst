@@ -71,4 +71,3 @@ Contents:
    basic_usage
    recipes
    how_bakery_behaves
-   extensions
