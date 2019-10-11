@@ -1,13 +1,13 @@
 import inspect
 import itertools
-from . import mommy
+from . import baker
 from .exceptions import RecipeNotFound
 
 # Enable seq to be imported from recipes
 from .utils import seq  # NoQA
 
 
-finder = mommy.ModelFinder()
+finder = baker.ModelFinder()
 
 
 class Recipe(object):
@@ -26,7 +26,7 @@ class Recipe(object):
             # do not generate values if field value is provided
             if new_attrs.get(k):
                 continue
-            elif mommy.is_iterator(v):
+            elif baker.is_iterator(v):
                 if isinstance(self._model, str):
                     m = finder.get_model(self._model)
                 else:
@@ -41,7 +41,7 @@ class Recipe(object):
                 for key, value in list(rel_fields_attrs.items()):
                     if key.startswith('%s__' % k):
                         a[key] = rel_fields_attrs.pop(key)
-                recipe_attrs = mommy.filter_rel_attrs(k, **a)
+                recipe_attrs = baker.filter_rel_attrs(k, **a)
                 if _save_related:
                     mapping[k] = v.recipe.make(**recipe_attrs)
                 else:
@@ -53,12 +53,12 @@ class Recipe(object):
         return mapping
 
     def make(self, **attrs):
-        return mommy.make(self._model, **self._mapping(attrs))
+        return baker.make(self._model, **self._mapping(attrs))
 
     def prepare(self, **attrs):
         defaults = {'_save_related': False}
         defaults.update(attrs)
-        return mommy.prepare(self._model, **self._mapping(defaults))
+        return baker.prepare(self._model, **self._mapping(defaults))
 
     def extend(self, **attrs):
         attr_mapping = self.attr_mapping.copy()

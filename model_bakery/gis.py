@@ -1,13 +1,13 @@
 from __future__ import absolute_import
 from django.apps import apps
 
-MOMMY_GIS = apps.is_installed("django.contrib.gis")
+BAKER_GIS = apps.is_installed("django.contrib.gis")
 
 default_gis_mapping = {}
 
-__all__ = ['MOMMY_GIS', 'default_gis_mapping']
+__all__ = ['BAKER_GIS', 'default_gis_mapping']
 
-if MOMMY_GIS:
+if BAKER_GIS:
     from . import random_gen
     from django.contrib.gis.db.models import (
         GeometryField,

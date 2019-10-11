@@ -3,7 +3,6 @@ dist: xenial
 branches:
   only:
   - master
-  - development
 python:
   - "3.5"
   - "3.6"

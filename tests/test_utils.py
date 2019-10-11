@@ -1,6 +1,6 @@
 import pytest
 
-from model_mommy.utils import import_if_str, import_from_str
+from model_bakery.utils import import_if_str, import_from_str
 
 from tests.generic.models import User
 

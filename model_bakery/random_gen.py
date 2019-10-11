@@ -15,7 +15,7 @@ from decimal import Decimal
 from os.path import abspath, join, dirname
 from random import randint, choice, random, uniform
 
-from model_mommy.timezone import now
+from model_bakery.timezone import now
 
 
 MAX_LENGTH = 300
@@ -37,7 +37,7 @@ def gen_file_field():
 
 
 def gen_image_field():
-    name = 'mock-img.jpeg'
+    name = 'mock_img.jpeg'
     file_path = abspath(join(dirname(__file__), name))
     with open(file_path, 'rb') as f:
         return get_content_file(f.read(), name=name)
@@ -46,8 +46,8 @@ def gen_image_field():
 def gen_from_list(L):
     '''Makes sure all values of the field are generated from the list L
     Usage:
-    from mommy import Mommy
-    class KidMommy(Mommy):
+    from baker import Baker
+    class ExperientBaker(Baker):
       attr_mapping = {'some_field':gen_from_list([A, B, C])}
     '''
     return lambda: choice(list(L))
@@ -226,12 +226,12 @@ def _fk_model(field):
 
 
 def _prepare_related(model, **attrs):
-    from .mommy import prepare
+    from .baker import prepare
     return prepare(model, **attrs)
 
 
 def gen_related(model, **attrs):
-    from .mommy import make
+    from .baker import make
     return make(model, **attrs)
 
 
@@ -240,7 +240,7 @@ gen_related.prepare = _prepare_related
 
 
 def gen_m2m(model, **attrs):
-    from .mommy import make, MAX_MANY_QUANTITY
+    from .baker import make, MAX_MANY_QUANTITY
     return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
 
 

@@ -1,5 +1,5 @@
-include model_mommy/mock_file.txt
-include model_mommy/mock-img.jpeg
+include model_bakery/mock_file.txt
+include model_bakery/mock_img.jpeg
 include README.rst
 include requirements.txt
 include tox.ini
