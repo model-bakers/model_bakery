@@ -71,7 +71,7 @@ Contents:
    :maxdepth: 4
 
    basic_usage
-   how_mommy_behaves
+   how_bakery_behaves
    recipes
    know_issues
    extensions
