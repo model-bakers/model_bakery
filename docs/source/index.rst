@@ -1,14 +1,17 @@
-Model Mommy: Smart fixtures for better tests
-============================================
+Model Bakery: Smart fixtures for better tests
+=============================================
 
-Model-mommy offers you a smart way to create fixtures for testing in Django.
+Model_bakery offers you a smart way to create fixtures for testing in Django.
+
 With a simple and powerful API you can create many objects with a single line of code.
 
+Model_bakery is a rename of the legacy `model_bakery's project <https://pypi.org/project/model_bakery/>`_.
 
-Contributing to Model Mommy
-===========================
 
-As an open source project, Model Mommy welcomes contributions of many forms
+Contributing to Model Bakery
+============================
+
+As an open source project, Model Bakery welcomes contributions of many forms
 
 Examples of contributions include:
 
@@ -20,14 +23,14 @@ Examples of contributions include:
 Compatibility
 =============
 
-model_mommy supports Django >= 1.11 and Python 3
+model_bakery supports Django >= 1.11 and Python 3
 
 Install
 =======
 
 Run the command above ::
 
-    pip install model_mommy
+    pip install model_bakery
 
 Contributing
 ============
@@ -37,7 +40,7 @@ Contributing
 .. code-block:: console
 
     pip install virtualenvwrapper
-    mkvirtualenv model_mommy --no-site-packages --distribute
+    mkvirtualenv model_bakery --no-site-packages --distribute
 
 2. Install the requirements.
 
@@ -51,18 +54,13 @@ Contributing
 
     make test
 
-Inspiration
-===========
-
-*Model-mommy* was inspired by many great open source software like ruby's ObjectDaddy and FactoryGirl.
-
 
 Doubts? Loved it? Hated it? Suggestions?
 ========================================
 
-Join our mailing list for support, development and ideas!
+Feel free to open an issue for support, development or ideas!
 
-*  https://groups.google.com/group/model-mommy
+*  https://github.com/model-bakers/model_bakery
 
 
 Contents:
