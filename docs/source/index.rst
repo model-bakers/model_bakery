@@ -73,7 +73,6 @@ Contents:
    basic_usage
    how_mommy_behaves
    recipes
-   deprecation_warnings
    know_issues
    extensions
 
