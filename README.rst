@@ -8,8 +8,8 @@ With a simple and powerful API you can create many objects with a single line of
 
 Model Bakery is a rename of the legacy [Model Mommy project](https://pypi.org/project/model_mommy/).
 
-.. image:: https://travis-ci.org/berinhard/model_bakery.svg?branch=master
-    :target: https://travis-ci.org/berinhard/model_bakery
+.. image:: https://travis-ci.org/model-bakers/model_bakery.svg?branch=master
+    :target: https://travis-ci.org/model-bakers/model_bakery
     :alt: Test Status
 
 .. image:: https://badge.fury.io/py/model_bakery.svg
