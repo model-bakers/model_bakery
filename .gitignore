@@ -13,3 +13,4 @@ share/
 build/
 lib64
 pyvenv.cfg
+dist/

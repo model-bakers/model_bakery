@@ -1,4 +1,4 @@
-__version__ = '1.0.0'
+__version__ = '0.0.1a'
 __title__ = 'model_bakery'
 __author__ = 'Vanderson Mota'
 __license__ = 'Apache 2.0'
