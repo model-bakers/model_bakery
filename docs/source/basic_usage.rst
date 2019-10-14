@@ -1,13 +1,13 @@
 Basic Usage
 ===========
 
-Let's say you have an app **family** with a model like this:
+Let's say you have an app **shop** with a model like this:
 
-File: model.py ::
+File: **models.py** ::
 
-    class Kid(models.Model):
+    class Customer(models.Model):
         """
-        Model class Kid of family app
+        Model class Customer of shop app
         """
         happy = models.BooleanField()
         name = models.CharField(max_length=30)
@@ -15,52 +15,41 @@ File: model.py ::
         bio = models.TextField()
         wanted_games_qtd = models.BigIntegerField()
         birthday = models.DateField()
-        appointment = models.DateTimeField()
+        last_shopping = models.DateTimeField()
 
-To create a persisted instance, just call Mommy:
+To create a persisted instance, just call Model Bakery:
 
-File: test_model.py ::
-
-    # -*- coding:utf-8 -*-
+File: **test_models.py** ::
 
     #Core Django imports
     from django.test import TestCase
 
     #Third-party app imports
-    from model_mommy import mommy
-    from model_mommy.recipe import Recipe, foreign_key
+    from model_bakery import baker
 
-    # Relative imports of the 'app-name' package
-    from .models import Kid
+    from shop.models import Customer
 
-    class KidTestModel(TestCase):
+    class CustomerTestModel(TestCase):
         """
-        Class to test the model
-        Kid
+        Class to test the model Customer
         """
 
         def setUp(self):
-            """
-            Set up all the tests
-            """
-            self.kid = mommy.make(Kid)
+            self.customer = baker.make(Customer)
 
+Importing every model over and over again is boring. So let Model Bakery import them for you: ::
 
-No need to pass attributes every damn time.
-
-Importing every model over and over again is boring. So let Mommy import them for you: ::
-
-    from model_mommy import mommy
+    from model_bakery import baker
 
     # 1st form: app_label.model_name
-    kid = mommy.make('family.Kid')
+    customer = baker.make('shop.Customer')
 
     # 2nd form: model_name
-    dog = mommy.make('Dog')
+    product = baker.make('Product')
 
 .. note::
 
-    You can only use the 2nd form on unique model names. If you have an app family with a Dog, and an app farm with a Dog, you must use the app_label.model_name form.
+    You can only use the 2nd form on unique model names. If you have an app shop with a Product, and an app stock with a Product, you must use the app_label.model_name form.
 
 .. note::
 
@@ -69,13 +58,13 @@ Importing every model over and over again is boring. So let Mommy import them fo
 Model Relationships
 -------------------
 
-Mommy also handles relationships. Say the kid has a dog:
+Model Bakery also handles relationships. Let's say the customer has a purchase history:
 
-File: model.py ::
+File: **models.py** ::
 
-    class Kid(models.Model):
+    class Customer(models.Model):
         """
-        Model class Kid of family app
+        Model class Customer of shop app
         """
         happy = models.BooleanField()
         name = models.CharField(max_length=30)
@@ -85,213 +74,142 @@ File: model.py ::
         birthday = models.DateField()
         appointment = models.DateTimeField()
 
-        class Meta:
-            verbose_name = _(u'Kid')
-            verbose_name_plural = _(u'Kids')
-
-        def __unicode__(self):
-            """
-            Return the name of kid
-            """
-            return u'%s' % (self.name)
-
-    class Dog(models.Model):
+    class PurchaseHistory(models.Model):
         """
-        Model class Dog of family app
+        Model class PurchaseHistory of shop app
         """
-        owner = models.ForeignKey('Kid')
+        customer = models.ForeignKey('Customer')
+        products = models.ManyToManyField('Product')
+        year = models.IntegerField()
 
-when you ask Mommy:
+You can use Model Bakery as: ::
 
-File: test_model.py ::
-
-    # -*- coding:utf-8 -*-
-
-    #Core Django imports
     from django.test import TestCase
 
-    #Third-party app imports
-    from model_mommy import mommy
-    from model_mommy.recipe import Recipe, foreign_key
+    from model_bakery import baker
 
-    # Relative imports of the 'app-name' package
-
-    class DogTestModel(TestCase):
-        """
-        Class to test the model
-        Dog
-        """
+    class PurchaseHistoryTestModel(TestCase):
 
         def setUp(self):
-            """
-            Set up all the tests
-            """
-            self.rex = mommy.make('family.Dog')
+            self.history = baker.make('shop.PurchaseHistory')
+            print(self.history.customer)
 
-She will also create the Kid, automagically.
-**NOTE: ForeignKeys and OneToOneFields**
-Since Django 1.8, ForeignKey and OneToOne fields don't accept unpersisted model instances anymore. This means if you do:
+It will also create the Customer, automagically.
 
-    mommy.prepare('family.Dog')
+**NOTE: ForeignKeys and OneToOneFields** - Since Django 1.8, ForeignKey and OneToOne fields don't accept unpersisted model instances anymore. This means that if you run: ::
 
-You'll end with a persisted "Kid" instance.
+    baker.prepare('shop.PurchaseHistory')
+
+You'll end up with a persisted "Customer" instance.
 
 M2M Relationships
 -----------------
 
-File: test_model.py ::
+By default Model Bakery doesn't create related instances for many-to-many relationships. If you want them to be created, you have to turn it on as following: ::
 
-    # -*- coding:utf-8 -*-
-
-    #Core Django imports
     from django.test import TestCase
 
-    #Third-party app imports
-    from model_mommy import mommy
-    from model_mommy.recipe import Recipe, foreign_key
+    from model_bakery import baker
 
-    # Relative imports of the 'app-name' package
-
-    class DogTestModel(TestCase):
-        """
-        Class to test the model
-        Dog
-        """
+    class PurchaseHistoryTestModel(TestCase):
 
         def setUp(self):
-            """
-            Set up all the tests
-            """
-            self.rex = mommy.make('family.Dog', make_m2m=True)
+            self.history = baker.make('shop.PurchaseHistory', make_m2m=True)
+            print(self.history.products.count())
+
 
 Explicit M2M Relationships
 --------------------------
-If you want to, you can prepare your own set of related object and pass it to model_mommy. Here's an example:
+If you want to, you can prepare your own set of related object and pass it to Model Bakery. Here's an example: ::
 
-File: test_models.py ::
-    dogs_set = mommy.prepare(models.Dog, _quantity=2)
-    home = mommy.make(models.Home, owner=owner, dogs=dogs_set)
+    products_set = baker.prepare(Product, _quantity=5)
+    history = baker.make(PurchaseHistory, products=products_set)
 
 
-Defining some attributes
-------------------------
+Explicit values for fields
+--------------------------
 
-Of course it's possible to explicitly set values for attributes.
+By default, Model Bakery uses random values to populate the model's fields. But it's possible to explicitly set values for them as well. ::
 
-File: test_model.py ::
-
-    # -*- coding:utf-8 -*-
-
-    #Core Django imports
     from django.test import TestCase
 
-    #Third-party app imports
-    from model_mommy import mommy
-    from model_mommy.recipe import Recipe, foreign_key
+    from model_bakery import baker
 
-    # Relative imports of the 'app-name' package
-    from .models import Kid
-
-    class KidTestModel(TestCase):
-        """
-        Class to test the model
-        Kid
-        """
+    class CustomerTestModel(TestCase):
 
         def setUp(self):
-            """
-            Set up all the tests
-            """
-            self.kid = mommy.make(
-                Kid,
-                age=3
+            self.customer = baker.make(
+                'shop.Customer',
+                age=21
             )
 
-            self.another_kid = mommy.make(
-                'family.Kid',
-                age=6
+            self.older_customer = baker.make(
+                'shop.Customer',
+                age=42
             )
 
-Related objects attributes are also reachable by their name or related names:
+Related objects fields are also reachable by their name or related names in a very similar way as Django does with `field lookups <https://docs.djangoproject.com/en/dev/ref/models/querysets/#field-lookups>`_: ::
 
-File: test_model.py ::
-
-    # -*- coding:utf-8 -*-
-
-    #Core Django imports
     from django.test import TestCase
 
-    #Third-party app imports
-    from model_mommy import mommy
-    from model_mommy.recipe import Recipe, foreign_key
+    from model_bakery import baker
 
-    # Relative imports of the 'app-name' package
-    from .models import Dog
-
-    class DogTestModel(TestCase):
-        """
-        Class to test the model
-        Dog
-        """
+    class PurchaseHistoryTestModel(TestCase):
 
         def setUp(self):
-            """
-            Set up all the tests
-            """
-
-            self.bobs_dog = mommy.make(
-                'family.Dog',
-                owner__name='Bob'
+            self.bob_history = baker.make(
+                'shop.PurchaseHistory',
+                customer__name='Bob'
             )
 
 Creating Files
 --------------
 
-Mommy does not creates files for FileField types. If you need to have the files created, you can pass the flag `_create_files=True` (defaults to `False`) to either `mommy.make` or `mommy.make_recipe`.
+Model Bakery does not create files for FileField types. If you need to have the files created, you can pass the flag ``_create_files=True`` (defaults to ``False``) to either ``baker.make`` or ``baker.make_recipe``.
 
-**Important**: Mommy does not do any kind of file clean up, so it's up to you to delete the files created by it.
+**Important**: the lib does not do any kind of file clean up, so it's up to you to delete the files created by it.
 
 
 Non persistent objects
 ----------------------
 
-If you don't need a persisted object, *Mommy* can handle this for you as well:
+If you don't need a persisted object, Model Bakery can handle this for you as well with the **prepare** method:
 
 .. code-block:: python
 
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    kid = mommy.prepare('family.Kid')
+    customer = baker.prepare('shop.Customer')
 
-It works like `make`, but it doesn't persist the instance neither the related instances.
+It works like ``make`` method, but it doesn't persist the instance neither the related instances.
 
-If you want to persist only the related instances but not your model, you can use the `_save_related` parameter for it:
+If you want to persist only the related instances but not your model, you can use the ``_save_related`` parameter for it:
 
 .. code-block:: python
 
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    dog = mommy.prepare('family.Dog', _save_related=True)
-    assert dog.id is None
-    assert bool(dog.owner.id) is True
+    history = baker.prepare('shop.PurchaseHistory', _save_related=True)
+    assert history.id is None
+    assert bool(history.customer.id) is True
 
 More than one instance
 ----------------------
 
-If you need to create more than one instance of the model, you can use the `_quantity` parameter for it:
+If you need to create more than one instance of the model, you can use the ``_quantity`` parameter for it:
 
 .. code-block:: python
 
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    kids = mommy.make('family.Kid', _quantity=3)
-    assert len(kids) == 3
+    customers = baker.make('shop.Customer', _quantity=3)
+    assert len(customers) == 3
 
-It also works with `prepare`:
+It also works with ``prepare``:
 
 .. code-block:: python
 
-    from model_mommy import mommy
+    from model_bakery import baker
 
-    kids = mommy.prepare('family.Kid', _quantity=3)
-    assert len(kids) == 3
+    customers = baker.prepare('shop.Customer', _quantity=3)
+    assert len(customers) == 3
