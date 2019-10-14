@@ -5,8 +5,8 @@ Model Bakery: Smart fixtures for better tests
 *Model-bakery* offers you a smart way to create fixtures for testing in Django.
 With a simple and powerful API you can create many objects with a single line of code.
 
-.. image:: https://travis-ci.org/berinhard/model_bakery.svg?branch=master
-    :target: https://travis-ci.org/berinhard/model_bakery
+.. image::  https://travis-ci.com/model-bakers/model_bakery.svg?branch=master
+    :target:  https://travis-ci.com/model-bakers/model_bakery/
     :alt: Test Status
 
 .. image:: https://badge.fury.io/py/model_bakery.svg
