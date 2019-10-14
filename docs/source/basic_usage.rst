@@ -148,7 +148,7 @@ By default, Model Bakery uses random values to populate the model's fields. But 
                 age=42
             )
 
-Related objects fields are also reachable by their name or related names in a very similar way as Django does with `field lookups <https://docs.djangoproject.com/en/2.2/ref/models/querysets/#id4>`_: ::
+Related objects fields are also reachable by their name or related names in a very similar way as Django does with `field lookups <https://docs.djangoproject.com/en/dev/ref/models/querysets/#field-lookups>`_: ::
 
     from django.test import TestCase
 
