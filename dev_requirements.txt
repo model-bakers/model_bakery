@@ -6,3 +6,4 @@ pytest-django
 sphinx
 tox
 wheel
+twine==2.0.0
