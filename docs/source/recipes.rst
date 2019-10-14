@@ -151,12 +151,12 @@ If you want to set m2m relationship you can use ``related`` as well:
 
     from model_bakery.recipe import related, Recipe
 
-    prod_1 = Recipe(Product, name='Pencil')
-    prod_2 = Recipe(Product, name='Pen')
+    pencil = Recipe(Product, name='Pencil')
+    pen = Recipe(Product, name='Pen')
     history = Recipe(PurchaseHistory)
 
     history_with_prods = history.extend(
-        products=related(prod_1, prod_2)
+        products=related(pencil, pen)
     )
 
 
@@ -211,16 +211,16 @@ Sometimes, you have a field with an unique value and using ``make`` can cause ra
         age=seq(15)
     )
 
-    p = baker.make_recipe('shop.customer')
-    p.name
+    customer = baker.make_recipe('shop.customer')
+    customer.name
     >>> 'Joe1'
-    p.age
+    customer.age
     >>> 16
 
-    p = baker.make_recipe('shop.customer')
-    p.name
+    new_customer = baker.make_recipe('shop.customer')
+    new_customer.name
     >>> 'Joe2'
-    p.age
+    new_customer.age
     >>> 17
 
 This will append a counter to strings to avoid uniqueness problems and it will sum the counter with numerical values.
@@ -234,8 +234,8 @@ Sequences and iterables can be used not only for recipes, but with ``baker.make`
     from model_bakery import seq
     from model_bakery import baker
 
-    p = baker.make('Customer', name=seq('Joe'))
-    p.name
+    customer = baker.make('Customer', name=seq('Joe'))
+    customer.name
     >>> 'Joe1'
 
     customers = baker.make('Customer', name=seq('Chad'), _quantity=3)
@@ -262,20 +262,20 @@ You can also provide an optional ``increment_by`` argument which will modify inc
         appointment=seq(date(2014, 7, 21), timedelta(days=1))
     )
 
-    p = baker.make_recipe('shop.customer')
-    p.age
+    customer = baker.make_recipe('shop.customer')
+    customer.age
     >>> 18
-    p.height_ft
+    customer.height_ft
     >>> 5.75
-    p.appointment
+    customer.appointment
     >>> datetime.date(2014, 7, 22)
 
-    p = baker.make_recipe('shop.customer')
-    p.age
+    new_customer = baker.make_recipe('shop.customer')
+    new_customer.age
     >>> 21
-    p.height_ft
+    new_customer.height_ft
     >>> 6.0
-    p.appointment
+    new_customer.appointment
     >>> datetime.date(2014, 7, 23)
 
 Overriding recipe definitions
