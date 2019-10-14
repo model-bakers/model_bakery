@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Model Bakery documentation build configuration file, created by
 # sphinx-quickstart on Wed Apr 30 11:58:35 2014.
 #
@@ -48,8 +46,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Model Bakery'
-copyright = u'2014, Lucas Simon Rodrigues Magalhaes'
+project = 'Model Bakery'
+copyright = '2014, Lucas Simon Rodrigues Magalhaes'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -201,8 +199,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'ModelBakery.tex', u'Model Bakery Documentation',
-   u'Lucas Simon Rodrigues Magalhaes', 'manual'),
+  ('index', 'ModelBakery.tex', 'Model Bakery Documentation',
+   'Lucas Simon Rodrigues Magalhaes', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -231,8 +229,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'modelmommy', u'Model Bakery Documentation',
-     [u'Lucas Simon Rodrigues Magalhaes'], 1)
+    ('index', 'modelmommy', 'Model Bakery Documentation',
+     ['Lucas Simon Rodrigues Magalhaes'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -245,8 +243,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'ModelBakery', u'Model Bakery Documentation',
-   u'Lucas Simon Rodrigues Magalhaes', 'ModelBakery', 'One line description of project.',
+  ('index', 'ModelBakery', 'Model Bakery Documentation',
+   'Lucas Simon Rodrigues Magalhaes', 'ModelBakery', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -266,13 +264,13 @@ texinfo_documents = [
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'Model Bakery'
-epub_author = u'Lucas Simon Rodrigues Magalhaes'
-epub_publisher = u'Lucas Simon Rodrigues Magalhaes'
-epub_copyright = u'2014, Lucas Simon Rodrigues Magalhaes'
+epub_title = 'Model Bakery'
+epub_author = 'Lucas Simon Rodrigues Magalhaes'
+epub_publisher = 'Lucas Simon Rodrigues Magalhaes'
+epub_copyright = '2014, Lucas Simon Rodrigues Magalhaes'
 
 # The basename for the epub file. It defaults to the project name.
-#epub_basename = u'Model Bakery'
+#epub_basename = 'Model Bakery'
 
 # The HTML theme for the epub output. Since the default themes are not optimized
 # for small screen space, using the same theme for HTML and epub output is
