@@ -12,8 +12,8 @@ Model Bakery is a rename of the legacy `Model Mommy project <https://pypi.org/pr
     :target:  https://travis-ci.com/model-bakers/model_bakery/
     :alt: Test Status
 
-.. image:: https://badge.fury.io/py/model_bakery.svg
-    :target: https://badge.fury.io/py/model_bakery
+.. image:: https://img.shields.io/pypi/v/model_bakery.svg
+    :target: https://pypi.python.org/pypi/model_bakery/
     :alt: Latest PyPI version
 
 .. image:: https://readthedocs.org/projects/model-bakery/badge/?version=latest
