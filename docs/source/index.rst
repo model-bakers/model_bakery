@@ -71,3 +71,4 @@ Contents:
    basic_usage
    recipes
    how_bakery_behaves
+   migrating_from_mommy
