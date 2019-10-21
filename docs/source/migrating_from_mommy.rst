@@ -1,7 +1,9 @@
 Migrating from Model Mommy
 ==========================
 
-Model Bakery has a `Python script <https://github.com/model-bakers/model_bakery/blob/master/utils/from_mommy_to_bakery.py>`_ to help you to migrate your project's test code to depend upon it instead of legacy Model Mommy. **From your project's root dir**, the following snippet can work as an example of how to migrate it:
+Model Bakery has a `Python script <https://github.com/model-bakers/model_bakery/blob/master/utils/from_mommy_to_bakery.py>`_ to help you to migrate your project's test code from Model Mommy to Model Bakery. This script will rename recipe files and replace legacy imports by the new ones.
+
+**From your project's root dir**, execute the following commands:
 
 .. code-block:: console
 
