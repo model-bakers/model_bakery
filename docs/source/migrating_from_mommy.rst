@@ -13,3 +13,6 @@ Model Bakery has a `Python script <https://github.com/model-bakers/model_bakery/
     $ python from_mommy_to_bakery.py --dry-run  # will list the files that'll be manipulated
     $ python from_mommy_to_bakery.py            # migrate from model_mommy to model_bakery
     $ python manage.py test
+
+
+This command will only migrate ``*.py`` files. Any other file type such as ``tox.ini``, ``requirements.txt`` etc, have to be updated manually.
