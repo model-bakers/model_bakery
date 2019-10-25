@@ -322,14 +322,14 @@ class TestBakerCreatesAssociatedModels():
     def test_simple_creating_person_with_parameters(self):
         kid = baker.make(models.Person, happy=True, age=10, name='Mike')
         assert kid.age == 10
-        assert kid.happy == True
+        assert kid.happy is True
         assert kid.name == 'Mike'
 
     def test_creating_person_from_factory_using_paramters(self):
         person_baker_ = baker.Baker(models.Person)
         person = person_baker_.make(happy=False, age=20, gender='M', name='John')
         assert person.age == 20
-        assert person.happy == False
+        assert person.happy is False
         assert person.name == 'John'
         assert person.gender == 'M'
 
@@ -480,7 +480,7 @@ class TestFillBlanksTestCase():
 
     def test_fill_wrong_field(self):
         with pytest.raises(AttributeError) as exc_info:
-            baker.make(models.DummyBlankFieldsModel,_fill_optional=['blank_char_field', 'wrong'])
+            baker.make(models.DummyBlankFieldsModel, _fill_optional=['blank_char_field', 'wrong'])
 
         msg = "_fill_optional field(s) ['wrong'] are not related to model DummyBlankFieldsModel"
         assert msg in str(exc_info.value)
