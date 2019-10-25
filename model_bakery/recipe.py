@@ -84,14 +84,15 @@ class RecipeForeignKey(object):
 
 
 def foreign_key(recipe):
-    """
-      Returns the callable, so that the associated _model
-      will not be created during the recipe definition.
+    """Return a `RecipeForeignKey`.
+
+    Return the callable, so that the associated `_model` will not be created
+    during the recipe definition.
     """
     return RecipeForeignKey(recipe)
 
 
-class related(object):
+class related(object):  # FIXME
     def __init__(self, *args):
         self.related = []
         for recipe in args:
@@ -109,7 +110,5 @@ class related(object):
                 raise TypeError('Not a recipe')
 
     def make(self):
-        """
-         Persists objects to m2m relation
-        """
+        """Persist objects to m2m relation."""
         return [m.make() for m in self.related]

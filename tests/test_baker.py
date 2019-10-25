@@ -179,18 +179,18 @@ class TestBakerCreatesAssociatedModels():
         assert isinstance(dog.owner, models.Person)
 
     def test_foreign_key_on_parent_should_create_one_object(self):
-        '''
+        """
         Foreign key on parent gets created twice. Once for
         parent object and another time for child object
-        '''
+        """
         person_count = models.Person.objects.count()
         baker.make(models.GuardDog)
         assert models.Person.objects.count() == person_count + 1
 
     def test_foreign_key_on_parent_is_not_created(self):
-        '''
+        """
         Foreign key on parent doesn't get created using owner
-        '''
+        """
         owner = baker.make(models.Person)
         person_count = models.Person.objects.count()
         dog = baker.make(models.GuardDog, owner=owner)
@@ -198,9 +198,9 @@ class TestBakerCreatesAssociatedModels():
         assert dog.owner == owner
 
     def test_foreign_key_on_parent_id_is_not_created(self):
-        '''
+        """
         Foreign key on parent doesn't get created using owner_id
-        '''
+        """
         owner = baker.make(models.Person)
         person_count = models.Person.objects.count()
         dog = baker.make(models.GuardDog, owner_id=owner.id)
@@ -208,20 +208,20 @@ class TestBakerCreatesAssociatedModels():
         assert models.GuardDog.objects.get(pk=dog.pk).owner == owner
 
     def test_auto_now_add_on_parent_should_work(self):
-        '''
+        """
         Foreign key on parent gets created twice. Once for
         parent object and another time for child object
-        '''
+        """
         person_count = models.Person.objects.count()
         dog = baker.make(models.GuardDog)
         assert models.Person.objects.count() == person_count + 1
         assert dog.created
 
     def test_attrs_on_related_model_through_parent(self):
-        '''
+        """
         Foreign key on parent gets created twice. Once for
         parent object and another time for child object
-        '''
+        """
         baker.make(models.GuardDog, owner__name='john')
         for person in models.Person.objects.all():
             assert person.name == 'john'
@@ -286,7 +286,7 @@ class TestBakerCreatesAssociatedModels():
 
     def test_create_many_to_many_with_through_option(self):
         """
-         This does not works
+         This does not works  # FIXME
         """
         # School student's attr is a m2m relationship with a model through
         school = baker.make(models.School, make_m2m=True)
@@ -618,7 +618,7 @@ class TestBakerAutomaticallyRefreshFromDB():
 class TestBakerMakeCanFetchInstanceFromDefaultManager():
 
     def test_annotation_within_manager_get_queryset_are_run_on_make(self):
-        '''Test that a custom model Manager can be used within make().
+        """Test that a custom model Manager can be used within make().
 
         Passing _from_manager='objects' will force baker.make() to
         return an instance that has been going through that given
@@ -626,7 +626,7 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager():
         code, like default annotations. As such the instance will have
         the same fields as one created in the application.
 
-        '''
+        """
         movie = baker.make(models.MovieWithAnnotation)
         with pytest.raises(AttributeError):
             movie.name

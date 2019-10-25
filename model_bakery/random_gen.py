@@ -1,12 +1,12 @@
-"""
-Generators are callables that return a value used to populate a field.
+"""Generators are callables that return a value used to populate a field.
 
-If this callable has a `required` attribute (a list, mostly), for each item in
-the list, if the item is a string, the field attribute with the same name will
-be fetched from the field and used as argument for the generator. If it is a
-callable (which will receive `field` as first argument), it should return a
-list in the format (key, value) where key is the argument name for generator
-and value is the value for that argument.
+If this callable has a `required` attribute (a list, mostly), for each
+item in the list, if the item is a string, the field attribute with the
+same name will be fetched from the field and used as argument for the
+generator. If it is a callable (which will receive `field` as first
+argument), it should return a list in the format (key, value) where key
+is the argument name for generator and value is the value for that
+argument.
 """
 
 import string
@@ -43,14 +43,18 @@ def gen_image_field():
         return get_content_file(f.read(), name=name)
 
 
-def gen_from_list(L):
-    '''Makes sure all values of the field are generated from the list L
-    Usage:
-    from baker import Baker
-    class ExperientBaker(Baker):
-      attr_mapping = {'some_field':gen_from_list([A, B, C])}
-    '''
-    return lambda: choice(list(L))
+def gen_from_list(a_list):
+    """Make sure all values of the field are generated from a list.
+
+    Examples:
+        Here how to use it.
+
+        >>> from baker import Baker
+        >>> class ExperienceBaker(Baker):
+        >>>     attr_mapping = {'some_field': gen_from_list(['A', 'B', 'C'])}
+
+    """
+    return lambda: choice(list(a_list))
 
 
 # -- DEFAULT GENERATORS --

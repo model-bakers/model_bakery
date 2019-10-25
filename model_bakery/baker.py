@@ -18,7 +18,7 @@ from .exceptions import (
     ModelNotFound, AmbiguousModelName, InvalidQuantityException, RecipeIteratorEmpty,
     CustomBakerNotFound, InvalidCustomBaker
 )
-from .utils import import_from_str, import_if_str
+from .utils import import_from_str
 
 recipes = None
 
@@ -35,10 +35,10 @@ def _valid_quantity(quantity):
 
 def make(_model, _quantity=None, make_m2m=False, _save_kwargs=None, _refresh_after_create=False,
          _create_files=False, **attrs):
-    """
-    Creates a persisted instance from a given model its associated models.
-    It fill the fields with random values or you can specify
-    which fields you want to define its values by yourself.
+    """Create a persisted instance from a given model its associated models.
+
+    It fill the fields with random values or you can specify which
+    fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
     baker = Baker.create(_model, make_m2m=make_m2m, create_files=_create_files)
@@ -62,11 +62,10 @@ def make(_model, _quantity=None, make_m2m=False, _save_kwargs=None, _refresh_aft
 
 
 def prepare(_model, _quantity=None, _save_related=False, **attrs):
-    """
-    Creates BUT DOESN'T persist an instance from a given model its
-    associated models.
-    It fill the fields with random values or you can specify
-    which fields you want to define its values by yourself.
+    """Create but do not persist an instance from a given model.
+
+    It fill the fields with random values or you can specify which
+    fields you want to define its values by yourself.
     """
     baker = Baker.create(_model)
     if _valid_quantity(_quantity):
@@ -96,18 +95,20 @@ def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new
 
 
 class ModelFinder(object):
-    """
-    Encapsulates all the logic for finding a model to Baker.
-    """
+    """Encapsulates all the logic for finding a model to Baker."""
+
     _unique_models = None
     _ambiguous_models = None
 
     def get_model(self, name):
-        """
-        Get a model.
+        """Get a model.
 
-        :param name String on the form 'applabel.modelname' or 'modelname'.
-        :return a model class.
+        Args:
+        name (str): A name on the form 'applabel.modelname' or 'modelname'
+
+        Returns:
+            object: a model class
+
         """
         try:
             if '.' in name:
@@ -124,11 +125,10 @@ class ModelFinder(object):
         return model
 
     def get_model_by_name(self, name):
-        """
-        Get a model by name.
+        """Get a model by name.
 
-        If a model with that name exists in more than one app,
-        raises AmbiguousModelName.
+        If a model with that name exists in more than one app, raises
+        AmbiguousModelName.
         """
         name = name.lower()
 
@@ -142,9 +142,7 @@ class ModelFinder(object):
         return self._unique_models.get(name)
 
     def _populate(self):
-        """
-        Cache models for faster self._get_model.
-        """
+        """Cache models for faster self._get_model."""
         unique_models = {}
         ambiguous_models = []
 
@@ -172,9 +170,12 @@ def is_iterator(value):
 
 
 def _custom_baker_class():
-    """
-    Returns custom baker class specified by BAKER_CUSTOM_CLASS in the django
-    settings, or None if no custom class is defined
+    """Return the specified custom baker class.
+
+    Returns:
+        object: The custom class is specified by BAKER_CUSTOM_CLASS in Django's
+        settings, or None if no custom class is defined.
+
     """
     custom_class_string = getattr(settings, 'BAKER_CUSTOM_CLASS', None)
     if custom_class_string is None:
@@ -204,9 +205,7 @@ class Baker(object):
 
     @classmethod
     def create(cls, _model, make_m2m=False, create_files=False):
-        """
-        Factory which creates the baker class defined by the BAKER_CUSTOM_CLASS setting
-        """
+        """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
         return baker_class(_model, make_m2m, create_files)
 
@@ -230,8 +229,8 @@ class Baker(object):
         self.type_mapping = generators.get_type_mapping()
         generators_from_settings = getattr(settings, 'BAKER_CUSTOM_FIELDS_GEN', {})
         for k, v in generators_from_settings.items():
-            field_class = import_if_str(k)
-            generator = import_if_str(v)
+            field_class = import_from_str(k)
+            generator = import_from_str(v)
             self.type_mapping[field_class] = generator
 
     def make(
@@ -241,8 +240,7 @@ class Baker(object):
         _from_manager=None,
         **attrs
     ):
-        """Creates and persists an instance of the model associated
-        with Baker instance."""
+        """Create and persist an instance of the model associated with Baker instance."""
         params = {
             'commit': True,
             'commit_related': True,
@@ -254,8 +252,7 @@ class Baker(object):
         return self._make(**params)
 
     def prepare(self, _save_related=False, **attrs):
-        """Creates, but does not persist, an instance of the model
-        associated with Baker instance."""
+        """Create, but do not persist, an instance of the associated model."""
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
     def get_fields(self):
@@ -444,8 +441,7 @@ class Baker(object):
         return field.remote_field
 
     def generate_value(self, field, commit=True):
-        """
-        Calls the generator associated with a field passing all required args.
+        """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
         -- attr_mapping - mapping per attribute name
@@ -486,10 +482,10 @@ class Baker(object):
 
 
 def get_required_values(generator, field):
-    """
-    Gets required values for a generator from the field.
-    If required value is a function, calls it with field as argument.
-    If required value is a string, simply fetch the value from the field
+    """Get required values for a generator from the field.
+
+    If required value is a function, calls it with field as argument. If
+    required value is a string, simply fetch the value from the field
     and return.
     """
     # FIXME: avoid abbreviations

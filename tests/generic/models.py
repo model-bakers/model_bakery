@@ -306,12 +306,11 @@ class Movie(models.Model):
 
 class MovieManager(models.Manager):
     def get_queryset(self):
-        '''Annotate queryset with an alias field 'name'.
+        """Annotate queryset with an alias field 'name'.
 
         We want to test whether this annotation has been run after
         calling baker.make().
-
-        '''
+        """
         return (
             super(MovieManager, self).get_queryset()
             .annotate(name=models.F('title'))
