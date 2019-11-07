@@ -17,12 +17,12 @@ PACKAGE_RECIPES_PATTERN = re.compile(PACKAGE_RECIPES)
 PACKAGE_LEGACY_MODULE = r'\bmommy\b'
 PACKAGE_LEGACY_MODULE_PATTERN = re.compile(PACKAGE_LEGACY_MODULE)
 
-legacy_and_new = [
+LEGACY_AND_NEW = [
     {'old': PACKAGE_NAME_PATTERN, 'new': r'model_bakery'},
     {'old': PACKAGE_RECIPES_PATTERN, 'new': r'baker_recipes'},
     {'old': PACKAGE_LEGACY_MODULE_PATTERN, 'new': r'baker'},
 ]
-exclude = [
+EXCLUDE = [
     'node_modules', 'venv', '.git', 'sql', 'docs',
     'from_mommy_to_bakery.py', 'Pipfile', 'Pipfile.lock'
 ]
@@ -50,7 +50,7 @@ def _replace_legacy_terms(file_path, dry_run):
     except UnicodeDecodeError:
         return
     changed = []
-    for patterns in legacy_and_new:
+    for patterns in LEGACY_AND_NEW:
         old, new = patterns['old'], patterns['new']
         content, has_changed = _find_changes(content, old, new)
         changed.append(has_changed)
@@ -62,11 +62,21 @@ def _replace_legacy_terms(file_path, dry_run):
             print(file_path)
 
 
+def _sanitize_folder_or_file(folder_or_file):
+    folder_or_file = folder_or_file.strip()
+    if folder_or_file.endswith('/'):
+        # Remove trailing slash e.g.: '.tox/' -> '.tox'
+        folder_or_file = folder_or_file[:-1]
+    return folder_or_file
+
+
 def check_files(dry_run):
     excluded_by_gitignore = [
-        folder_or_file.strip()
+        _sanitize_folder_or_file(folder_or_file.strip())
         for folder_or_file in open('.gitignore').readlines()
     ]
+
+    exclude = EXCLUDE[:]
     exclude.extend(excluded_by_gitignore)
 
     to_be_renamed = []
@@ -79,7 +89,7 @@ def check_files(dry_run):
 
         for file_ in files:
             if file_ in exclude or not file_.endswith('.py'):
-                continue                
+                continue
 
             file_path = f'{root}/{file_}'
             if file_ == 'mommy_recipes.py':
