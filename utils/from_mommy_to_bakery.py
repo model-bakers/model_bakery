@@ -72,7 +72,7 @@ def _sanitize_folder_or_file(folder_or_file):
 
 def check_files(dry_run):
     excluded_by_gitignore = [
-        _sanitize_folder_or_file(folder_or_file.strip())
+        _sanitize_folder_or_file(folder_or_file)
         for folder_or_file in open('.gitignore').readlines()
     ]
 
