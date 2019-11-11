@@ -5,6 +5,15 @@ All notable changes to `model_bakery` will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.2](https://pypi.org/project/model-bakery/1.0.2/)
+
+### Added
+
+### Changed
+- Improvements on the migrations script
+
+### Removed
+
 ## [1.0.1](https://pypi.org/project/model-bakery/1.0.1/)
 
 ### Added
