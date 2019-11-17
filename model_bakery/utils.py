@@ -8,7 +8,7 @@ from .timezone import tz_aware
 def import_from_str(import_string):
     """Import an object defined as import if it is an string.
 
-    If `import_string_or_obj` follows the format `path.to.module.object_name`,
+    If `import_string` follows the format `path.to.module.object_name`,
     this method imports it; else it just return the object.
     """
     if isinstance(import_string, str):
