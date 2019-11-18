@@ -2,7 +2,7 @@ import importlib
 import datetime
 import itertools
 
-from .timezone import tz_aware
+from .timezone import now
 
 
 def import_if_str(import_string_or_obj):
@@ -41,7 +41,7 @@ def seq(value, increment_by=1):
         start = (date - datetime.datetime(1970, 1, 1)).total_seconds()
         increment_by = increment_by.total_seconds()
         for n in itertools.count(increment_by, increment_by):
-            series_date = tz_aware(datetime.datetime.utcfromtimestamp(start + n))
+            series_date = now()+n
             if type(value) is datetime.time:
                 yield series_date.time()
             elif type(value) is datetime.date:
