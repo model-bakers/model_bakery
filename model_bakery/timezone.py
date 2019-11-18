@@ -4,24 +4,15 @@ https://docs.djangoproject.com/en/1.4/topics/i18n/timezones/
 """
 # TODO: the whole file seems to be not needed anymore, since Django has this tooling built-in
 
-from datetime import datetime
+from django.utils import timezone
+import datetime
 
-try:
-    from django.conf import settings
-    from django.utils.timezone import now, utc
-except ImportError:
-    def now():
-        return datetime.now()
-
-
-def smart_datetime(*args):
-    value = datetime(*args)
-    return tz_aware(value)
-
-
-def tz_aware(d):
-    value = d
+def now():
+    """
+    Returns an aware or naive datetime.datetime, depending on settings.USE_TZ.
+    """
     if settings.USE_TZ:
-        value = d.replace(tzinfo=utc)
-
-    return value
+        # timeit shows that datetime.now(tz=utc) is 24% slower
+        return datetime.utcnow().replace(tzinfo=utc)
+    else:
+        return datetime.now()
