@@ -179,18 +179,12 @@ class TestBakerCreatesAssociatedModels():
         assert isinstance(dog.owner, models.Person)
 
     def test_foreign_key_on_parent_should_create_one_object(self):
-        '''
-        Foreign key on parent gets created twice. Once for
-        parent object and another time for child object
-        '''
         person_count = models.Person.objects.count()
         baker.make(models.GuardDog)
         assert models.Person.objects.count() == person_count + 1
 
     def test_foreign_key_on_parent_is_not_created(self):
-        '''
-        Foreign key on parent doesn't get created using owner
-        '''
+        """Foreign key on parent doesn't get created using owner."""
         owner = baker.make(models.Person)
         person_count = models.Person.objects.count()
         dog = baker.make(models.GuardDog, owner=owner)
@@ -198,9 +192,7 @@ class TestBakerCreatesAssociatedModels():
         assert dog.owner == owner
 
     def test_foreign_key_on_parent_id_is_not_created(self):
-        '''
-        Foreign key on parent doesn't get created using owner_id
-        '''
+        """Foreign key on parent doesn't get created using owner_id."""
         owner = baker.make(models.Person)
         person_count = models.Person.objects.count()
         dog = baker.make(models.GuardDog, owner_id=owner.id)
@@ -208,20 +200,12 @@ class TestBakerCreatesAssociatedModels():
         assert models.GuardDog.objects.get(pk=dog.pk).owner == owner
 
     def test_auto_now_add_on_parent_should_work(self):
-        '''
-        Foreign key on parent gets created twice. Once for
-        parent object and another time for child object
-        '''
         person_count = models.Person.objects.count()
         dog = baker.make(models.GuardDog)
         assert models.Person.objects.count() == person_count + 1
         assert dog.created
 
     def test_attrs_on_related_model_through_parent(self):
-        '''
-        Foreign key on parent gets created twice. Once for
-        parent object and another time for child object
-        '''
         baker.make(models.GuardDog, owner__name='john')
         for person in models.Person.objects.all():
             assert person.name == 'john'
@@ -285,9 +269,6 @@ class TestBakerCreatesAssociatedModels():
         assert store.customers.count() == baker.MAX_MANY_QUANTITY
 
     def test_create_many_to_many_with_through_option(self):
-        """
-         This does not works
-        """
         # School student's attr is a m2m relationship with a model through
         school = baker.make(models.School, make_m2m=True)
         assert models.School.objects.count() == 1
@@ -322,14 +303,14 @@ class TestBakerCreatesAssociatedModels():
     def test_simple_creating_person_with_parameters(self):
         kid = baker.make(models.Person, happy=True, age=10, name='Mike')
         assert kid.age == 10
-        assert kid.happy == True
+        assert kid.happy is True
         assert kid.name == 'Mike'
 
     def test_creating_person_from_factory_using_paramters(self):
         person_baker_ = baker.Baker(models.Person)
         person = person_baker_.make(happy=False, age=20, gender='M', name='John')
         assert person.age == 20
-        assert person.happy == False
+        assert person.happy is False
         assert person.name == 'John'
         assert person.gender == 'M'
 
@@ -480,7 +461,7 @@ class TestFillBlanksTestCase():
 
     def test_fill_wrong_field(self):
         with pytest.raises(AttributeError) as exc_info:
-            baker.make(models.DummyBlankFieldsModel,_fill_optional=['blank_char_field', 'wrong'])
+            baker.make(models.DummyBlankFieldsModel, _fill_optional=['blank_char_field', 'wrong'])
 
         msg = "_fill_optional field(s) ['wrong'] are not related to model DummyBlankFieldsModel"
         assert msg in str(exc_info.value)
@@ -618,15 +599,15 @@ class TestBakerAutomaticallyRefreshFromDB():
 class TestBakerMakeCanFetchInstanceFromDefaultManager():
 
     def test_annotation_within_manager_get_queryset_are_run_on_make(self):
-        '''Test that a custom model Manager can be used within make().
+        """A custom model Manager can be used within make().
 
-        Passing _from_manager='objects' will force baker.make() to
-        return an instance that has been going through that given
-        Manager, thus calling its get_queryset() method and associated
+        Passing ``_from_manager='objects'`` will force ``baker.make()``
+        to return an instance that has been going through a given
+        Manager, thus calling its ``get_queryset()`` method and associated
         code, like default annotations. As such the instance will have
         the same fields as one created in the application.
 
-        '''
+        """
         movie = baker.make(models.MovieWithAnnotation)
         with pytest.raises(AttributeError):
             movie.name

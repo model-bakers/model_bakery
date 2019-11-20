@@ -9,7 +9,7 @@ from django.db.models import (
 
 from . import random_gen
 from .gis import default_gis_mapping
-from .utils import import_if_str
+from .utils import import_from_str
 
 try:
     from django.contrib.postgres.fields import ArrayField
@@ -98,7 +98,7 @@ user_mapping = {}
 
 
 def add(field, func):
-    user_mapping[import_if_str(field)] = import_if_str(func)
+    user_mapping[import_from_str(field)] = import_from_str(func)
 
 
 def get(field):

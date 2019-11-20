@@ -5,28 +5,18 @@ import itertools
 from .timezone import tz_aware
 
 
-def import_if_str(import_string_or_obj):
-    """
-    Import and return an object defined as import string in the form of
-
-        path.to.module.object_name
-
-    or just return the object if it isn't a string.
-    """
-    if isinstance(import_string_or_obj, str):
-        return import_from_str(import_string_or_obj)
-    return import_string_or_obj
-
-
 def import_from_str(import_string):
-    """
-    Import and return an object defined as import string in the form of
+    """Import an object defined as import if it is an string.
 
-        path.to.module.object_name
+    If `import_string` follows the format `path.to.module.object_name`,
+    this method imports it; else it just return the object.
     """
-    path, field_name = import_string.rsplit('.', 1)
-    module = importlib.import_module(path)
-    return getattr(module, field_name)
+    if isinstance(import_string, str):
+        path, field_name = import_string.rsplit('.', 1)
+        module = importlib.import_module(path)
+        return getattr(module, field_name)
+    else:
+        return import_string
 
 
 def seq(value, increment_by=1):
