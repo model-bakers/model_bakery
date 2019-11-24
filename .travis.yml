@@ -31,3 +31,4 @@ before_script:
 script:
   - TOX_TEST_PASSENV="TRAVIS TRAVIS_JOB_ID TRAVIS_BRANCH" tox -e py${TRAVIS_PYTHON_VERSION//[.]/}-$DJANGO-{postgresql}
   - TOX_TEST_PASSENV="TRAVIS TRAVIS_JOB_ID TRAVIS_BRANCH" tox -e py${TRAVIS_PYTHON_VERSION//[.]/}-$DJANGO-{sqlite}
+  - tox -e flake8
