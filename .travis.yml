@@ -8,78 +8,30 @@ jobs:
   include:
     - env: TOXENV=flake8
       python: 3.7
-    - env: TOXENV=py35-django111-postgresql
+    - env: TOXENV=py35-django111-{postgresql,sqlite}
       python: 3.5
-    - env: TOXENV=py36-django111-postgresql
+    - env: TOXENV=py36-django111-{postgresql,sqlite}
       python: 3.6
-    - env: TOXENV=py37-django111-postgresql
+    - env: TOXENV=py37-django111-{postgresql,sqlite}
       python: 3.7
-    - env: TOXENV=py35-django111-sqlite
+    - env: TOXENV=py35-django20-{postgresql,sqlite}
       python: 3.5
-    - env: TOXENV=py36-django111-sqlite
+    - env: TOXENV=py36-django20-{postgresql,sqlite}
       python: 3.6
-    - env: TOXENV=py37-django111-sqlite
+    - env: TOXENV=py37-django20-{postgresql,sqlite}
       python: 3.7
-    - env: TOXENV=py35-django20-postgresql
+    - env: TOXENV=py35-django21-{postgresql,sqlite}
       python: 3.5
-    - env: TOXENV=py36-django20-postgresql
+    - env: TOXENV=py36-django21-{postgresql,sqlite}
       python: 3.6
-    - env: TOXENV=py37-django20-postgresql
+    - env: TOXENV=py37-django21-{postgresql,sqlite}
       python: 3.7
-    - env: TOXENV=py35-django20-sqlite
+    - env: TOXENV=py35-django22-{postgresql,sqlite}
       python: 3.5
-    - env: TOXENV=py36-django20-sqlite
+    - env: TOXENV=py36-django22-{postgresql,sqlite}
       python: 3.6
-    - env: TOXENV=py37-django20-sqlite
+    - env: TOXENV=py37-django22-{postgresql,sqlite}
       python: 3.7
-    - env: TOXENV=py35-django21-postgresql
-      python: 3.5
-    - env: TOXENV=py36-django21-postgresql
-      python: 3.6
-    - env: TOXENV=py37-django21-postgresql
-      python: 3.7
-    - env: TOXENV=py35-django21-sqlite
-      python: 3.5
-    - env: TOXENV=py36-django21-sqlite
-      python: 3.6
-    - env: TOXENV=py37-django21-sqlite
-      python: 3.7
-    - env: TOXENV=py35-django22-postgresql
-      python: 3.5
-    - env: TOXENV=py36-django22-postgresql
-      python: 3.6
-    - env: TOXENV=py37-django22-postgresql
-      python: 3.7
-    - env: TOXENV=py35-django22-sqlite
-      python: 3.5
-    - env: TOXENV=py36-django22-sqlite
-      python: 3.6
-    - env: TOXENV=py37-django22-sqlite
-      python: 3.7
-    - env: TOXENV=py35-django30-postgresql
-      python: 3.5
-    - env: TOXENV=py36-django30-postgresql
-      python: 3.6
-    - env: TOXENV=py37-django30-postgresql
-      python: 3.7
-    - env: TOXENV=py35-django30-sqlite
-      python: 3.5
-    - env: TOXENV=py36-django30-sqlite
-      python: 3.6
-    - env: TOXENV=py37-django30-sqlite
-      python: 3.7
-  allow_failures:
-    - env: TOXENV=py35-django30-postgresql
-      python: 3.5
-    - env: TOXENV=py36-django30-postgresql
-      python: 3.6
-    - env: TOXENV=py37-django30-postgresql
-      python: 3.7
-    - env: TOXENV=py35-django30-sqlite
-      python: 3.5
-    - env: TOXENV=py36-django30-sqlite
-      python: 3.6
-    - env: TOXENV=py37-django30-sqlite
 before_install:
   - sudo apt-get update && sudo apt-get build-dep python-imaging
   - sudo service postgresql restart
