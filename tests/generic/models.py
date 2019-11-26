@@ -14,7 +14,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 
 from .fields import (
-    CustomFieldWithGenerator, CustomFieldWithoutGenerator, FakeListField, CustomForeignKey
+    CustomFieldWithGenerator,
+    CustomFieldWithoutGenerator,
+    FakeListField,
+    CustomForeignKey,
 )
 from model_bakery.timezone import smart_datetime as datetime
 
@@ -32,18 +35,15 @@ else:
     from django.db import models
 
 GENDER_CHOICES = [
-    ('M', 'male'),
-    ('F', 'female'),
-    ('N', 'non-binary'),
+    ("M", "male"),
+    ("F", "female"),
+    ("N", "non-binary"),
 ]
 
 OCCUPATION_CHOICES = (
-    ('Service Industry', (
-        ('waitress', 'Waitress'),
-        ('bartender', 'Bartender'))),
-    ('Education', (
-        ('teacher', 'Teacher'),
-        ('principal', 'Principal'))))
+    ("Service Industry", (("waitress", "Waitress"), ("bartender", "Bartender"))),
+    ("Education", (("teacher", "Teacher"), ("principal", "Principal"))),
+)
 
 TEST_TIME = base_datetime.datetime(2014, 7, 21, 15, 39, 58, 457698)
 
@@ -57,7 +57,9 @@ class Profile(models.Model):
 
 
 class User(models.Model):
-    profile = models.ForeignKey(Profile, blank=True, null=True, on_delete=models.CASCADE)
+    profile = models.ForeignKey(
+        Profile, blank=True, null=True, on_delete=models.CASCADE
+    )
 
 
 class PaymentBill(models.Model):
@@ -87,7 +89,12 @@ class Person(models.Model):
 
     try:
         from django.contrib.postgres.fields import ArrayField, HStoreField, JSONField
-        from django.contrib.postgres.fields.citext import CICharField, CIEmailField, CITextField
+        from django.contrib.postgres.fields.citext import (
+            CICharField,
+            CIEmailField,
+            CITextField,
+        )
+
         acquaintances = ArrayField(models.IntegerField())
         data = JSONField()
         hstore_data = HStoreField()
@@ -111,12 +118,12 @@ class Person(models.Model):
 
 class Dog(models.Model):
     class Meta:
-        order_with_respect_to = 'owner'
+        order_with_respect_to = "owner"
 
-    owner = models.ForeignKey('Person', on_delete=models.CASCADE)
+    owner = models.ForeignKey("Person", on_delete=models.CASCADE)
     breed = models.CharField(max_length=50)
     created = models.DateTimeField(auto_now_add=True)
-    friends_with = models.ManyToManyField('Dog')
+    friends_with = models.ManyToManyField("Dog")
 
 
 class GuardDog(Dog):
@@ -125,8 +132,8 @@ class GuardDog(Dog):
 
 class Home(models.Model):
     address = models.CharField(max_length=200)
-    owner = models.ForeignKey('Person', on_delete=models.CASCADE)
-    dogs = models.ManyToManyField('Dog')
+    owner = models.ForeignKey("Person", on_delete=models.CASCADE)
+    dogs = models.ManyToManyField("Dog")
 
 
 class LonelyPerson(models.Model):
@@ -135,14 +142,17 @@ class LonelyPerson(models.Model):
 
 class RelatedNamesModel(models.Model):
     name = models.CharField(max_length=256)
-    one_to_one = models.OneToOneField(Person, related_name='one_related', on_delete=models.CASCADE)
-    foreign_key = models.ForeignKey(Person, related_name='fk_related', on_delete=models.CASCADE)
+    one_to_one = models.OneToOneField(
+        Person, related_name="one_related", on_delete=models.CASCADE
+    )
+    foreign_key = models.ForeignKey(
+        Person, related_name="fk_related", on_delete=models.CASCADE
+    )
 
 
 class ModelWithOverridedSave(Dog):
-
     def save(self, *args, **kwargs):
-        self.owner = kwargs.pop('owner')
+        self.owner = kwargs.pop("owner")
         return super(ModelWithOverridedSave, self).save(*args, **kwargs)
 
 
@@ -152,9 +162,11 @@ class Classroom(models.Model):
 
 
 class Store(models.Model):
-    customers = models.ManyToManyField(Person, related_name='favorite_stores')
-    employees = models.ManyToManyField(Person, related_name='employers')
-    suppliers = models.ManyToManyField(Person, related_name='suppliers', blank=True, null=True)
+    customers = models.ManyToManyField(Person, related_name="favorite_stores")
+    employees = models.ManyToManyField(Person, related_name="employers")
+    suppliers = models.ManyToManyField(
+        Person, related_name="suppliers", blank=True, null=True
+    )
 
 
 class DummyEmptyModel(models.Model):
@@ -194,7 +206,7 @@ class UnsupportedModel(models.Model):
 class DummyGenericForeignKeyModel(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey("content_type", "object_id")
 
 
 class DummyGenericRelationModel(models.Model):
@@ -203,9 +215,7 @@ class DummyGenericRelationModel(models.Model):
 
 class DummyNullFieldsModel(models.Model):
     null_foreign_key = models.ForeignKey(
-        'DummyBlankFieldsModel',
-        null=True,
-        on_delete=models.CASCADE
+        "DummyBlankFieldsModel", null=True, on_delete=models.CASCADE
     )
     null_integer_field = models.IntegerField(null=True)
 
@@ -217,17 +227,18 @@ class DummyBlankFieldsModel(models.Model):
 
 class DummyDefaultFieldsModel(models.Model):
     default_id = models.AutoField(primary_key=True)
-    default_char_field = models.CharField(max_length=50, default='default')
-    default_text_field = models.TextField(default='default')
+    default_char_field = models.CharField(max_length=50, default="default")
+    default_text_field = models.TextField(default="default")
     default_int_field = models.IntegerField(default=123)
     default_float_field = models.FloatField(default=123.0)
-    default_date_field = models.DateField(default='2012-01-01')
+    default_date_field = models.DateField(default="2012-01-01")
     default_date_time_field = models.DateTimeField(default=datetime(2012, 1, 1))
-    default_time_field = models.TimeField(default='00:00:00')
-    default_decimal_field = models.DecimalField(max_digits=5, decimal_places=2,
-                                                default=Decimal('0'))
-    default_email_field = models.EmailField(default='foo@bar.org')
-    default_slug_field = models.SlugField(default='a-slug')
+    default_time_field = models.TimeField(default="00:00:00")
+    default_decimal_field = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal("0")
+    )
+    default_email_field = models.EmailField(default="foo@bar.org")
+    default_slug_field = models.SlugField(default="a-slug")
 
 
 class DummyFileFieldModel(models.Model):
@@ -236,9 +247,12 @@ class DummyFileFieldModel(models.Model):
 
 
 if has_pil:
+
     class DummyImageFieldModel(models.Model):
         fs = FileSystemStorage(location=gettempdir())
         image_field = models.ImageField(upload_to="%Y/%m/%d", storage=fs)
+
+
 else:
     # doesn't matter, won't be using
     class DummyImageFieldModel(models.Model):
@@ -256,7 +270,7 @@ class Ambiguous(models.Model):
 
 class School(models.Model):
     name = models.CharField(max_length=10)
-    students = models.ManyToManyField(Person, through='SchoolEnrollment')
+    students = models.ManyToManyField(Person, through="SchoolEnrollment")
 
 
 class SchoolEnrollment(models.Model):
@@ -278,7 +292,9 @@ class CustomFieldWithoutGeneratorModel(models.Model):
 
 
 class CustomForeignKeyWithGeneratorModel(models.Model):
-    custom_fk = CustomForeignKey(Profile, blank=True, null=True, on_delete=models.CASCADE)
+    custom_fk = CustomForeignKey(
+        Profile, blank=True, null=True, on_delete=models.CASCADE
+    )
 
 
 class DummyUniqueIntegerFieldModel(models.Model):
@@ -289,7 +305,7 @@ class ModelWithNext(models.Model):
     attr = models.CharField(max_length=10)
 
     def next(self):
-        return 'foo'
+        return "foo"
 
 
 class BaseModelForNext(models.Model):
@@ -311,10 +327,7 @@ class MovieManager(models.Manager):
         We want to test whether this annotation has been run after
         calling baker.make().
         """
-        return (
-            super(MovieManager, self).get_queryset()
-            .annotate(name=models.F('title'))
-        )
+        return super(MovieManager, self).get_queryset().annotate(name=models.F("title"))
 
 
 class MovieWithAnnotation(Movie):
@@ -322,14 +335,16 @@ class MovieWithAnnotation(Movie):
 
 
 class CastMember(models.Model):
-    movie = models.ForeignKey(Movie, related_name='cast_members', on_delete=models.CASCADE)
+    movie = models.ForeignKey(
+        Movie, related_name="cast_members", on_delete=models.CASCADE
+    )
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
 
 
 class DummyGenericIPAddressFieldModel(models.Model):
-    ipv4_field = models.GenericIPAddressField(protocol='IPv4')
-    ipv6_field = models.GenericIPAddressField(protocol='IPv6')
-    ipv46_field = models.GenericIPAddressField(protocol='both')
+    ipv4_field = models.GenericIPAddressField(protocol="IPv4")
+    ipv6_field = models.GenericIPAddressField(protocol="IPv6")
+    ipv46_field = models.GenericIPAddressField(protocol="both")
 
 
 class AbstractModel(models.Model):

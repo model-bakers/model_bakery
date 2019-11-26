@@ -8,17 +8,20 @@ from django.db.models.signals import m2m_changed
 
 from model_bakery import baker
 from model_bakery import random_gen
-from model_bakery.exceptions import ModelNotFound, AmbiguousModelName, InvalidQuantityException
+from model_bakery.exceptions import (
+    ModelNotFound,
+    AmbiguousModelName,
+    InvalidQuantityException,
+)
 from model_bakery.timezone import smart_datetime
 
 from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
 
 
-class TestsModelFinder():
-
+class TestsModelFinder:
     def test_unicode_regression(self):
-        obj = baker.prepare('generic.Person')
+        obj = baker.prepare("generic.Person")
         assert isinstance(obj, models.Person)
 
     def test_model_class(self):
@@ -26,38 +29,37 @@ class TestsModelFinder():
         assert isinstance(obj, models.Person)
 
     def test_app_model_string(self):
-        obj = baker.prepare('generic.Person')
+        obj = baker.prepare("generic.Person")
         assert isinstance(obj, models.Person)
 
     def test_model_string(self):
-        obj = baker.prepare('Person')
+        obj = baker.prepare("Person")
         assert isinstance(obj, models.Person)
 
     def test_raise_on_ambiguous_model_string(self):
         with pytest.raises(AmbiguousModelName):
-            baker.prepare('Ambiguous')
+            baker.prepare("Ambiguous")
 
     def test_raise_model_not_found(self):
         with pytest.raises(ModelNotFound):
-            baker.Baker('non_existing.Model')
+            baker.Baker("non_existing.Model")
 
         with pytest.raises(ModelNotFound):
-            baker.Baker('NonExistingModel')
+            baker.Baker("NonExistingModel")
 
 
 @pytest.mark.django_db
-class TestsBakerCreatesSimpleModel():
-
+class TestsBakerCreatesSimpleModel:
     def test_consider_real_django_fields_only(self):
-        id_ = models.ModelWithImpostorField._meta.get_field('id')
-        with patch.object(baker.Baker, 'get_fields') as mock:
+        id_ = models.ModelWithImpostorField._meta.get_field("id")
+        with patch.object(baker.Baker, "get_fields") as mock:
             f = Manager()
-            f.name = 'foo'
+            f.name = "foo"
             mock.return_value = [id_, f]
             try:
                 baker.make(models.ModelWithImpostorField)
             except TypeError:
-                assert False, 'TypeError raised'
+                assert False, "TypeError raised"
 
     def test_make_should_create_one_object(self):
         person = baker.make(models.Person)
@@ -75,16 +77,16 @@ class TestsBakerCreatesSimpleModel():
         assert person.id is None
 
     def test_non_abstract_model_creation(self):
-        person = baker.make(models.NonAbstractPerson, name='bob', happy=False)
+        person = baker.make(models.NonAbstractPerson, name="bob", happy=False)
         assert isinstance(person, models.NonAbstractPerson)
-        assert 'bob' == person.name
+        assert "bob" == person.name
         assert person.happy is False
 
     def test_abstract_model_subclass_creation(self):
         instance = baker.make(models.SubclassOfAbstract)
         assert isinstance(instance, models.SubclassOfAbstract)
         assert isinstance(instance, models.AbstractModel)
-        assert isinstance(instance.name, type(u''))
+        assert isinstance(instance.name, type(u""))
         assert len(instance.name) == 30
         assert isinstance(instance.height, int)
 
@@ -98,8 +100,7 @@ class TestsBakerCreatesSimpleModel():
 
 
 @pytest.mark.django_db
-class TestsBakerRepeatedCreatesSimpleModel():
-
+class TestsBakerRepeatedCreatesSimpleModel:
     def test_make_should_create_objects_respecting_quantity_parameter(self):
         people = baker.make(models.Person, _quantity=5)
         assert models.Person.objects.count() == 5
@@ -133,8 +134,7 @@ class TestsBakerRepeatedCreatesSimpleModel():
 
 
 @pytest.mark.django_db
-class TestBakerPrepareSavingRelatedInstances():
-
+class TestBakerPrepareSavingRelatedInstances:
     def test_default_behaviour_for_and_fk(self):
         dog = baker.prepare(models.Dog)
 
@@ -172,8 +172,7 @@ class TestBakerPrepareSavingRelatedInstances():
 
 
 @pytest.mark.django_db
-class TestBakerCreatesAssociatedModels():
-
+class TestBakerCreatesAssociatedModels:
     def test_dependent_models_with_ForeignKey(self):
         dog = baker.make(models.Dog)
         assert isinstance(dog.owner, models.Person)
@@ -206,30 +205,22 @@ class TestBakerCreatesAssociatedModels():
         assert dog.created
 
     def test_attrs_on_related_model_through_parent(self):
-        baker.make(models.GuardDog, owner__name='john')
+        baker.make(models.GuardDog, owner__name="john")
         for person in models.Person.objects.all():
-            assert person.name == 'john'
+            assert person.name == "john"
 
     def test_access_related_name_of_m2m(self):
         try:
             baker.make(models.Person, classroom_set=[baker.make(models.Classroom)])
         except TypeError:
-            assert False, 'type error raised'
+            assert False, "type error raised"
 
     def test_save_object_instances_when_handling_one_to_many_relations(self):
         owner = baker.make(models.Person)
-        dogs_set = baker.prepare(
-            models.Dog,
-            owner=owner,
-            _quantity=2,
-        )
+        dogs_set = baker.prepare(models.Dog, owner=owner, _quantity=2,)
 
         assert 0 == models.Dog.objects.count()  # ensure there're no dogs in our db
-        home = baker.make(
-            models.Home,
-            owner=owner,
-            dogs=dogs_set,
-        )
+        home = baker.make(models.Home, owner=owner, dogs=dogs_set,)
         assert home.dogs.count() == 2
         assert 2 == models.Dog.objects.count()  # dogs in dogs_set were created
 
@@ -296,37 +287,37 @@ class TestBakerCreatesAssociatedModels():
         def test_m2m_changed(*args, **kwargs):
             self.m2m_changed_fired = True
 
-        m2m_changed.connect(test_m2m_changed, dispatch_uid='test_m2m_changed')
+        m2m_changed.connect(test_m2m_changed, dispatch_uid="test_m2m_changed")
         baker.make(models.Store, make_m2m=True)
         assert self.m2m_changed_fired
 
     def test_simple_creating_person_with_parameters(self):
-        kid = baker.make(models.Person, happy=True, age=10, name='Mike')
+        kid = baker.make(models.Person, happy=True, age=10, name="Mike")
         assert kid.age == 10
         assert kid.happy is True
-        assert kid.name == 'Mike'
+        assert kid.name == "Mike"
 
     def test_creating_person_from_factory_using_paramters(self):
         person_baker_ = baker.Baker(models.Person)
-        person = person_baker_.make(happy=False, age=20, gender='M', name='John')
+        person = person_baker_.make(happy=False, age=20, gender="M", name="John")
         assert person.age == 20
         assert person.happy is False
-        assert person.name == 'John'
-        assert person.gender == 'M'
+        assert person.name == "John"
+        assert person.gender == "M"
 
     def test_ForeignKey_model_field_population(self):
-        dog = baker.make(models.Dog, breed='X1', owner__name='Bob')
-        assert 'X1' == dog.breed
-        assert 'Bob' == dog.owner.name
+        dog = baker.make(models.Dog, breed="X1", owner__name="Bob")
+        assert "X1" == dog.breed
+        assert "Bob" == dog.owner.name
 
     def test_ForeignKey_model_field_population_should_work_with_prepare(self):
-        dog = baker.prepare(models.Dog, breed='X1', owner__name='Bob')
-        assert 'X1' == dog.breed
-        assert 'Bob' == dog.owner.name
+        dog = baker.prepare(models.Dog, breed="X1", owner__name="Bob")
+        assert "X1" == dog.breed
+        assert "Bob" == dog.owner.name
 
     def test_ForeignKey_model_field_population_for_not_required_fk(self):
         user = baker.make(models.User, profile__email="a@b.com")
-        assert 'a@b.com' == user.profile.email
+        assert "a@b.com" == user.profile.email
 
     def test_does_not_creates_null_ForeignKey(self):
         user = baker.make(models.User)
@@ -338,46 +329,43 @@ class TestBakerCreatesAssociatedModels():
 
     def test_ensure_recursive_ForeignKey_population(self):
         bill = baker.make(models.PaymentBill, user__profile__email="a@b.com")
-        assert 'a@b.com' == bill.user.profile.email
+        assert "a@b.com" == bill.user.profile.email
 
     def test_field_lookup_for_m2m_relationship(self):
-        store = baker.make(models.Store, suppliers__gender='M')
+        store = baker.make(models.Store, suppliers__gender="M")
         suppliers = store.suppliers.all()
         assert suppliers
         for supplier in suppliers:
-            assert 'M' == supplier.gender
+            assert "M" == supplier.gender
 
     def test_field_lookup_for_one_to_one_relationship(self):
-        lonely_person = baker.make(models.LonelyPerson, only_friend__name='Bob')
-        assert 'Bob' == lonely_person.only_friend.name
+        lonely_person = baker.make(models.LonelyPerson, only_friend__name="Bob")
+        assert "Bob" == lonely_person.only_friend.name
 
     def test_allow_create_fkey_related_model(self):
         try:
-            person = baker.make(models.Person, dog_set=[baker.make(models.Dog),
-                                                        baker.make(models.Dog)])
+            person = baker.make(
+                models.Person, dog_set=[baker.make(models.Dog), baker.make(models.Dog)]
+            )
         except TypeError:
-            assert False, 'type error raised'
+            assert False, "type error raised"
 
         assert person.dog_set.count() == 2
 
     def test_field_lookup_for_related_field(self):
         person = baker.make(
-            models.Person,
-            one_related__name='Foo',
-            fk_related__name='Bar',
+            models.Person, one_related__name="Foo", fk_related__name="Bar",
         )
 
         assert person.pk
         assert person.one_related.pk
         assert 1, person.fk_related.count()
-        assert 'Foo' == person.one_related.name
-        assert 'Bar' == person.fk_related.get().name
+        assert "Foo" == person.one_related.name
+        assert "Bar" == person.fk_related.get().name
 
     def test_field_lookup_for_related_field_does_not_work_with_prepare(self):
         person = baker.prepare(
-            models.Person,
-            one_related__name='Foo',
-            fk_related__name='Bar',
+            models.Person, one_related__name="Foo", fk_related__name="Bar",
         )
 
         assert not person.pk
@@ -385,41 +373,38 @@ class TestBakerCreatesAssociatedModels():
 
 
 @pytest.mark.django_db
-class TestHandlingUnsupportedModels():
-
+class TestHandlingUnsupportedModels:
     def test_unsupported_model_raises_an_explanatory_exception(self):
         try:
             baker.make(models.UnsupportedModel)
             assert False, "Should have raised a TypeError"
         except TypeError as e:
-            assert 'not supported' in repr(e)
+            assert "not supported" in repr(e)
 
 
 @pytest.mark.django_db
-class TestHandlingModelsWithGenericRelationFields():
-
+class TestHandlingModelsWithGenericRelationFields:
     def test_create_model_with_generic_relation(self):
         dummy = baker.make(models.DummyGenericRelationModel)
         assert isinstance(dummy, models.DummyGenericRelationModel)
 
 
 @pytest.mark.django_db
-class TestHandlingContentTypeField():
+class TestHandlingContentTypeField:
     def test_create_model_with_contenttype_field(self):
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
 
 
 @pytest.mark.django_db
-class TestHandlingContentTypeFieldNoQueries():
+class TestHandlingContentTypeFieldNoQueries:
     def test_create_model_with_contenttype_field(self):
         dummy = baker.prepare(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
 
 
 @pytest.mark.django_db
-class TestSkipNullsTestCase():
-
+class TestSkipNullsTestCase:
     def test_skip_null(self):
         dummy = baker.make(models.DummyNullFieldsModel)
         assert dummy.null_foreign_key is None
@@ -427,53 +412,58 @@ class TestSkipNullsTestCase():
 
 
 @pytest.mark.django_db
-class TestFillNullsTestCase():
-
+class TestFillNullsTestCase:
     def test_create_nullable_many_to_many_if_flagged_and_fill_field_optional(self):
-        classroom = baker.make(models.Classroom, make_m2m=True, _fill_optional=[
-            'students'])
+        classroom = baker.make(
+            models.Classroom, make_m2m=True, _fill_optional=["students"]
+        )
         assert classroom.students.count() == 5
 
     def test_create_nullable_many_to_many_if_flagged_and_fill_optional(self):
         classroom = baker.make(models.Classroom, make_m2m=True, _fill_optional=True)
         assert classroom.students.count() == 5
 
-    def test_nullable_many_to_many_is_not_created_if_not_flagged_and_fill_optional(self):
+    def test_nullable_many_to_many_is_not_created_if_not_flagged_and_fill_optional(
+        self,
+    ):
         classroom = baker.make(models.Classroom, make_m2m=False, _fill_optional=True)
         assert classroom.students.count() == 0
 
 
 @pytest.mark.django_db
-class TestSkipBlanksTestCase():
-
+class TestSkipBlanksTestCase:
     def test_skip_blank(self):
         dummy = baker.make(models.DummyBlankFieldsModel)
-        assert dummy.blank_char_field == ''
-        assert dummy.blank_text_field == ''
+        assert dummy.blank_char_field == ""
+        assert dummy.blank_text_field == ""
 
 
 @pytest.mark.django_db
-class TestFillBlanksTestCase():
-
+class TestFillBlanksTestCase:
     def test_fill_field_optional(self):
-        dummy = baker.make(models.DummyBlankFieldsModel, _fill_optional=['blank_char_field'])
+        dummy = baker.make(
+            models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
+        )
         assert len(dummy.blank_char_field) == 50
 
     def test_fill_wrong_field(self):
         with pytest.raises(AttributeError) as exc_info:
-            baker.make(models.DummyBlankFieldsModel, _fill_optional=['blank_char_field', 'wrong'])
+            baker.make(
+                models.DummyBlankFieldsModel,
+                _fill_optional=["blank_char_field", "wrong"],
+            )
 
         msg = "_fill_optional field(s) ['wrong'] are not related to model DummyBlankFieldsModel"
         assert msg in str(exc_info.value)
 
     def test_fill_wrong_fields_with_parent(self):
         with pytest.raises(AttributeError):
-            baker.make(models.SubclassOfAbstract, _fill_optional=['name', 'wrong'])
+            baker.make(models.SubclassOfAbstract, _fill_optional=["name", "wrong"])
 
     def test_fill_many_optional(self):
         dummy = baker.make(
             models.DummyBlankFieldsModel,
-            _fill_optional=['blank_char_field', 'blank_text_field']
+            _fill_optional=["blank_char_field", "blank_text_field"],
         )
         assert len(dummy.blank_text_field) == 300
 
@@ -488,8 +478,7 @@ class TestFillBlanksTestCase():
 
 
 @pytest.mark.django_db
-class TestFillAutoFieldsTestCase():
-
+class TestFillAutoFieldsTestCase:
     def test_fill_autofields_with_provided_value(self):
         baker.make(models.DummyEmptyModel, id=237)
         saved_dummy = models.DummyEmptyModel.objects.get()
@@ -504,40 +493,36 @@ class TestFillAutoFieldsTestCase():
 
 
 @pytest.mark.django_db
-class TestSkipDefaultsTestCase():
-
+class TestSkipDefaultsTestCase:
     def test_skip_fields_with_default(self):
         dummy = baker.make(models.DummyDefaultFieldsModel)
-        assert dummy.default_char_field == 'default'
-        assert dummy.default_text_field == 'default'
+        assert dummy.default_char_field == "default"
+        assert dummy.default_text_field == "default"
         assert dummy.default_int_field == 123
         assert dummy.default_float_field == 123.0
-        assert dummy.default_date_field == '2012-01-01'
+        assert dummy.default_date_field == "2012-01-01"
         assert dummy.default_date_time_field == smart_datetime(2012, 1, 1)
-        assert dummy.default_time_field == '00:00:00'
-        assert dummy.default_decimal_field == Decimal('0')
-        assert dummy.default_email_field == 'foo@bar.org'
-        assert dummy.default_slug_field == 'a-slug'
+        assert dummy.default_time_field == "00:00:00"
+        assert dummy.default_decimal_field == Decimal("0")
+        assert dummy.default_email_field == "foo@bar.org"
+        assert dummy.default_slug_field == "a-slug"
 
 
 @pytest.mark.django_db
-class TestBakerHandlesModelWithNext():
-
+class TestBakerHandlesModelWithNext:
     def test_creates_instance_for_model_with_next(self):
         instance = baker.make(
-            models.BaseModelForNext,
-            fk=baker.make(models.ModelWithNext),
+            models.BaseModelForNext, fk=baker.make(models.ModelWithNext),
         )
 
         assert instance.id
         assert instance.fk.id
         assert instance.fk.attr
-        assert 'foo' == instance.fk.next()
+        assert "foo" == instance.fk.next()
 
 
 @pytest.mark.django_db
-class TestBakerHandlesModelWithList():
-
+class TestBakerHandlesModelWithList:
     def test_creates_instance_for_model_with_list(self):
         instance = baker.make(models.BaseModelForList, fk=["foo"])
 
@@ -546,58 +531,56 @@ class TestBakerHandlesModelWithList():
 
 
 @pytest.mark.django_db
-class TestBakerGeneratesIPAdresses():
-
+class TestBakerGeneratesIPAdresses:
     def test_create_model_with_valid_ips(self):
         form_data = {
-            'ipv4_field': random_gen.gen_ipv4(),
-            'ipv6_field': random_gen.gen_ipv6(),
-            'ipv46_field': random_gen.gen_ipv46(),
+            "ipv4_field": random_gen.gen_ipv4(),
+            "ipv6_field": random_gen.gen_ipv6(),
+            "ipv46_field": random_gen.gen_ipv46(),
         }
         assert DummyGenericIPAddressFieldForm(form_data).is_valid()
 
 
 @pytest.mark.django_db
-class TestBakerAllowsSaveParameters():
-
+class TestBakerAllowsSaveParameters:
     def test_allows_save_kwargs_on_baker_make(self):
         owner = baker.make(models.Person)
-        dog = baker.make(models.ModelWithOverridedSave, _save_kwargs={'owner': owner})
+        dog = baker.make(models.ModelWithOverridedSave, _save_kwargs={"owner": owner})
         assert owner == dog.owner
 
         dog1, dog2 = baker.make(
-            models.ModelWithOverridedSave,
-            _save_kwargs={'owner': owner},
-            _quantity=2
+            models.ModelWithOverridedSave, _save_kwargs={"owner": owner}, _quantity=2
         )
         assert owner == dog1.owner
         assert owner == dog2.owner
 
 
 @pytest.mark.django_db
-class TestBakerAutomaticallyRefreshFromDB():
-
+class TestBakerAutomaticallyRefreshFromDB:
     def test_refresh_from_db_if_true(self):
-        person = baker.make(models.Person, birthday='2017-02-01', _refresh_after_create=True)
+        person = baker.make(
+            models.Person, birthday="2017-02-01", _refresh_after_create=True
+        )
 
         assert person.birthday == datetime.date(2017, 2, 1)
 
     def test_do_not_refresh_from_db_if_false(self):
-        person = baker.make(models.Person, birthday='2017-02-01', _refresh_after_create=False)
+        person = baker.make(
+            models.Person, birthday="2017-02-01", _refresh_after_create=False
+        )
 
-        assert person.birthday == '2017-02-01'
+        assert person.birthday == "2017-02-01"
         assert person.birthday != datetime.date(2017, 2, 1)
 
     def test_do_not_refresh_from_db_by_default(self):
-        person = baker.make(models.Person, birthday='2017-02-01')
+        person = baker.make(models.Person, birthday="2017-02-01")
 
-        assert person.birthday == '2017-02-01'
+        assert person.birthday == "2017-02-01"
         assert person.birthday != datetime.date(2017, 2, 1)
 
 
 @pytest.mark.django_db
-class TestBakerMakeCanFetchInstanceFromDefaultManager():
-
+class TestBakerMakeCanFetchInstanceFromDefaultManager:
     def test_annotation_within_manager_get_queryset_are_run_on_make(self):
         """A custom model Manager can be used within make().
 
@@ -613,8 +596,6 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager():
             movie.name
 
         movie = baker.make(
-            models.MovieWithAnnotation,
-            title='Old Boy',
-            _from_manager='objects',
+            models.MovieWithAnnotation, title="Old Boy", _from_manager="objects",
         )
         assert movie.title == movie.name
