@@ -130,8 +130,7 @@ class TestDefiningRecipes:
         assert person.appointment == recipe_attrs["appointment"]
         assert person.blog == recipe_attrs["blog"]
         assert person.wanted_games_qtd == recipe_attrs["wanted_games_qtd"]
-        if person.id is not None:
-            raise ValueError
+        assert person.id is None
 
     def test_make_recipe_without_all_model_needed_data(self):
         person_recipe = Recipe(Person, name="John Doe")
@@ -278,8 +277,7 @@ class TestExecutingRecipes:
         assert len(people) == 3
         for person in people:
             assert isinstance(person, Person)
-            if person.id is not None:
-                raise ValueError
+            assert person.id is None
 
     def test_prepare_recipe_with_quantity_parameter_respection_model_args(self):
         people = baker.prepare_recipe(
