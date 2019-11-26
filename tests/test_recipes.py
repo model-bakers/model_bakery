@@ -1,7 +1,7 @@
 import pytest
 import itertools
 
-# from random import choice
+from random import choice
 from decimal import Decimal
 from unittest.mock import patch
 
