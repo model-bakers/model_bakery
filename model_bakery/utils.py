@@ -12,7 +12,7 @@ def import_from_str(import_string):
     this method imports it; else it just return the object.
     """
     if isinstance(import_string, str):
-        path, field_name = import_string.rsplit('.', 1)
+        path, field_name = import_string.rsplit(".", 1)
         module = importlib.import_module(path)
         return getattr(module, field_name)
     else:
@@ -20,7 +20,7 @@ def import_from_str(import_string):
 
 
 def seq(value, increment_by=1):
-    if type(value) in [datetime.datetime, datetime.date,  datetime.time]:
+    if type(value) in [datetime.datetime, datetime.date, datetime.time]:
         if type(value) is datetime.date:
             date = datetime.datetime.combine(value, datetime.datetime.now().time())
         elif type(value) is datetime.time:
