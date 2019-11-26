@@ -8,6 +8,8 @@ jobs:
   include:
     - env: TOXENV=flake8
       python: 3.7
+    - env: TOXENV=black
+      python: 3.7
     - env: TOXENV=py35-django111-{postgresql,sqlite}
       python: 3.5
     - env: TOXENV=py36-django111-{postgresql,sqlite}
