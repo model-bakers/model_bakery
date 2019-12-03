@@ -8,13 +8,16 @@ dist: xenial
 branches:
   only:
   - master
+before_install:
+  - sudo apt-get update && sudo apt-get build-dep python-imaging
+  - sudo service postgresql restart
 install:
   - pip install tox-travis
 addons:
-  postgresql: "11"
+  postgresql: "10"
   apt:
     packages:
-    - postgresql-11-postgis-2.5
+    - postgresql-10-postgis-2.5
 services:
   - postgresql
 before_script:
@@ -22,4 +25,4 @@ before_script:
   - psql template1 -c "create extension postgis;"
   - psql template1 -c "create extension citext;"
 script:
-  - tox
+  - tox -v
