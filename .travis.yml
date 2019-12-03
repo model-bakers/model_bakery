@@ -8,9 +8,6 @@ dist: xenial
 branches:
   only:
   - master
-before_install:
-  - sudo apt-get update && sudo apt-get build-dep python-imaging
-  - sudo service postgresql restart
 install:
   - pip install tox-travis
 addons:
