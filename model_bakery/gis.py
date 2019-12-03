@@ -5,7 +5,7 @@ BAKER_GIS = apps.is_installed("django.contrib.gis")
 
 default_gis_mapping = {}
 
-__all__ = ['BAKER_GIS', 'default_gis_mapping']
+__all__ = ["BAKER_GIS", "default_gis_mapping"]
 
 if BAKER_GIS:
     from . import random_gen

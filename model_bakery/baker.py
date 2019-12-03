@@ -7,24 +7,35 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from django.db.models.base import ModelBase
 from django.db.models import (
-    ForeignKey, ManyToManyField, OneToOneField, Field, AutoField, BooleanField, FileField
+    ForeignKey,
+    ManyToManyField,
+    OneToOneField,
+    Field,
+    AutoField,
+    BooleanField,
+    FileField,
 )
-from django.db.models.fields.related import \
-    ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor
+from django.db.models.fields.related import (
+    ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
+)
 from django.db.models.fields.proxy import OrderWrt
 
 from . import generators, random_gen
 from .exceptions import (
-    ModelNotFound, AmbiguousModelName, InvalidQuantityException, RecipeIteratorEmpty,
-    CustomBakerNotFound, InvalidCustomBaker
+    ModelNotFound,
+    AmbiguousModelName,
+    InvalidQuantityException,
+    RecipeIteratorEmpty,
+    CustomBakerNotFound,
+    InvalidCustomBaker,
 )
 from .utils import import_from_str
 
 recipes = None
 
 # FIXME: use pkg_resource
-mock_file_jpeg = join(dirname(__file__), 'mock_img.jpeg')
-mock_file_txt = join(dirname(__file__), 'mock_file.txt')
+mock_file_jpeg = join(dirname(__file__), "mock_img.jpeg")
+mock_file_txt = join(dirname(__file__), "mock_file.txt")
 
 MAX_MANY_QUANTITY = 5
 
@@ -33,8 +44,15 @@ def _valid_quantity(quantity):
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
 
-def make(_model, _quantity=None, make_m2m=False, _save_kwargs=None, _refresh_after_create=False,
-         _create_files=False, **attrs):
+def make(
+    _model,
+    _quantity=None,
+    make_m2m=False,
+    _save_kwargs=None,
+    _refresh_after_create=False,
+    _create_files=False,
+    **attrs
+):
     """Create a persisted instance from a given model its associated models.
 
     It fill the fields with random values or you can specify which
@@ -55,9 +73,7 @@ def make(_model, _quantity=None, make_m2m=False, _save_kwargs=None, _refresh_aft
             for _ in range(_quantity)
         ]
     return baker.make(
-        _save_kwargs=_save_kwargs,
-        _refresh_after_create=_refresh_after_create,
-        **attrs
+        _save_kwargs=_save_kwargs, _refresh_after_create=_refresh_after_create, **attrs
     )
 
 
@@ -72,14 +88,17 @@ def prepare(_model, _quantity=None, _save_related=False, **attrs):
         raise InvalidQuantityException
 
     if _quantity:
-        return [baker.prepare(_save_related=_save_related, **attrs) for i in range(_quantity)]
+        return [
+            baker.prepare(_save_related=_save_related, **attrs)
+            for i in range(_quantity)
+        ]
     else:
         return baker.prepare(_save_related=_save_related, **attrs)
 
 
 def _recipe(name):
-    app, recipe_name = name.rsplit('.', 1)
-    return import_from_str('.'.join((app, 'baker_recipes', recipe_name)))
+    app, recipe_name = name.rsplit(".", 1)
+    return import_from_str(".".join((app, "baker_recipes", recipe_name)))
 
 
 def make_recipe(baker_recipe_name, _quantity=None, **new_attrs):
@@ -88,9 +107,7 @@ def make_recipe(baker_recipe_name, _quantity=None, **new_attrs):
 
 def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new_attrs):
     return _recipe(baker_recipe_name).prepare(
-        _quantity=_quantity,
-        _save_related=_save_related,
-        **new_attrs
+        _quantity=_quantity, _save_related=_save_related, **new_attrs
     )
 
 
@@ -111,8 +128,8 @@ class ModelFinder(object):
 
         """
         try:
-            if '.' in name:
-                app_label, model_name = name.split('.')
+            if "." in name:
+                app_label, model_name = name.split(".")
                 model = apps.get_model(app_label, model_name)
             else:
                 model = self.get_model_by_name(name)
@@ -136,8 +153,10 @@ class ModelFinder(object):
             self._populate()
 
         if name in self._ambiguous_models:
-            raise AmbiguousModelName('%s is a model in more than one app. '
-                                     'Use the form "app.model".' % name.title())
+            raise AmbiguousModelName(
+                "%s is a model in more than one app. "
+                'Use the form "app.model".' % name.title()
+            )
 
         return self._unique_models.get(name)
 
@@ -163,10 +182,10 @@ class ModelFinder(object):
 
 
 def is_iterator(value):
-    if not hasattr(value, '__iter__'):
+    if not hasattr(value, "__iter__"):
         return False
 
-    return hasattr(value, '__next__')
+    return hasattr(value, "__next__")
 
 
 def _custom_baker_class():
@@ -177,22 +196,25 @@ def _custom_baker_class():
         settings, or None if no custom class is defined.
 
     """
-    custom_class_string = getattr(settings, 'BAKER_CUSTOM_CLASS', None)
+    custom_class_string = getattr(settings, "BAKER_CUSTOM_CLASS", None)
     if custom_class_string is None:
         return None
 
     try:
         baker_class = import_from_str(custom_class_string)
 
-        for required_function_name in ['make', 'prepare']:
+        for required_function_name in ["make", "prepare"]:
             if not hasattr(baker_class, required_function_name):
                 raise InvalidCustomBaker(
-                    'Custom Baker classes must have a "%s" function' % required_function_name
+                    'Custom Baker classes must have a "%s" function'
+                    % required_function_name
                 )
 
         return baker_class
     except ImportError:
-        raise CustomBakerNotFound("Could not find custom baker class '%s'" % custom_class_string)
+        raise CustomBakerNotFound(
+            "Could not find custom baker class '%s'" % custom_class_string
+        )
 
 
 class Baker(object):
@@ -227,7 +249,7 @@ class Baker(object):
 
     def init_type_mapping(self):
         self.type_mapping = generators.get_type_mapping()
-        generators_from_settings = getattr(settings, 'BAKER_CUSTOM_FIELDS_GEN', {})
+        generators_from_settings = getattr(settings, "BAKER_CUSTOM_FIELDS_GEN", {})
         for k, v in generators_from_settings.items():
             field_class = import_from_str(k)
             generator = import_from_str(v)
@@ -242,11 +264,11 @@ class Baker(object):
     ):
         """Create and persist an instance of the model associated with Baker instance."""
         params = {
-            'commit': True,
-            'commit_related': True,
-            '_save_kwargs': _save_kwargs,
-            '_refresh_after_create': _refresh_after_create,
-            '_from_manager': _from_manager,
+            "commit": True,
+            "commit_related": True,
+            "_save_kwargs": _save_kwargs,
+            "_refresh_after_create": _refresh_after_create,
+            "_from_manager": _from_manager,
         }
         params.update(attrs)
         return self._make(**params)
@@ -283,16 +305,22 @@ class Baker(object):
                 else:
                     self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
             elif field.name not in self.model_attrs:
-                if not isinstance(field, ForeignKey) or \
-                        '{0}_id'.format(field.name) not in self.model_attrs:
-                    self.model_attrs[field.name] = self.generate_value(field, commit_related)
+                if (
+                    not isinstance(field, ForeignKey)
+                    or "{0}_id".format(field.name) not in self.model_attrs
+                ):
+                    self.model_attrs[field.name] = self.generate_value(
+                        field, commit_related
+                    )
             elif callable(self.model_attrs[field.name]):
                 self.model_attrs[field.name] = self.model_attrs[field.name]()
             elif field.name in self.iterator_attrs:
                 try:
                     self.model_attrs[field.name] = next(self.iterator_attrs[field.name])
                 except StopIteration:
-                    raise RecipeIteratorEmpty('{0} iterator is empty.'.format(field.name))
+                    raise RecipeIteratorEmpty(
+                        "{0} iterator is empty.".format(field.name)
+                    )
 
         instance = self.instance(
             self.model_attrs,
@@ -347,14 +375,15 @@ class Baker(object):
 
         kwargs = filter_rel_attrs(rel_name, **self.rel_attrs)
         kwargs[related.field.name] = instance
-        kwargs['_model'] = related.field.model
+        kwargs["_model"] = related.field.model
 
         make(**kwargs)
 
     def _clean_attrs(self, attrs):
         def is_rel_field(x):
-            return '__' in x
-        self.fill_in_optional = attrs.pop('_fill_optional', False)
+            return "__" in x
+
+        self.fill_in_optional = attrs.pop("_fill_optional", False)
         # error for non existing fields
         if isinstance(self.fill_in_optional, (tuple, list, set)):
             # parents and relations
@@ -363,13 +392,15 @@ class Baker(object):
             )
             if wrong_fields:
                 raise AttributeError(
-                    '_fill_optional field(s) %s are not related to model %s'
+                    "_fill_optional field(s) %s are not related to model %s"
                     % (list(wrong_fields), self.model.__name__)
                 )
         self.iterator_attrs = dict((k, v) for k, v in attrs.items() if is_iterator(v))
         self.model_attrs = dict((k, v) for k, v in attrs.items() if not is_rel_field(k))
         self.rel_attrs = dict((k, v) for k, v in attrs.items() if is_rel_field(k))
-        self.rel_fields = [x.split('__')[0] for x in self.rel_attrs.keys() if is_rel_field(x)]
+        self.rel_fields = [
+            x.split("__")[0] for x in self.rel_attrs.keys() if is_rel_field(x)
+        ]
 
     def _skip_field(self, field):
         # check for fill optional argument
@@ -388,22 +419,26 @@ class Baker(object):
         if isinstance(field, (AutoField, GenericRelation, OrderWrt)):
             return True
 
-        if all([
-            field.name not in self.model_attrs,
-            field.name not in self.rel_fields,
-            field.name not in self.attr_mapping
-        ]):
+        if all(
+            [
+                field.name not in self.model_attrs,
+                field.name not in self.rel_fields,
+                field.name not in self.attr_mapping,
+            ]
+        ):
             # Django is quirky in that BooleanFields are always "blank",
             # but have no default.
             if not field.fill_optional and (
-                not issubclass(field.__class__, Field) or
-                field.has_default() or
-                (field.blank and not isinstance(field, BooleanField))
+                not issubclass(field.__class__, Field)
+                or field.has_default()
+                or (field.blank and not isinstance(field, BooleanField))
             ):
                 return True
 
         if field.name not in self.model_attrs:
-            if field.name not in self.rel_fields and (field.null and not field.fill_optional):
+            if field.name not in self.rel_fields and (
+                field.null and not field.fill_optional
+            ):
                 return True
 
         return False
@@ -433,7 +468,7 @@ class Baker(object):
                 for value in values:
                     base_kwargs = {
                         m2m_relation.source_field_name: instance,
-                        m2m_relation.target_field_name: value
+                        m2m_relation.target_field_name: value,
                     }
                     make(through_model, **base_kwargs)
 
@@ -455,10 +490,11 @@ class Baker(object):
         """
         if field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
-        elif getattr(field, 'choices'):
+        elif getattr(field, "choices"):
             generator = random_gen.gen_from_choices(field.choices)
-        elif isinstance(field, ForeignKey) and \
-                issubclass(self._remote_field(field).model, ContentType):
+        elif isinstance(field, ForeignKey) and issubclass(
+            self._remote_field(field).model, ContentType
+        ):
             generator = self.type_mapping[ContentType]
         elif generators.get(field.__class__):
             generator = generators.get(field.__class__)
@@ -467,7 +503,7 @@ class Baker(object):
         elif field.has_default():
             return field.default
         else:
-            raise TypeError('%s is not supported by baker.' % field.__class__)
+            raise TypeError("%s is not supported by baker." % field.__class__)
 
         # attributes like max_length, decimal_places are taken into account when
         # generating the value.
@@ -477,7 +513,7 @@ class Baker(object):
             generator_attrs.update(filter_rel_attrs(field.name, **self.rel_attrs))
 
         if not commit:
-            generator = getattr(generator, 'prepare', generator)
+            generator = getattr(generator, "prepare", generator)
         return generator(**generator_attrs)
 
 
@@ -490,7 +526,7 @@ def get_required_values(generator, field):
     """
     # FIXME: avoid abbreviations
     rt = {}
-    if hasattr(generator, 'required'):
+    if hasattr(generator, "required"):
         for item in generator.required:
 
             if callable(item):  # baker can deal with the nasty hacking too!
@@ -501,8 +537,11 @@ def get_required_values(generator, field):
                 rt[item] = getattr(field, item)
 
             else:
-                raise ValueError("Required value '%s' is of wrong type. \
-                                  Don't make baker sad." % str(item))
+                raise ValueError(
+                    "Required value '%s' is of wrong type. \
+                                  Don't make baker sad."
+                    % str(item)
+                )
 
     return rt
 
@@ -511,9 +550,9 @@ def filter_rel_attrs(field_name, **rel_attrs):
     clean_dict = {}
 
     for k, v in rel_attrs.items():
-        if k.startswith(field_name + '__'):
-            splitted_key = k.split('__')
-            key = '__'.join(splitted_key[1:])
+        if k.startswith(field_name + "__"):
+            splitted_key = k.split("__")
+            key = "__".join(splitted_key[1:])
             clean_dict[key] = v
         else:
             clean_dict[k] = v

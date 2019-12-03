@@ -18,9 +18,9 @@ class Recipe(object):
         self._iterator_backups = {}
 
     def _mapping(self, new_attrs):
-        _save_related = new_attrs.get('_save_related', True)
-        rel_fields_attrs = dict((k, v) for k, v in new_attrs.items() if '__' in k)
-        new_attrs = dict((k, v) for k, v in new_attrs.items() if '__' not in k)
+        _save_related = new_attrs.get("_save_related", True)
+        rel_fields_attrs = dict((k, v) for k, v in new_attrs.items() if "__" in k)
+        new_attrs = dict((k, v) for k, v in new_attrs.items() if "__" not in k)
         mapping = self.attr_mapping.copy()
         for k, v in self.attr_mapping.items():
             # do not generate values if field value is provided
@@ -39,7 +39,7 @@ class Recipe(object):
             elif isinstance(v, RecipeForeignKey):
                 a = {}
                 for key, value in list(rel_fields_attrs.items()):
-                    if key.startswith('%s__' % k):
+                    if key.startswith("%s__" % k):
                         a[key] = rel_fields_attrs.pop(key)
                 recipe_attrs = baker.filter_rel_attrs(k, **a)
                 if _save_related:
@@ -56,7 +56,7 @@ class Recipe(object):
         return baker.make(self._model, **self._mapping(attrs))
 
     def prepare(self, **attrs):
-        defaults = {'_save_related': False}
+        defaults = {"_save_related": False}
         defaults.update(attrs)
         return baker.prepare(self._model, **self._mapping(defaults))
 
@@ -67,7 +67,6 @@ class Recipe(object):
 
 
 class RecipeForeignKey(object):
-
     def __init__(self, recipe):
         if isinstance(recipe, Recipe):
             self.recipe = recipe
@@ -80,7 +79,7 @@ class RecipeForeignKey(object):
             else:
                 raise RecipeNotFound
         else:
-            raise TypeError('Not a recipe')
+            raise TypeError("Not a recipe")
 
 
 def foreign_key(recipe):
@@ -107,7 +106,7 @@ class related(object):  # FIXME
                 else:
                     raise RecipeNotFound
             else:
-                raise TypeError('Not a recipe')
+                raise TypeError("Not a recipe")
 
     def make(self):
         """Persist objects to m2m relation."""

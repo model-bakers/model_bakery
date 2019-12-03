@@ -15,3 +15,7 @@ repos:
     rev: 4.0.1
     hooks:
     -   id: pydocstyle
+-   repo: https://github.com/ambv/black
+    rev: stable
+    hooks:
+    -   id: black

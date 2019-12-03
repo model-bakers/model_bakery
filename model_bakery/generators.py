@@ -1,10 +1,32 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import (
-    BigIntegerField, BinaryField, BooleanField, CharField, DateField, DateTimeField, DecimalField,
-    DurationField, EmailField, FileField, FloatField, ForeignKey, GenericIPAddressField,
-    ImageField, IntegerField, IPAddressField, ManyToManyField, NullBooleanField, OneToOneField,
-    PositiveIntegerField, PositiveSmallIntegerField, SlugField, SmallIntegerField, TextField,
-    TimeField, URLField, UUIDField
+    BigIntegerField,
+    BinaryField,
+    BooleanField,
+    CharField,
+    DateField,
+    DateTimeField,
+    DecimalField,
+    DurationField,
+    EmailField,
+    FileField,
+    FloatField,
+    ForeignKey,
+    GenericIPAddressField,
+    ImageField,
+    IntegerField,
+    IPAddressField,
+    ManyToManyField,
+    NullBooleanField,
+    OneToOneField,
+    PositiveIntegerField,
+    PositiveSmallIntegerField,
+    SlugField,
+    SmallIntegerField,
+    TextField,
+    TimeField,
+    URLField,
+    UUIDField,
 )
 
 from . import random_gen
@@ -27,7 +49,11 @@ except ImportError:
     HStoreField = None
 
 try:
-    from django.contrib.postgres.fields.citext import CICharField, CIEmailField, CITextField
+    from django.contrib.postgres.fields.citext import (
+        CICharField,
+        CIEmailField,
+        CITextField,
+    )
 except ImportError:
     CICharField = None
     CIEmailField = None
@@ -38,29 +64,23 @@ default_mapping = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
-
     BooleanField: random_gen.gen_boolean,
     NullBooleanField: random_gen.gen_boolean,
     IntegerField: random_gen.gen_integer,
     BigIntegerField: random_gen.gen_integer,
     SmallIntegerField: random_gen.gen_integer,
-
     PositiveIntegerField: lambda: random_gen.gen_integer(min_int=0),
     PositiveSmallIntegerField: lambda: random_gen.gen_integer(min_int=0),
-
     FloatField: random_gen.gen_float,
     DecimalField: random_gen.gen_decimal,
-
     BinaryField: random_gen.gen_byte_string,
     CharField: random_gen.gen_string,
     TextField: random_gen.gen_text,
     SlugField: random_gen.gen_slug,
     UUIDField: random_gen.gen_uuid,
-
     DateField: random_gen.gen_date,
     DateTimeField: random_gen.gen_datetime,
     TimeField: random_gen.gen_time,
-
     URLField: random_gen.gen_url,
     EmailField: random_gen.gen_email,
     IPAddressField: random_gen.gen_ipv4,
@@ -68,7 +88,6 @@ default_mapping = {
     FileField: random_gen.gen_file_field,
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
-
     ContentType: random_gen.gen_content_type,
 }
 

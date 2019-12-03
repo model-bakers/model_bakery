@@ -1,9 +1,10 @@
 -r requirements.txt
+black
 pillow
 pre-commit
 pytest
 pytest-django
 sphinx
 tox
-wheel
 twine==2.0.0
+wheel

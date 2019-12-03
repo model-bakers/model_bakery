@@ -10,6 +10,7 @@ try:
     from django.conf import settings
     from django.utils.timezone import now, utc
 except ImportError:
+
     def now():
         return datetime.now()
 

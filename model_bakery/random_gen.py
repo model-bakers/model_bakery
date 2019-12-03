@@ -26,20 +26,21 @@ MAX_INT = 10000
 
 def get_content_file(content, name):
     from django.core.files.base import ContentFile
+
     return ContentFile(content, name=name)
 
 
 def gen_file_field():
-    name = 'mock_file.txt'
+    name = "mock_file.txt"
     file_path = abspath(join(dirname(__file__), name))
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         return get_content_file(f.read(), name=name)
 
 
 def gen_image_field():
-    name = 'mock_img.jpeg'
+    name = "mock_img.jpeg"
     file_path = abspath(join(dirname(__file__), name))
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         return get_content_file(f.read(), name=name)
 
 
@@ -81,15 +82,17 @@ def gen_float():
 
 def gen_decimal(max_digits, decimal_places):
     def num_as_str(x):
-        return ''.join([str(randint(0, 9)) for _ in range(x)])
+        return "".join([str(randint(0, 9)) for _ in range(x)])
 
     if decimal_places:
-        return Decimal("%s.%s" % (num_as_str(max_digits - decimal_places - 1),
-                                  num_as_str(decimal_places)))
+        return Decimal(
+            "%s.%s"
+            % (num_as_str(max_digits - decimal_places - 1), num_as_str(decimal_places))
+        )
     return Decimal(num_as_str(max_digits))
 
 
-gen_decimal.required = ['max_digits', 'decimal_places']
+gen_decimal.required = ["max_digits", "decimal_places"]
 
 
 def gen_date():
@@ -105,18 +108,18 @@ def gen_time():
 
 
 def gen_string(max_length):
-    return str(''.join(choice(string.ascii_letters) for _ in range(max_length)))
+    return str("".join(choice(string.ascii_letters) for _ in range(max_length)))
 
 
-gen_string.required = ['max_length']
+gen_string.required = ["max_length"]
 
 
 def gen_slug(max_length):
-    valid_chars = string.ascii_letters + string.digits + '_-'
-    return str(''.join(choice(valid_chars) for _ in range(max_length)))
+    valid_chars = string.ascii_letters + string.digits + "_-"
+    return str("".join(choice(valid_chars) for _ in range(max_length)))
 
 
-gen_slug.required = ['max_length']
+gen_slug.required = ["max_length"]
 
 
 def gen_text():
@@ -132,7 +135,7 @@ def gen_null_boolean():
 
 
 def gen_url():
-    return str('http://www.%s.com/' % gen_string(30))
+    return str("http://www.%s.com/" % gen_string(30))
 
 
 def gen_email():
@@ -140,7 +143,7 @@ def gen_email():
 
 
 def gen_ipv6():
-    return ":".join(format(randint(1, 65535), 'x') for _ in range(8))
+    return ":".join(format(randint(1, 65535), "x") for _ in range(8))
 
 
 def gen_ipv4():
@@ -154,12 +157,13 @@ def gen_ipv46():
 
 def gen_ip(protocol, default_validators):
     from django.core.exceptions import ValidationError
-    protocol = (protocol or '').lower()
+
+    protocol = (protocol or "").lower()
 
     if not protocol:
         field_validator = default_validators[0]
-        dummy_ipv4 = '1.1.1.1'
-        dummy_ipv6 = 'FE80::0202:B3FF:FE1E:8329'
+        dummy_ipv4 = "1.1.1.1"
+        dummy_ipv6 = "FE80::0202:B3FF:FE1E:8329"
         try:
             field_validator(dummy_ipv4)
             field_validator(dummy_ipv6)
@@ -170,9 +174,9 @@ def gen_ip(protocol, default_validators):
                 generator = gen_ipv4
             except ValidationError:
                 generator = gen_ipv6
-    elif protocol == 'ipv4':
+    elif protocol == "ipv4":
         generator = gen_ipv4
-    elif protocol == 'ipv6':
+    elif protocol == "ipv6":
         generator = gen_ipv6
     else:
         generator = gen_ipv46
@@ -180,7 +184,7 @@ def gen_ip(protocol, default_validators):
     return generator()
 
 
-gen_ip.required = ['protocol', 'default_validators']
+gen_ip.required = ["protocol", "default_validators"]
 
 
 def gen_byte_string(max_length=16):
@@ -188,8 +192,9 @@ def gen_byte_string(max_length=16):
     return bytes(generator)
 
 
-def gen_interval(interval_key='milliseconds'):
+def gen_interval(interval_key="milliseconds"):
     from datetime import timedelta
+
     interval = gen_integer()
     kwargs = {interval_key: interval}
     return timedelta(**kwargs)
@@ -198,15 +203,17 @@ def gen_interval(interval_key='milliseconds'):
 def gen_content_type():
     from django.contrib.contenttypes.models import ContentType
     from django.apps import apps
+
     try:
         return ContentType.objects.get_for_model(choice(apps.get_models()))
     except AssertionError:
-        warnings.warn('Database access disabled, returning ContentType raw instance')
+        warnings.warn("Database access disabled, returning ContentType raw instance")
         return ContentType()
 
 
 def gen_uuid():
     import uuid
+
     return uuid.uuid4()
 
 
@@ -224,18 +231,20 @@ def gen_hstore():
 
 def _fk_model(field):
     try:
-        return ('model', field.related_model)
+        return ("model", field.related_model)
     except AttributeError:
-        return ('model', field.related.parent_model)
+        return ("model", field.related.parent_model)
 
 
 def _prepare_related(model, **attrs):
     from .baker import prepare
+
     return prepare(model, **attrs)
 
 
 def gen_related(model, **attrs):
     from .baker import make
+
     return make(model, **attrs)
 
 
@@ -245,6 +254,7 @@ gen_related.prepare = _prepare_related
 
 def gen_m2m(model, **attrs):
     from .baker import make, MAX_MANY_QUANTITY
+
     return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
 
 
@@ -253,65 +263,46 @@ gen_m2m.required = [_fk_model]
 
 # GIS generators
 
+
 def gen_coord():
     return uniform(0, 1)
 
 
 def gen_coords():
-    return '{x} {y}'.format(x=gen_coord(), y=gen_coord())
+    return "{x} {y}".format(x=gen_coord(), y=gen_coord())
 
 
 def gen_point():
-    return 'POINT ({})'.format(
-        gen_coords(),
-    )
+    return "POINT ({})".format(gen_coords(),)
 
 
 def _gen_line_string_without_prefix():
-    return '({}, {})'.format(
-        gen_coords(),
-        gen_coords(),
-    )
+    return "({}, {})".format(gen_coords(), gen_coords(),)
 
 
 def gen_line_string():
-    return 'LINESTRING {}'.format(
-        _gen_line_string_without_prefix()
-    )
+    return "LINESTRING {}".format(_gen_line_string_without_prefix())
 
 
 def _gen_polygon_without_prefix():
     start = gen_coords()
-    return '(({}, {}, {}, {}))'.format(
-        start,
-        gen_coords(),
-        gen_coords(),
-        start
-    )
+    return "(({}, {}, {}, {}))".format(start, gen_coords(), gen_coords(), start)
 
 
 def gen_polygon():
-    return 'POLYGON {}'.format(
-        _gen_polygon_without_prefix(),
-    )
+    return "POLYGON {}".format(_gen_polygon_without_prefix(),)
 
 
 def gen_multi_point():
-    return 'MULTIPOINT (({}))'.format(
-        gen_coords(),
-    )
+    return "MULTIPOINT (({}))".format(gen_coords(),)
 
 
 def gen_multi_line_string():
-    return 'MULTILINESTRING ({})'.format(
-        _gen_line_string_without_prefix(),
-    )
+    return "MULTILINESTRING ({})".format(_gen_line_string_without_prefix(),)
 
 
 def gen_multi_polygon():
-    return 'MULTIPOLYGON ({})'.format(
-        _gen_polygon_without_prefix(),
-    )
+    return "MULTIPOLYGON ({})".format(_gen_polygon_without_prefix(),)
 
 
 def gen_geometry():
@@ -319,6 +310,4 @@ def gen_geometry():
 
 
 def gen_geometry_collection():
-    return 'GEOMETRYCOLLECTION ({})'.format(
-        gen_point(),
-    )
+    return "GEOMETRYCOLLECTION ({})".format(gen_point(),)
