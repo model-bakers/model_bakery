@@ -16,7 +16,7 @@ setuptools.setup(
     license="Apache 2.0",
     description="Smart object creation facility for Django.",
     long_description=open(join(dirname(__file__), "README.md")).read(),
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     keywords="django testing factory python",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
