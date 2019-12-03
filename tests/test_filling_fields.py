@@ -8,7 +8,6 @@ import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
-# from django.core.files import images, File
 from django.db import connection
 from django.db.models import fields, ImageField, FileField
 
