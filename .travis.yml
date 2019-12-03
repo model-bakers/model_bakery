@@ -14,10 +14,10 @@ before_install:
 install:
   - pip install tox-travis
 addons:
-  postgresql: "10"
+  postgresql: "9.6"
   apt:
     packages:
-    - postgresql-10-postgis-2.5
+    - postgresql-9.6-postgis-2.4
 services:
   - postgresql
 before_script:
