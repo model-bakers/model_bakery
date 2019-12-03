@@ -1,44 +1,18 @@
 language: python
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
 cache: pip
 dist: xenial
 branches:
   only:
   - master
-jobs:
-  include:
-    - env: TOXENV=flake8
-      python: 3.7
-    - env: TOXENV=black
-      python: 3.7
-    - env: TOXENV=py35-django111-{postgresql,sqlite}
-      python: 3.5
-    - env: TOXENV=py36-django111-{postgresql,sqlite}
-      python: 3.6
-    - env: TOXENV=py37-django111-{postgresql,sqlite}
-      python: 3.7
-    - env: TOXENV=py35-django20-{postgresql,sqlite}
-      python: 3.5
-    - env: TOXENV=py36-django20-{postgresql,sqlite}
-      python: 3.6
-    - env: TOXENV=py37-django20-{postgresql,sqlite}
-      python: 3.7
-    - env: TOXENV=py35-django21-{postgresql,sqlite}
-      python: 3.5
-    - env: TOXENV=py36-django21-{postgresql,sqlite}
-      python: 3.6
-    - env: TOXENV=py37-django21-{postgresql,sqlite}
-      python: 3.7
-    - env: TOXENV=py35-django22-{postgresql,sqlite}
-      python: 3.5
-    - env: TOXENV=py36-django22-{postgresql,sqlite}
-      python: 3.6
-    - env: TOXENV=py37-django22-{postgresql,sqlite}
-      python: 3.7
 before_install:
   - sudo apt-get update && sudo apt-get build-dep python-imaging
   - sudo service postgresql restart
 install:
-  - pip install tox
+  - pip install tox-travis
 addons:
   postgresql: "9.6"
   apt:
@@ -51,4 +25,4 @@ before_script:
   - psql template1 -c "create extension postgis;"
   - psql template1 -c "create extension citext;"
 script:
-  - tox
+  - tox -v
