@@ -64,14 +64,13 @@ def make(
         raise InvalidQuantityException
 
     if _quantity:
-        return [
+        for _ in range(_quantity):
             baker.make(
                 _save_kwargs=_save_kwargs,
                 _refresh_after_create=_refresh_after_create,
                 **attrs
             )
-            for _ in range(_quantity)
-        ]
+            return True
     return baker.make(
         _save_kwargs=_save_kwargs, _refresh_after_create=_refresh_after_create, **attrs
     )
