@@ -5,7 +5,7 @@ python:
 #  - "3.7"
 #  - "3.8"
 cache: pip
-dist: xenial
+dist: bionic
 branches:
   only:
   - master
