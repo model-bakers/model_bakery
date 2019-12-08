@@ -1,17 +1,14 @@
 language: python
 python:
-#  - "3.5"
+  - "3.5"
   - "3.6"
-#  - "3.7"
-#  - "3.8"
+  - "3.7"
+  - "3.8"
 cache: pip
 dist: bionic
 branches:
   only:
   - master
-before_install:
-#  - sudo apt-get update && sudo apt-get install libgdal-dev
-  - sudo service postgresql restart
 install:
   - pip install tox-travis
 addons:
