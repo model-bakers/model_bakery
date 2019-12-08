@@ -5,6 +5,20 @@ All notable changes to `model_bakery` will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased](https://github.com/model-bakers/model_bakery/tree/master)
+
+### Added
+
+### Changed
+- Improve code comments (https://github.com/model-bakers/model_bakery/pull/31)
+- Switch to tox-travis (https://github.com/model-bakers/model_bakery/pull/43)
+- Add black job (https://github.com/model-bakers/model_bakery/pull/42)
+- README.md instead of rst (https://github.com/model-bakers/model_bakery/pull/44)
+- Add Django 3.0 and Python 3.8 to CI (https://github.com/model-bakers/model_bakery/pull/48/)
+
+### Removed
+- Python 3.5 support ((https://github.com/model-bakers/model_bakery/pull/48/))
+
 ## [1.0.2](https://pypi.org/project/model-bakery/1.0.2/)
 
 ### Added

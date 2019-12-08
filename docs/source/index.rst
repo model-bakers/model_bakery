@@ -21,7 +21,7 @@ As an open source project, Model Bakery welcomes contributions of many forms. Ex
 Compatibility
 =============
 
-model_bakery supports Django >= 1.11 and Python >= 3.5
+model_bakery supports Django >= 1.11 and Python >= 3.6
 
 Install
 =======
