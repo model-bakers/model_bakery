@@ -3,21 +3,19 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8"
 cache: pip
-dist: xenial
+dist: bionic
 branches:
   only:
   - master
-before_install:
-  - sudo apt-get update && sudo apt-get build-dep python-imaging
-  - sudo service postgresql restart
 install:
   - pip install tox-travis
 addons:
-  postgresql: "9.6"
+  postgresql: "10"
   apt:
     packages:
-    - postgresql-9.6-postgis-2.4
+    - postgresql-10-postgis-2.5
 services:
   - postgresql
 before_script:
