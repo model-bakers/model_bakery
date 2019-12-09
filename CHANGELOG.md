@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add Django 3.0 and Python 3.8 to CI (https://github.com/model-bakers/model_bakery/pull/48/)
 
 ### Removed
-- Python 3.5 support ((https://github.com/model-bakers/model_bakery/pull/48/))
 
 ## [1.0.2](https://pypi.org/project/model-bakery/1.0.2/)
 
