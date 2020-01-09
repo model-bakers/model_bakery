@@ -86,6 +86,8 @@ class Person(models.Model):
     wanted_games_qtd = models.BigIntegerField()
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
+    id_document = models.CharField(unique=True, max_length=10)
+
 
     try:
         from django.contrib.postgres.fields import ArrayField, HStoreField, JSONField
