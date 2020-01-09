@@ -88,7 +88,6 @@ class Person(models.Model):
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
 
-
     try:
         from django.contrib.postgres.fields import ArrayField, HStoreField, JSONField
         from django.contrib.postgres.fields.citext import (

@@ -136,26 +136,28 @@ class TestsBakerRepeatedCreatesSimpleModel:
     def test_accepts_generators_with_quantity(self):
         people = baker.make(
             models.Person,
-            name=itertools.cycle(['a', 'b', 'c']),
-            id_document=itertools.cycle(['d1', 'd2', 'd3', 'd4', 'd5']),
-            _quantity=5
+            name=itertools.cycle(["a", "b", "c"]),
+            id_document=itertools.cycle(["d1", "d2", "d3", "d4", "d5"]),
+            _quantity=5,
         )
         assert models.Person.objects.count() == 5
         p1, p2, p3, p4, p5 = models.Person.objects.all()
-        assert 'a' == p1.name
-        assert 'd1' == p1.id_document
-        assert 'b' == p2.name
-        assert 'd2' == p2.id_document
-        assert 'c' == p3.name
-        assert 'd3' == p3.id_document
-        assert 'a' == p4.name
-        assert 'd4' == p4.id_document
-        assert 'b' == p5.name
-        assert 'd5' == p5.id_document
+        assert "a" == p1.name
+        assert "d1" == p1.id_document
+        assert "b" == p2.name
+        assert "d2" == p2.id_document
+        assert "c" == p3.name
+        assert "d3" == p3.id_document
+        assert "a" == p4.name
+        assert "d4" == p4.id_document
+        assert "b" == p5.name
+        assert "d5" == p5.id_document
 
     def test_accepts_generators_with_quantity_for_unique_fields(self):
         people = baker.make(
-            models.DummyUniqueIntegerFieldModel, value=itertools.cycle([1, 2, 3]), _quantity=3
+            models.DummyUniqueIntegerFieldModel,
+            value=itertools.cycle([1, 2, 3]),
+            _quantity=3,
         )
         assert models.DummyUniqueIntegerFieldModel.objects.count() == 3
         num_1, num_2, num_3 = models.DummyUniqueIntegerFieldModel.objects.all()
@@ -165,17 +167,16 @@ class TestsBakerRepeatedCreatesSimpleModel:
 
     def test_generators_work_with_user_model(self):
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
         people = baker.make(
-            User,
-            username=itertools.cycle(['a', 'b', 'c']),
-            _quantity=3
+            User, username=itertools.cycle(["a", "b", "c"]), _quantity=3
         )
         assert User.objects.count() == 3
         u1, u2, u3 = User.objects.all()
-        assert 'a' == u1.username
-        assert 'b' == u2.username
-        assert 'c' == u3.username
+        assert "a" == u1.username
+        assert "b" == u2.username
+        assert "c" == u3.username
 
 
 @pytest.mark.django_db
