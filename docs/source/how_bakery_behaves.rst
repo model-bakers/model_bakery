@@ -95,7 +95,7 @@ Examples:
 .. code-block:: python
 
     # in the module code.path:
-    class CustomBaker(baker.Baker)
+    class CustomBaker(baker.Baker):
         def get_fields(self):
             return [
                 field
