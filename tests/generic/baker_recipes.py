@@ -89,3 +89,9 @@ movie_with_cast = Recipe(
 )
 
 overrided_save = Recipe("generic.ModelWithOverridedSave")
+
+ip_fields = Recipe(
+    "generic.DummyGenericIPAddressFieldModel",
+    ipv4_field=seq("127.0.0.", increment_by=2),
+    ipv6_field=seq("2001:12f8:0:28::", start=4, increment_by=2),
+)

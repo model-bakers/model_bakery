@@ -19,7 +19,7 @@ def import_from_str(import_string):
         return import_string
 
 
-def seq(value, increment_by=1):
+def seq(value, increment_by=1, start=None):
     if type(value) in [datetime.datetime, datetime.date, datetime.time]:
         if type(value) is datetime.date:
             date = datetime.datetime.combine(value, datetime.datetime.now().time())
@@ -39,5 +39,5 @@ def seq(value, increment_by=1):
             else:
                 yield series_date
     else:
-        for n in itertools.count(increment_by, increment_by):
+        for n in itertools.count(start or increment_by, increment_by):
             yield value + type(value)(n)
