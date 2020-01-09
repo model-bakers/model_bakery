@@ -46,7 +46,7 @@ serial_datetime = Recipe(
     DummyDefaultFieldsModel,
     default_date_field=seq(TEST_TIME.date(), timedelta(days=1)),
     default_date_time_field=seq(TEST_TIME, timedelta(hours=3)),
-    default_time_field=seq(TEST_TIME.time(), timedelta(seconds=15)),
+    default_time_field=seq(TEST_TIME.time(), timedelta(seconds=15), start="xpto"),
 )
 
 dog = Recipe(Dog, breed="Pug", owner=foreign_key(person))
