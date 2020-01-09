@@ -245,7 +245,7 @@ Sequences and iterables can be used not only for recipes, but with ``baker.make`
     >>> 'Chad2'
     >>> 'Chad3'
 
-You can also provide an optional ``increment_by`` argument which will modify incrementing behaviour. This can be an integer, float, Decimal or timedelta.
+You can also provide an optional ``increment_by`` argument which will modify incrementing behaviour. This can be an integer, float, Decimal or timedelta. If you want to start your increment differently, you can use the ``start`` argument, only if it's not a sequence for ``date``, ``datetime`` or ``time`` objects.
 
 .. code-block:: python
 
@@ -259,7 +259,8 @@ You can also provide an optional ``increment_by`` argument which will modify inc
         age=seq(15, increment_by=3)
         height_ft=seq(5.5, increment_by=.25)
         # assume today's date is 21/07/2014
-        appointment=seq(date(2014, 7, 21), timedelta(days=1))
+        appointment=seq(date(2014, 7, 21), timedelta(days=1)),
+        name=seq('Custom num: ', increment_by=2, start=5),
     )
 
     customer = baker.make_recipe('shop.customer')
@@ -269,6 +270,8 @@ You can also provide an optional ``increment_by`` argument which will modify inc
     >>> 5.75
     customer.appointment
     >>> datetime.date(2014, 7, 22)
+    customer.name
+    >>> 'Custom num: 5'
 
     new_customer = baker.make_recipe('shop.customer')
     new_customer.age
@@ -277,6 +280,8 @@ You can also provide an optional ``increment_by`` argument which will modify inc
     >>> 6.0
     new_customer.appointment
     >>> datetime.date(2014, 7, 23)
+    customer.name
+    >>> 'Custom num: 7'
 
 Overriding recipe definitions
 -----------------------------
