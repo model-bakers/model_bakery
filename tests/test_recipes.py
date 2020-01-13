@@ -327,7 +327,6 @@ class TestExecutingRecipes:
         assert owner == dog.owner
 
     def test_ip_fields_with_start(self):
-        import ipdb; ipdb.set_trace()
         first, second = baker.make_recipe("tests.generic.ip_fields", _quantity=2)
 
         assert "127.0.0.2" == first.ipv4_field
