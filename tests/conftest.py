@@ -8,6 +8,7 @@ def pytest_configure():
     test_db = os.environ.get("TEST_DB", "sqlite")
     installed_apps = [
         "django.contrib.contenttypes",
+        "django.contrib.auth",
         "tests.generic",
         "tests.ambiguous",
         "tests.ambiguous2",
