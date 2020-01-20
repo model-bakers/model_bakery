@@ -402,9 +402,9 @@ class Baker(object):
         ]
 
     def _skip_field(self, field):
-        # check for fill optional argument
         from django.contrib.contenttypes.fields import GenericRelation
 
+        # check for fill optional argument
         if isinstance(self.fill_in_optional, bool):
             field.fill_optional = self.fill_in_optional
         else:
