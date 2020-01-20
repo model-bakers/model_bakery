@@ -29,7 +29,6 @@ from django.db.models import (
 )
 
 from . import random_gen
-from .gis import default_gis_mapping
 from .utils import import_from_str
 
 try:
@@ -103,13 +102,16 @@ if CITextField:
     default_mapping[CITextField] = random_gen.gen_text
 
 # Add GIS fields
-default_mapping.update(default_gis_mapping)
 
 
 def get_type_mapping():
     from django.contrib.contenttypes.models import ContentType
+    from .gis import default_gis_mapping
+
     mapping = default_mapping.copy()
     mapping[ContentType] = random_gen.gen_content_type
+    default_mapping.update(default_gis_mapping)
+
     return mapping.copy()
 
 
