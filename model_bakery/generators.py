@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import (
     BigIntegerField,
     BinaryField,
@@ -88,7 +87,6 @@ default_mapping = {
     FileField: random_gen.gen_file_field,
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
-    ContentType: random_gen.gen_content_type,
 }
 
 if ArrayField:
@@ -109,7 +107,9 @@ default_mapping.update(default_gis_mapping)
 
 
 def get_type_mapping():
+    from django.contrib.contenttypes.models import ContentType
     mapping = default_mapping.copy()
+    mapping[ContentType] = random_gen.gen_content_type
     return mapping.copy()
 
 

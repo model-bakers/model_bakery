@@ -1,9 +1,8 @@
 from os.path import dirname, join
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
+from django.contrib import contenttypes
 from django.apps import apps
-from django.contrib.contenttypes.fields import GenericRelation
 
 from django.db.models.base import ModelBase
 from django.db.models import (
@@ -404,6 +403,8 @@ class Baker(object):
 
     def _skip_field(self, field):
         # check for fill optional argument
+        from django.contrib.contenttypes.fields import GenericRelation
+
         if isinstance(self.fill_in_optional, bool):
             field.fill_optional = self.fill_in_optional
         else:
@@ -493,9 +494,9 @@ class Baker(object):
         elif getattr(field, "choices"):
             generator = random_gen.gen_from_choices(field.choices)
         elif isinstance(field, ForeignKey) and issubclass(
-            self._remote_field(field).model, ContentType
+            self._remote_field(field).model, contenttypes.models.ContentType
         ):
-            generator = self.type_mapping[ContentType]
+            generator = self.type_mapping[contenttypes.models.ContentType]
         elif generators.get(field.__class__):
             generator = generators.get(field.__class__)
         elif field.__class__ in self.type_mapping:
