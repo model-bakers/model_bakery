@@ -29,6 +29,7 @@ def pytest_configure():
         ] + installed_apps
     else:
         raise NotImplementedError("Tests for % are not supported", test_db)
+
     settings.configure(
         DATABASES={"default": {"ENGINE": db_engine, "NAME": db_name}},
         INSTALLED_APPS=installed_apps,
@@ -37,4 +38,9 @@ def pytest_configure():
         MIDDLEWARE=(),
         USE_TZ=os.environ.get("USE_TZ", False),
     )
+
+    from model_bakery import baker
+
+    baker.generators.add("tests.generic.fields.CustomFieldWithGenerator", None)
+
     django.setup()
