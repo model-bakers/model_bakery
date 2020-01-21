@@ -1,6 +1,7 @@
 import importlib
 import datetime
 import itertools
+import warnings
 
 from .timezone import tz_aware
 
@@ -19,14 +20,19 @@ def import_from_str(import_string):
         return import_string
 
 
-def seq(value, increment_by=1):
+def seq(value, increment_by=1, start=None):
     if type(value) in [datetime.datetime, datetime.date, datetime.time]:
+        if start:
+            msg = "start parameter is ignored when using seq with date, time or datetime objects"
+            warnings.warn(msg)
+
         if type(value) is datetime.date:
             date = datetime.datetime.combine(value, datetime.datetime.now().time())
         elif type(value) is datetime.time:
             date = datetime.datetime.combine(datetime.date.today(), value)
         else:
             date = value
+
         # convert to epoch time
         start = (date - datetime.datetime(1970, 1, 1)).total_seconds()
         increment_by = increment_by.total_seconds()
@@ -39,5 +45,5 @@ def seq(value, increment_by=1):
             else:
                 yield series_date
     else:
-        for n in itertools.count(increment_by, increment_by):
+        for n in itertools.count(start or increment_by, increment_by):
             yield value + type(value)(n)

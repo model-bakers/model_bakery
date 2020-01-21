@@ -326,6 +326,14 @@ class TestExecutingRecipes:
         )
         assert owner == dog.owner
 
+    def test_ip_fields_with_start(self):
+        first, second = baker.make_recipe("tests.generic.ip_fields", _quantity=2)
+
+        assert "127.0.0.2" == first.ipv4_field
+        assert "2001:12f8:0:28::4" == first.ipv6_field
+        assert "127.0.0.4" == second.ipv4_field
+        assert "2001:12f8:0:28::6" == second.ipv6_field
+
 
 @pytest.mark.django_db
 class TestForeignKey:
