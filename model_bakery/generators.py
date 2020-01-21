@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
     BigIntegerField,
     BinaryField,
@@ -60,17 +61,27 @@ except ImportError:
     CITextField = None
 
 
+def _make_integer_gen_by_range(field_type):
+    min_int, max_int = (
+        BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
+    )
+
+    def gen_integer():
+        return random_gen.gen_integer(min_int=min_int, max_int=max_int)
+    return gen_integer
+
+
 default_mapping = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
     BooleanField: random_gen.gen_boolean,
     NullBooleanField: random_gen.gen_boolean,
-    IntegerField: random_gen.gen_integer,
-    BigIntegerField: random_gen.gen_integer,
-    SmallIntegerField: random_gen.gen_integer,
-    PositiveIntegerField: lambda: random_gen.gen_integer(min_int=0),
-    PositiveSmallIntegerField: lambda: random_gen.gen_integer(min_int=0),
+    IntegerField: _make_integer_gen_by_range(IntegerField),
+    BigIntegerField: _make_integer_gen_by_range(BigIntegerField),
+    SmallIntegerField: _make_integer_gen_by_range(SmallIntegerField),
+    PositiveIntegerField: _make_integer_gen_by_range(PositiveIntegerField),
+    PositiveSmallIntegerField: _make_integer_gen_by_range(PositiveSmallIntegerField),
     FloatField: random_gen.gen_float,
     DecimalField: random_gen.gen_decimal,
     BinaryField: random_gen.gen_byte_string,
