@@ -42,7 +42,8 @@ def pytest_configure():
     from model_bakery import baker
 
     def gen_same_text():
-        return 'always the same text'
+        return "always the same text"
+
     baker.generators.add("tests.generic.fields.CustomFieldViaSettings", gen_same_text)
 
     django.setup()
