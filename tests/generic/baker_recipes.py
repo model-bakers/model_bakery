@@ -46,7 +46,7 @@ serial_datetime = Recipe(
     DummyDefaultFieldsModel,
     default_date_field=seq(TEST_TIME.date(), timedelta(days=1)),
     default_date_time_field=seq(TEST_TIME, timedelta(hours=3)),
-    default_time_field=seq(TEST_TIME.time(), timedelta(seconds=15)),
+    default_time_field=seq(TEST_TIME.time(), timedelta(seconds=15), start="xpto"),
 )
 
 dog = Recipe(Dog, breed="Pug", owner=foreign_key(person))
@@ -89,3 +89,9 @@ movie_with_cast = Recipe(
 )
 
 overrided_save = Recipe("generic.ModelWithOverridedSave")
+
+ip_fields = Recipe(
+    "generic.DummyGenericIPAddressFieldModel",
+    ipv4_field=seq("127.0.0.", increment_by=2),
+    ipv6_field=seq("2001:12f8:0:28::", start=4, increment_by=2),
+)
