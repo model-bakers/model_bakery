@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add black job (https://github.com/model-bakers/model_bakery/pull/42)
 - README.md instead of rst (https://github.com/model-bakers/model_bakery/pull/44)
 - Add Django 3.0 and Python 3.8 to CI (https://github.com/model-bakers/model_bakery/pull/48/)
+- The different IntegerField types now will generate values on their min/max range (https://github.com/model-bakers/model_bakery/pull/59)
 
 ### Removed
 
