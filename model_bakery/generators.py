@@ -62,12 +62,11 @@ except ImportError:
 
 
 def _make_integer_gen_by_range(field_type):
-    min_int, max_int = (
-        BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
-    )
+    min_int, max_int = BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
 
     def gen_integer():
         return random_gen.gen_integer(min_int=min_int, max_int=max_int)
+
     return gen_integer
 
 
