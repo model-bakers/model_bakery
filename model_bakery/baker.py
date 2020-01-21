@@ -489,13 +489,15 @@ class Baker(object):
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
         model.
         """
+        is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
+            self._remote_field(field).model, contenttypes.models.ContentType
+        )
+
         if field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
         elif getattr(field, "choices"):
             generator = random_gen.gen_from_choices(field.choices)
-        elif isinstance(field, ForeignKey) and issubclass(
-            self._remote_field(field).model, contenttypes.models.ContentType
-        ):
+        elif is_content_type_fk:
             generator = self.type_mapping[contenttypes.models.ContentType]
         elif generators.get(field.__class__):
             generator = generators.get(field.__class__)
