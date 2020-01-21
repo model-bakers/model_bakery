@@ -35,6 +35,18 @@ from .gis import default_gis_mapping
 from .utils import import_from_str
 
 try:
+    from django.db.models import AutoField, BigAutoField, SmallAutoField
+except ImportError:
+    AutoField = None
+    BigAutoField = None
+    SmallAutoField = None
+
+try:
+    from django.db.models import PositiveBigIntegerField
+except ImportError:
+    PositiveBigIntegerField = None
+
+try:
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
     ArrayField = None
@@ -113,6 +125,17 @@ if CIEmailField:
     default_mapping[CIEmailField] = random_gen.gen_email
 if CITextField:
     default_mapping[CITextField] = random_gen.gen_text
+if AutoField:
+    default_mapping[AutoField] = _make_integer_gen_by_range(AutoField)
+if BigAutoField:
+    default_mapping[BigAutoField] = _make_integer_gen_by_range(BigAutoField)
+if SmallAutoField:
+    default_mapping[SmallAutoField] = _make_integer_gen_by_range(SmallAutoField)
+if PositiveBigIntegerField:
+    default_mapping[PositiveBigIntegerField] = _make_integer_gen_by_range(
+        PositiveBigIntegerField
+    )
+
 
 # Add GIS fields
 default_mapping.update(default_gis_mapping)
