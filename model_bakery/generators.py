@@ -1,3 +1,4 @@
+from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
     BigIntegerField,
     BinaryField,
@@ -32,6 +33,18 @@ from . import random_gen
 from .utils import import_from_str
 
 try:
+    from django.db.models import AutoField, BigAutoField, SmallAutoField
+except ImportError:
+    AutoField = None
+    BigAutoField = None
+    SmallAutoField = None
+
+try:
+    from django.db.models import PositiveBigIntegerField
+except ImportError:
+    PositiveBigIntegerField = None
+
+try:
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
     ArrayField = None
@@ -58,17 +71,26 @@ except ImportError:
     CITextField = None
 
 
+def _make_integer_gen_by_range(field_type):
+    min_int, max_int = BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
+
+    def gen_integer():
+        return random_gen.gen_integer(min_int=min_int, max_int=max_int)
+
+    return gen_integer
+
+
 default_mapping = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
     BooleanField: random_gen.gen_boolean,
     NullBooleanField: random_gen.gen_boolean,
-    IntegerField: random_gen.gen_integer,
-    BigIntegerField: random_gen.gen_integer,
-    SmallIntegerField: random_gen.gen_integer,
-    PositiveIntegerField: lambda: random_gen.gen_integer(min_int=0),
-    PositiveSmallIntegerField: lambda: random_gen.gen_integer(min_int=0),
+    IntegerField: _make_integer_gen_by_range(IntegerField),
+    BigIntegerField: _make_integer_gen_by_range(BigIntegerField),
+    SmallIntegerField: _make_integer_gen_by_range(SmallIntegerField),
+    PositiveIntegerField: _make_integer_gen_by_range(PositiveIntegerField),
+    PositiveSmallIntegerField: _make_integer_gen_by_range(PositiveSmallIntegerField),
     FloatField: random_gen.gen_float,
     DecimalField: random_gen.gen_decimal,
     BinaryField: random_gen.gen_byte_string,
@@ -100,6 +122,17 @@ if CIEmailField:
     default_mapping[CIEmailField] = random_gen.gen_email
 if CITextField:
     default_mapping[CITextField] = random_gen.gen_text
+if AutoField:
+    default_mapping[AutoField] = _make_integer_gen_by_range(AutoField)
+if BigAutoField:
+    default_mapping[BigAutoField] = _make_integer_gen_by_range(BigAutoField)
+if SmallAutoField:
+    default_mapping[SmallAutoField] = _make_integer_gen_by_range(SmallAutoField)
+if PositiveBigIntegerField:
+    default_mapping[PositiveBigIntegerField] = _make_integer_gen_by_range(
+        PositiveBigIntegerField
+    )
+
 
 # Add GIS fields
 

@@ -21,7 +21,7 @@ from model_bakery.timezone import now
 MAX_LENGTH = 300
 # Using sys.maxint here breaks a bunch of tests when running against a
 # Postgres database.
-MAX_INT = 10000
+MAX_INT = 100000000000
 
 
 def get_content_file(content, name):
