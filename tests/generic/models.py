@@ -16,6 +16,7 @@ from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKe
 from .fields import (
     CustomFieldWithGenerator,
     CustomFieldWithoutGenerator,
+    CustomFieldViaSettings,
     FakeListField,
     CustomForeignKey,
 )
@@ -290,6 +291,10 @@ class CustomFieldWithGeneratorModel(models.Model):
 
 class CustomFieldWithoutGeneratorModel(models.Model):
     custom_value = CustomFieldWithoutGenerator()
+
+
+class CustomFieldViaSettingsModel(models.Model):
+    custom_value = CustomFieldViaSettings()
 
 
 class CustomForeignKeyWithGeneratorModel(models.Model):

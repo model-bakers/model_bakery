@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
     BigIntegerField,
@@ -31,7 +30,6 @@ from django.db.models import (
 )
 
 from . import random_gen
-from .gis import default_gis_mapping
 from .utils import import_from_str
 
 try:
@@ -110,7 +108,6 @@ default_mapping = {
     FileField: random_gen.gen_file_field,
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
-    ContentType: random_gen.gen_content_type,
 }
 
 if ArrayField:
@@ -138,11 +135,16 @@ if PositiveBigIntegerField:
 
 
 # Add GIS fields
-default_mapping.update(default_gis_mapping)
 
 
 def get_type_mapping():
+    from django.contrib.contenttypes.models import ContentType
+    from .gis import default_gis_mapping
+
     mapping = default_mapping.copy()
+    mapping[ContentType] = random_gen.gen_content_type
+    default_mapping.update(default_gis_mapping)
+
     return mapping.copy()
 
 

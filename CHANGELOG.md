@@ -10,12 +10,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+
 - Improve code comments [PR #31](https://github.com/model-bakers/model_bakery/pull/31)
 - Switch to tox-travis [PR #43](https://github.com/model-bakers/model_bakery/pull/43)
 - Add black job [PR #42](https://github.com/model-bakers/model_bakery/pull/42)
 - README.md instead of rst [PR #44](https://github.com/model-bakers/model_bakery/pull/44)
 - Add Django 3.0 and Python 3.8 to CI [PR #48](https://github.com/model-bakers/model_bakery/pull/48/)
 - Add `start` argument to `baker.seq` [PR #56](https://github.com/model-bakers/model_bakery/pull/56)
+- Fixes bug when registering custom fields generator via `settings.py` [PR #58](https://github.com/model-bakers/model_bakery/pull/58)
 - The different IntegerField types now will generate values on their min/max range [PR #59](https://github.com/model-bakers/model_bakery/pull/59)
 
 ### Removed
