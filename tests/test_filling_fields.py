@@ -334,6 +334,10 @@ class TestFillingCustomFields:
 
         assert "Some value" == person.name
 
+    def test_ensure_adding_generators_via_settings_works(self):
+        obj = baker.make(models.CustomFieldViaSettingsModel)
+        assert "always the same text" == obj.custom_value
+
 
 @pytest.mark.django_db
 class TestFillingAutoFields:

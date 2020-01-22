@@ -9,6 +9,10 @@ class CustomFieldWithoutGenerator(models.TextField):
     pass
 
 
+class CustomFieldViaSettings(models.TextField):
+    pass
+
+
 class FakeListField(models.TextField):
     def to_python(self, value):
         return value.split()
