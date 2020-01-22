@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-<<<<<<< HEAD
 - Improve code comments [PR #31](https://github.com/model-bakers/model_bakery/pull/31)
 - Switch to tox-travis [PR #43](https://github.com/model-bakers/model_bakery/pull/43)
 - Add black job [PR #42](https://github.com/model-bakers/model_bakery/pull/42)
