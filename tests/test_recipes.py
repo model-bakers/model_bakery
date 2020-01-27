@@ -27,7 +27,7 @@ recipe_attrs = {
     "birthday": now().date(),
     "appointment": now(),
     "blog": "http://joe.blogspot.com",
-    "wanted_games_qtd": 4,
+    "days_since_last_login": 4,
     "birth_time": now(),
 }
 person_recipe = Recipe(Person, **recipe_attrs)
@@ -57,7 +57,7 @@ class TestDefiningRecipes:
         assert person.birthday == recipe_attrs["birthday"]
         assert person.appointment == recipe_attrs["appointment"]
         assert person.blog == recipe_attrs["blog"]
-        assert person.wanted_games_qtd == recipe_attrs["wanted_games_qtd"]
+        assert person.days_since_last_login == recipe_attrs["days_since_last_login"]
         assert person.id is not None
 
     def test_flat_model_prepare_recipe_with_the_correct_attributes(self):
@@ -69,7 +69,7 @@ class TestDefiningRecipes:
         assert person.birthday == recipe_attrs["birthday"]
         assert person.appointment == recipe_attrs["appointment"]
         assert person.blog == recipe_attrs["blog"]
-        assert person.wanted_games_qtd == recipe_attrs["wanted_games_qtd"]
+        assert person.days_since_last_login == recipe_attrs["days_since_last_login"]
         assert person.id is None
 
     def test_accepts_callable(self):
@@ -110,7 +110,7 @@ class TestDefiningRecipes:
         assert person.birthday == recipe_attrs["birthday"]
         assert person.appointment == recipe_attrs["appointment"]
         assert person.blog == recipe_attrs["blog"]
-        assert person.wanted_games_qtd == recipe_attrs["wanted_games_qtd"]
+        assert person.days_since_last_login == recipe_attrs["days_since_last_login"]
         assert person.id is not None
 
     def test_prepare_recipes_with_args(self):
@@ -129,7 +129,7 @@ class TestDefiningRecipes:
         assert person.birthday == recipe_attrs["birthday"]
         assert person.appointment == recipe_attrs["appointment"]
         assert person.blog == recipe_attrs["blog"]
-        assert person.wanted_games_qtd == recipe_attrs["wanted_games_qtd"]
+        assert person.days_since_last_login == recipe_attrs["days_since_last_login"]
         assert person.id is None
 
     def test_make_recipe_without_all_model_needed_data(self):
@@ -142,7 +142,7 @@ class TestDefiningRecipes:
         assert person.birthday
         assert person.appointment
         assert person.blog
-        assert person.wanted_games_qtd
+        assert person.days_since_last_login
         assert person.id
 
     def test_prepare_recipe_without_all_model_needed_data(self):
@@ -155,7 +155,7 @@ class TestDefiningRecipes:
         assert person.birthday
         assert person.appointment
         assert person.blog
-        assert person.wanted_games_qtd
+        assert person.days_since_last_login
         assert not person.id
 
     def test_defining_recipes_str(self):

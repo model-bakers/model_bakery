@@ -84,7 +84,7 @@ class Person(models.Model):
     occupation = models.CharField(max_length=10, choices=OCCUPATION_CHOICES)
     uuid = models.UUIDField(primary_key=False)
     name_hash = models.BinaryField(max_length=16)
-    wanted_games_qtd = models.BigIntegerField()
+    days_since_last_login = models.BigIntegerField()
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
