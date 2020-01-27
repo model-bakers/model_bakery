@@ -307,8 +307,8 @@ If you need to reuse and override existent recipe call extend method:
         Customer,
         bio='Some customer bio',
         age=30,
-        happy=True,
+        enjoy_jards_macale=True,
     )
     sad_customer = customer.extend(
-        happy=False,
+        enjoy_jards_macale=False,
     )

@@ -9,11 +9,11 @@ File: **models.py** ::
         """
         Model class Customer of shop app
         """
-        happy = models.BooleanField()
+        enjoy_jards_macale = models.BooleanField()
         name = models.CharField(max_length=30)
         age = models.IntegerField()
         bio = models.TextField()
-        wanted_games_qtd = models.BigIntegerField()
+        days_since_last_login = models.BigIntegerField()
         birthday = models.DateField()
         last_shopping = models.DateTimeField()
 
@@ -66,11 +66,11 @@ File: **models.py** ::
         """
         Model class Customer of shop app
         """
-        happy = models.BooleanField()
+        enjoy_jards_macale = models.BooleanField()
         name = models.CharField(max_length=30)
         age = models.IntegerField()
         bio = models.TextField()
-        wanted_games_qtd = models.BigIntegerField()
+        days_since_last_login = models.BigIntegerField()
         birthday = models.DateField()
         appointment = models.DateTimeField()
 
