@@ -25,7 +25,10 @@ class TeenagerBaker(baker.Baker):
 
 
 class SadPeopleBaker(baker.Baker):
-    attr_mapping = {"happy": gen_opposite, "like_metal_music": gen_opposite}
+    attr_mapping = {
+        "enjoy_jards_macale": gen_opposite,
+        "like_metal_music": gen_opposite,
+    }
 
 
 @pytest.mark.django_db
@@ -46,11 +49,11 @@ class TestLessSimpleExtendBaker:
 
     def test_string_to_generator_required(self):
         gen_opposite.required = ["default"]
-        happy_field = Person._meta.get_field("happy")
+        enjoy_jards_macale_field = Person._meta.get_field("enjoy_jards_macale")
         like_metal_music_field = Person._meta.get_field("like_metal_music")
         sad_people_factory = SadPeopleBaker(Person)
         person = sad_people_factory.make()
-        assert person.happy is not happy_field.default
+        assert person.enjoy_jards_macale is not enjoy_jards_macale_field.default
         assert person.like_metal_music is not like_metal_music_field.default
 
     @pytest.mark.parametrize("value", [18, 18.5, [], {}, True])

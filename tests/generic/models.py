@@ -70,7 +70,8 @@ class PaymentBill(models.Model):
 
 class Person(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    happy = models.BooleanField(default=True)
+    #  jards macalé is an amazing brazilian musician! =]
+    enjoy_jards_macale = models.BooleanField(default=True)
     like_metal_music = models.BooleanField(default=False)
     name = models.CharField(max_length=30)
     nickname = models.SlugField(max_length=36)
