@@ -143,7 +143,7 @@ def get_type_mapping():
 
     mapping = default_mapping.copy()
     mapping[ContentType] = random_gen.gen_content_type
-    default_mapping.update(default_gis_mapping)
+    mapping.update(default_gis_mapping)
 
     return mapping.copy()
 
