@@ -78,10 +78,12 @@ class TestsBakerCreatesSimpleModel:
         assert person.id is None
 
     def test_non_abstract_model_creation(self):
-        person = baker.make(models.NonAbstractPerson, name="bob", happy=False)
+        person = baker.make(
+            models.NonAbstractPerson, name="bob", enjoy_jards_macale=False
+        )
         assert isinstance(person, models.NonAbstractPerson)
         assert "bob" == person.name
-        assert person.happy is False
+        assert person.enjoy_jards_macale is False
 
     def test_abstract_model_subclass_creation(self):
         instance = baker.make(models.SubclassOfAbstract)
@@ -338,16 +340,18 @@ class TestBakerCreatesAssociatedModels:
         assert self.m2m_changed_fired
 
     def test_simple_creating_person_with_parameters(self):
-        kid = baker.make(models.Person, happy=True, age=10, name="Mike")
+        kid = baker.make(models.Person, enjoy_jards_macale=True, age=10, name="Mike")
         assert kid.age == 10
-        assert kid.happy is True
+        assert kid.enjoy_jards_macale is True
         assert kid.name == "Mike"
 
     def test_creating_person_from_factory_using_paramters(self):
         person_baker_ = baker.Baker(models.Person)
-        person = person_baker_.make(happy=False, age=20, gender="M", name="John")
+        person = person_baker_.make(
+            enjoy_jards_macale=False, age=20, gender="M", name="John"
+        )
         assert person.age == 20
-        assert person.happy is False
+        assert person.enjoy_jards_macale is False
         assert person.name == "John"
         assert person.gender == "M"
 

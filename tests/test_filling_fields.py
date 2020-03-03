@@ -109,18 +109,18 @@ class TestsDurationFieldsFilling:
 
 class TestBooleanFieldsFilling:
     def test_fill_BooleanField_with_boolean(self, person):
-        happy_field = models.Person._meta.get_field("happy")
-        assert isinstance(happy_field, fields.BooleanField)
+        enjoy_jards_macale_field = models.Person._meta.get_field("enjoy_jards_macale")
+        assert isinstance(enjoy_jards_macale_field, fields.BooleanField)
 
-        assert isinstance(person.happy, bool)
-        assert person.happy is True
+        assert isinstance(person.enjoy_jards_macale, bool)
+        assert person.enjoy_jards_macale is True
 
     def test_fill_BooleanField_with_false_if_default_is_false(self, person):
-        unhappy_field = models.Person._meta.get_field("unhappy")
-        assert isinstance(unhappy_field, fields.BooleanField)
+        like_metal_music_field = models.Person._meta.get_field("like_metal_music")
+        assert isinstance(like_metal_music_field, fields.BooleanField)
 
-        assert isinstance(person.unhappy, bool)
-        assert person.unhappy is False
+        assert isinstance(person.like_metal_music, bool)
+        assert person.like_metal_music is False
 
 
 class TestDateFieldsFilling:

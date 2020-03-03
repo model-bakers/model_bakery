@@ -26,11 +26,11 @@ pip install model_bakery
 # models.py
 
 class Customer(models.Model):
-    happy = models.BooleanField()
+    enjoy_jards_macale = models.BooleanField()
     name = models.CharField(max_length=30)
     age = models.IntegerField()
     bio = models.TextField()
-    wanted_games_qtd = models.BigIntegerField()
+    days_since_last_login = models.BigIntegerField()
     birthday = models.DateField()
     last_shopping = models.DateTimeField()
 
@@ -50,16 +50,16 @@ class TestCustomerModel(TestCase):
  'age': 3841,
  'bio': 'vUFzMUMyKzlnTyiCxfgODIhrnkjzgQwHtzIbtnVDKflqevczfnaOACkDNqvCHwvtWdLwoiKrCqfppAlogSLECtMmfleeveyqefkGyTGnpbkVQTtviQVDESpXascHAluGHYEotSypSiHvHzFteKIcUebrzUVigiOacfnGdvijEPrZdSCIIBjuXZMaWLrMXyrsUCdKPLRBRYklRdtZhgtxuASXdhNGhDsrnPHrYRClhrSJSVFojMkUHBvSZhoXoCrTfHsAjenCEHvcLeCecsXwXgWJcnJPSFdOmOpiHRnhSgRF',
  'birthday': datetime.date(2019, 12, 3),
- 'happy': True,
+ 'enjoy_jards_macale': True,
  'id': 1,
  'last_shopping': datetime.datetime(2019, 12, 3, 21, 42, 34, 77019),
  'name': 'qiayYnESvqcYLLBzxpFOcGBIfnQEPx',
- 'wanted_games_qtd': 6016}
+ 'days_since_last_login': 6016}
 """
 
 ```
 
-Check out [documentation](<http://model-bakery.readthedocs.org/>) for more complete examples. 
+Check out [documentation](<http://model-bakery.readthedocs.org/>) for more complete examples.
 
 ## Maintainers
 

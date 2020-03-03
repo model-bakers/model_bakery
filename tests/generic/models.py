@@ -70,9 +70,9 @@ class PaymentBill(models.Model):
 
 class Person(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    happy = models.BooleanField(default=True)
-    unhappy = models.BooleanField(default=False)
-    bipolar = models.BooleanField(default=False)
+    #  jards macalé is an amazing brazilian musician! =]
+    enjoy_jards_macale = models.BooleanField(default=True)
+    like_metal_music = models.BooleanField(default=False)
     name = models.CharField(max_length=30)
     nickname = models.SlugField(max_length=36)
     age = models.IntegerField()
@@ -84,7 +84,7 @@ class Person(models.Model):
     occupation = models.CharField(max_length=10, choices=OCCUPATION_CHOICES)
     uuid = models.UUIDField(primary_key=False)
     name_hash = models.BinaryField(max_length=16)
-    wanted_games_qtd = models.BigIntegerField()
+    days_since_last_login = models.BigIntegerField()
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)

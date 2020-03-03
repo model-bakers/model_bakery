@@ -12,13 +12,13 @@ You can override this behavior by:
     # from "Basic Usage" page, assume all fields either null=True or blank=True
     from model_bakery import baker
 
-    customer = baker.make('shop.Customer', happy=True, bio='Happy customer')
+    customer = baker.make('shop.Customer', enjoy_jards_macale=True, bio="A fan of Jards Malacé")
 
 2. Passing ``_fill_optional`` with a list of fields to fill with random data
 
 .. code-block:: python
 
-    customer = baker.make('shop.Customer', _fill_optional=['happy', 'bio'])
+    customer = baker.make('shop.Customer', _fill_optional=['enjoy_jards_macale', 'bio'])
 
 3. Passing ``_fill_optional=True`` to fill all fields with random data
 
