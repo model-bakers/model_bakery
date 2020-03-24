@@ -58,7 +58,7 @@ Custom fields
 -------------
 
 Model Bakery allows you to define generators methods for your custom fields or overrides its default generators.
-This can be achieved by specifing the field and generator function for the ``generators.add`` function.
+This can be achieved by specifying the field and generator function for the ``generators.add`` function.
 Both can be the real python objects imported in settings or just specified as import path string.
 
 Examples:
