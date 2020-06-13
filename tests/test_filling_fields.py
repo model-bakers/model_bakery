@@ -403,10 +403,12 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.ci_text, str)
 
     @pytest.mark.skipif(
-        not DecimalRangeField, reason="Django version does not support DecimalRangeField"
+        not DecimalRangeField,
+        reason="Django version does not support DecimalRangeField",
     )
     def test_filling_decimal_range_field(self, person):
         from psycopg2._range import NumericRange
+
         decimal_range_field = models.Person._meta.get_field("decimal_range")
         assert isinstance(decimal_range_field, DecimalRangeField)
         assert isinstance(person.decimal_range, NumericRange)
@@ -415,6 +417,7 @@ class TestCIStringFieldsFilling:
 
     def test_filling_integer_range_field(self, person):
         from psycopg2._range import NumericRange
+
         int_range_field = models.Person._meta.get_field("int_range")
         assert isinstance(int_range_field, IntegerRangeField)
         assert isinstance(person.int_range, NumericRange)
@@ -423,6 +426,7 @@ class TestCIStringFieldsFilling:
 
     def test_filling_integer_range_field_for_big_int(self, person):
         from psycopg2._range import NumericRange
+
         bigint_range_field = models.Person._meta.get_field("bigint_range")
         assert isinstance(bigint_range_field, BigIntegerRangeField)
         assert isinstance(person.bigint_range, NumericRange)

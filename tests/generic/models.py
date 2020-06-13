@@ -115,6 +115,7 @@ class Person(models.Model):
 
     try:
         from django.contrib.postgres.fields.ranges import DecimalRangeField
+
         decimal_range = DecimalRangeField()
     except ImportError:
         # Django version lower thant 2.2

@@ -96,9 +96,9 @@ def _make_integer_gen_by_range(field_type):
 
 
 def _make_pg_numbers_range(number_cast=int):
-
     def gen_range():
         from psycopg2._range import NumericRange
+
         base_num = random_gen.gen_integer(1, 100000)
         return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
 
