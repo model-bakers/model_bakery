@@ -98,6 +98,7 @@ class Person(models.Model):
         )
         from django.contrib.postgres.fields.ranges import (
             IntegerRangeField,
+            BigIntegerRangeField,
         )
 
         acquaintances = ArrayField(models.IntegerField())
@@ -107,6 +108,7 @@ class Person(models.Model):
         ci_email = CIEmailField()
         ci_text = CITextField()
         int_range = IntegerRangeField()
+        bigint_range = BigIntegerRangeField()
     except ImportError:
         # Skip PostgreSQL-related fields
         pass

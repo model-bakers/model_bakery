@@ -78,10 +78,12 @@ except ImportError:
     DecimalRangeField = None
 try:
     from django.contrib.postgres.fields.ranges import (
-        IntegerRangeField
+        IntegerRangeField,
+        BigIntegerRangeField,
     )
 except ImportError:
     IntegerRangeField = None
+    BigIntegerRangeField = None
 
 
 def _make_integer_gen_by_range(field_type):
@@ -159,6 +161,8 @@ if DecimalRangeField:
     default_mapping[DecimalRangeField] = _make_pg_numbers_range(Decimal)
 if IntegerRangeField:
     default_mapping[IntegerRangeField] = _make_pg_numbers_range(int)
+if BigIntegerRangeField:
+    default_mapping[BigIntegerRangeField] = _make_pg_numbers_range(int)
 
 
 # Add GIS fields

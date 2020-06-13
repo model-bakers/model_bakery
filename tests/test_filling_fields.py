@@ -28,6 +28,7 @@ try:
     )
     from django.contrib.postgres.fields.ranges import (
         IntegerRangeField,
+        BigIntegerRangeField,
     )
 except ImportError:
     ArrayField = None
@@ -37,6 +38,7 @@ except ImportError:
     CIEmailField = None
     CITextField = None
     IntegerRangeField = None
+    BigIntegerRangeField = None
 
 try:
     from django.contrib.postgres.fields.ranges import DecimalRangeField
@@ -418,6 +420,14 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.int_range, NumericRange)
         assert isinstance(person.int_range.lower, int)
         assert isinstance(person.int_range.upper, int)
+
+    def test_filling_integer_range_field_for_big_int(self, person):
+        from psycopg2._range import NumericRange
+        bigint_range_field = models.Person._meta.get_field("bigint_range")
+        assert isinstance(bigint_range_field, BigIntegerRangeField)
+        assert isinstance(person.bigint_range, NumericRange)
+        assert isinstance(person.bigint_range.lower, int)
+        assert isinstance(person.bigint_range.upper, int)
 
 
 @pytest.mark.skipif(
