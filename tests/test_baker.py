@@ -143,7 +143,7 @@ class TestsBakerRepeatedCreatesSimpleModel:
             _quantity=5,
         )
         assert models.Person.objects.count() == 5
-        p1, p2, p3, p4, p5 = models.Person.objects.all()
+        p1, p2, p3, p4, p5 = models.Person.objects.all().order_by('pk')
         assert "a" == p1.name
         assert "d1" == p1.id_document
         assert "b" == p2.name
