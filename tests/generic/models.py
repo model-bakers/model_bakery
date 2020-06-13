@@ -68,7 +68,7 @@ class PaymentBill(models.Model):
 
 class Person(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    #  jards macalé is an amazing brazilian musician! =]
+    #  Jards Macalé is an amazing brazilian musician! =]
     enjoy_jards_macale = models.BooleanField(default=True)
     like_metal_music = models.BooleanField(default=False)
     name = models.CharField(max_length=30)
@@ -326,10 +326,11 @@ class Movie(models.Model):
 
 class MovieManager(models.Manager):
     def get_queryset(self):
-        """Annotate queryset with an alias field 'name'.
+        """
+        Annotate queryset with an alias field 'name'.
 
         We want to test whether this annotation has been run after
-        calling baker.make().
+        calling `baker.make()`.
         """
         return super(MovieManager, self).get_queryset().annotate(name=models.F("title"))
 
