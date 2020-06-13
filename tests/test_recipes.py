@@ -1,23 +1,22 @@
-import pytest
 import itertools
-
-from random import choice  # noqa
+from datetime import timedelta
 from decimal import Decimal
+from random import choice  # noqa
 from unittest.mock import patch
 
-from datetime import timedelta
+import pytest
 from model_bakery import baker
-from model_bakery.recipe import Recipe, foreign_key, RecipeForeignKey
-from model_bakery.timezone import now, tz_aware
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
+from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key
+from model_bakery.timezone import now, tz_aware
+from tests.generic.baker_recipes import SmallDogRecipe, pug
 from tests.generic.models import (
     TEST_TIME,
-    Person,
-    DummyNumbersModel,
-    DummyBlankFieldsModel,
     Dog,
+    DummyBlankFieldsModel,
+    DummyNumbersModel,
+    Person,
 )
-from tests.generic.baker_recipes import SmallDogRecipe, pug
 
 recipe_attrs = {
     "name": "John Doe",

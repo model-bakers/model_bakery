@@ -1,21 +1,18 @@
-import pytest
 import datetime
 import itertools
 from decimal import Decimal
 from unittest.mock import patch
 
+import pytest
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
-
-from model_bakery import baker
-from model_bakery import random_gen
+from model_bakery import baker, random_gen
 from model_bakery.exceptions import (
-    ModelNotFound,
     AmbiguousModelName,
     InvalidQuantityException,
+    ModelNotFound,
 )
 from model_bakery.timezone import smart_datetime
-
 from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
 

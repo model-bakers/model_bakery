@@ -1,32 +1,31 @@
 from os.path import dirname, join
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib import contenttypes
-from django.apps import apps
-
-from django.db.models.base import ModelBase
 from django.db.models import (
+    AutoField,
+    BooleanField,
+    Field,
+    FileField,
     ForeignKey,
     ManyToManyField,
     OneToOneField,
-    Field,
-    AutoField,
-    BooleanField,
-    FileField,
 )
+from django.db.models.base import ModelBase
+from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
-from django.db.models.fields.proxy import OrderWrt
 
 from . import generators, random_gen
 from .exceptions import (
-    ModelNotFound,
     AmbiguousModelName,
-    InvalidQuantityException,
-    RecipeIteratorEmpty,
     CustomBakerNotFound,
     InvalidCustomBaker,
+    InvalidQuantityException,
+    ModelNotFound,
+    RecipeIteratorEmpty,
 )
 from .utils import import_from_str
 

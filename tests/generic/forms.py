@@ -1,6 +1,4 @@
 from django.forms import ModelForm
-
-
 from tests.generic.models import DummyGenericIPAddressFieldModel
 
 

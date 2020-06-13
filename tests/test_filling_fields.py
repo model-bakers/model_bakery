@@ -7,15 +7,17 @@ from tempfile import gettempdir
 import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-
+from django.core.validators import (
+    validate_ipv4_address,
+    validate_ipv6_address,
+    validate_ipv46_address,
+)
 from django.db import connection
-from django.db.models import fields, ImageField, FileField
-
+from django.db.models import FileField, ImageField, fields
 from model_bakery import baker
 from model_bakery.gis import BAKER_GIS
 from model_bakery.random_gen import gen_related
 from tests.generic import generators, models
-
 
 try:
     from django.contrib.postgres.fields import (
@@ -33,12 +35,6 @@ except ImportError:
     CICharField = None
     CIEmailField = None
     CITextField = None
-
-from django.core.validators import (
-    validate_ipv4_address,
-    validate_ipv6_address,
-    validate_ipv46_address,
-)
 
 
 @pytest.fixture

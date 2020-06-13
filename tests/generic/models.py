@@ -6,21 +6,19 @@ import datetime as base_datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
-from model_bakery.gis import BAKER_GIS
-
-from django.core.files.storage import FileSystemStorage
-
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
+from django.core.files.storage import FileSystemStorage
+from model_bakery.gis import BAKER_GIS
+from model_bakery.timezone import smart_datetime as datetime
 
 from .fields import (
+    CustomFieldViaSettings,
     CustomFieldWithGenerator,
     CustomFieldWithoutGenerator,
-    CustomFieldViaSettings,
-    FakeListField,
     CustomForeignKey,
+    FakeListField,
 )
-from model_bakery.timezone import smart_datetime as datetime
 
 # check whether or not PIL is installed
 try:
