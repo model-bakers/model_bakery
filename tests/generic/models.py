@@ -107,6 +107,14 @@ class Person(models.Model):
         # Skip PostgreSQL-related fields
         pass
 
+    try:
+        from django.contrib.postgres.fields.ranges import DecimalRangeField
+
+        decimal_range = DecimalRangeField()
+    except ImportError:
+        # Django version lower thant 2.2
+        pass
+
     if BAKER_GIS:
         geom = models.GeometryField()
         point = models.PointField()

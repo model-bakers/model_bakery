@@ -34,6 +34,11 @@ except ImportError:
     CIEmailField = None
     CITextField = None
 
+try:
+    from django.contrib.postgres.fields.ranges import DecimalRangeField
+except ImportError:
+    DecimalRangeField = None
+
 from django.core.validators import (
     validate_ipv4_address,
     validate_ipv6_address,
@@ -390,6 +395,17 @@ class TestCIStringFieldsFilling:
         ci_text_field = models.Person._meta.get_field("ci_text")
         assert isinstance(ci_text_field, CITextField)
         assert isinstance(person.ci_text, str)
+
+    @pytest.mark.skipif(
+        not DecimalRangeField, reason="Django version does not support DecimalRangeField"
+    )
+    def test_filling_decimal_range_field(self, person):
+        from psycopg2._range import NumericRange
+        decimal_range_field = models.Person._meta.get_field("decimal_range")
+        assert isinstance(decimal_range_field, DecimalRangeField)
+        assert isinstance(person.decimal_range, NumericRange)
+        assert isinstance(person.decimal_range.lower, Decimal)
+        assert isinstance(person.decimal_range.upper, Decimal)
 
 
 @pytest.mark.skipif(

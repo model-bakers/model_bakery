@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
     BigIntegerField,
@@ -70,6 +72,11 @@ except ImportError:
     CIEmailField = None
     CITextField = None
 
+try:
+    from django.contrib.postgres.fields.ranges import DecimalRangeField
+except ImportError:
+    DecimalRangeField = None
+
 
 def _make_integer_gen_by_range(field_type):
     min_int, max_int = BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
@@ -78,6 +85,16 @@ def _make_integer_gen_by_range(field_type):
         return random_gen.gen_integer(min_int=min_int, max_int=max_int)
 
     return gen_integer
+
+
+def _make_pg_numbers_range(number_cast=int):
+
+    def gen_range():
+        from psycopg2._range import NumericRange
+        base_num = random_gen.gen_integer(1, 100000)
+        return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
+
+    return gen_range
 
 
 default_mapping = {
@@ -132,6 +149,8 @@ if PositiveBigIntegerField:
     default_mapping[PositiveBigIntegerField] = _make_integer_gen_by_range(
         PositiveBigIntegerField
     )
+if DecimalRangeField:
+    default_mapping[DecimalRangeField] = _make_pg_numbers_range(Decimal)
 
 
 # Add GIS fields
