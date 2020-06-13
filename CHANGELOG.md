@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Add isort and fix imports [PR #77](https://github.com/model-bakers/model_bakery/pull/77)
 
 ### Removed
 
