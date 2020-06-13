@@ -96,6 +96,9 @@ class Person(models.Model):
             CIEmailField,
             CITextField,
         )
+        from django.contrib.postgres.fields.ranges import (
+            IntegerRangeField,
+        )
 
         acquaintances = ArrayField(models.IntegerField())
         data = JSONField()
@@ -103,13 +106,13 @@ class Person(models.Model):
         ci_char = CICharField(max_length=30)
         ci_email = CIEmailField()
         ci_text = CITextField()
+        int_range = IntegerRangeField()
     except ImportError:
         # Skip PostgreSQL-related fields
         pass
 
     try:
         from django.contrib.postgres.fields.ranges import DecimalRangeField
-
         decimal_range = DecimalRangeField()
     except ImportError:
         # Django version lower thant 2.2

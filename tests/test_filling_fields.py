@@ -26,6 +26,9 @@ try:
         HStoreField,
         JSONField,
     )
+    from django.contrib.postgres.fields.ranges import (
+        IntegerRangeField,
+    )
 except ImportError:
     ArrayField = None
     JSONField = None
@@ -33,6 +36,7 @@ except ImportError:
     CICharField = None
     CIEmailField = None
     CITextField = None
+    IntegerRangeField = None
 
 try:
     from django.contrib.postgres.fields.ranges import DecimalRangeField
@@ -406,6 +410,14 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.decimal_range, NumericRange)
         assert isinstance(person.decimal_range.lower, Decimal)
         assert isinstance(person.decimal_range.upper, Decimal)
+
+    def test_filling_integer_range_field(self, person):
+        from psycopg2._range import NumericRange
+        int_range_field = models.Person._meta.get_field("int_range")
+        assert isinstance(int_range_field, IntegerRangeField)
+        assert isinstance(person.int_range, NumericRange)
+        assert isinstance(person.int_range.lower, int)
+        assert isinstance(person.int_range.upper, int)
 
 
 @pytest.mark.skipif(
