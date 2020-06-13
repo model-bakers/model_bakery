@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fixed PostGIS model registration [PR #67](https://github.com/model-bakers/model_bakery/pull/67)
 
 ### Removed
 
