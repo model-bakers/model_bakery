@@ -29,6 +29,9 @@ from .exceptions import (
 )
 from .utils import import_from_str
 
+# Enable seq to be imported from baker
+from .utils import seq  # NoQA
+
 recipes = None
 
 # FIXME: use pkg_resource

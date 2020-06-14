@@ -225,20 +225,18 @@ Sometimes, you have a field with an unique value and using ``make`` can cause ra
 
 This will append a counter to strings to avoid uniqueness problems and it will sum the counter with numerical values.
 
-Sequences and iterables can be used not only for recipes, but with ``baker.make`` as well:
+Sequences and iterables can be used not only for recipes, but with ``baker`` as well:
 
 .. code-block:: python
 
 
-    # it can be imported directly from model_bakery
-    >>> from model_bakery import seq
     >>> from model_bakery import baker
 
-    >>> customer = baker.make('Customer', name=seq('Joe'))
+    >>> customer = baker.make('Customer', name=baker.seq('Joe'))
     >>> customer.name
     'Joe1'
 
-    >>> customers = baker.make('Customer', name=seq('Chad'), _quantity=3)
+    >>> customers = baker.make('Customer', name=baker.seq('Chad'), _quantity=3)
     >>> for customer in customers:
     ...     print(customer.name)
     'Chad1'

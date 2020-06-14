@@ -261,8 +261,6 @@ class TestsFillingFileField:
         with pytest.raises(ValueError):
             # Django raises ValueError if file does not exist
             assert dummy.file_field.path
-                dummy.file_field.path
-            )  # Django raises ValueError if file does not exist
 
 
 @pytest.mark.django_db
@@ -369,8 +367,6 @@ class TestFillingImageFileField:
         with pytest.raises(ValueError):
             # Django raises ValueError if image does not exist
             assert dummy.image_field.path
-                dummy.image_field.path
-            )  # Django raises ValueError if file does not exist
 
 
 @pytest.mark.skipif(
