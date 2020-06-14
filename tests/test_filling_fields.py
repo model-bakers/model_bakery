@@ -367,7 +367,8 @@ class TestFillingImageFileField:
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyImageFieldModel)
         with pytest.raises(ValueError):
-            assert (
+            # Django raises ValueError if image does not exist
+            assert dummy.image_field.path
                 dummy.image_field.path
             )  # Django raises ValueError if file does not exist
 
