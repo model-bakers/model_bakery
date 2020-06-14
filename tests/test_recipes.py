@@ -33,17 +33,16 @@ recipe_attrs = {
 person_recipe = Recipe(Person, **recipe_attrs)
 
 
+def test_import_seq_from_recipe():
+    """Test import seq method from recipe module."""
+    try:
+        from model_bakery.recipe import seq  # NoQA
+    except ImportError:
+        pytest.fail("{} raised".format(ImportError.__name__))
+
+
 @pytest.mark.django_db
 class TestDefiningRecipes:
-    def test_import_seq_from_baker(self):
-        """
-            Import seq method directly from baker module
-        """
-        try:
-            from model_bakery import seq  # NoQA
-        except ImportError:
-            self.fail("{} raised".format(ImportError.__name__))
-
     def test_flat_model_make_recipe_with_the_correct_attributes(self):
         """
           A 'flat model' means a model without associations, like
@@ -165,7 +164,7 @@ class TestDefiningRecipes:
         try:
             p.make(_quantity=5)
         except AttributeError as e:
-            self.fail("%s" % e)
+            pytest.fail("%s" % e)
 
 
 @pytest.mark.django_db

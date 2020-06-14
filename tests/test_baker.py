@@ -20,6 +20,14 @@ from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
 
 
+def test_import_seq_from_baker():
+    """Test import seq method from baker module."""
+    try:
+        from model_bakery.baker import seq  # NoQA
+    except ImportError:
+        pytest.fail("{} raised".format(ImportError.__name__))
+
+
 class TestsModelFinder:
     def test_unicode_regression(self):
         obj = baker.prepare("generic.Person")
