@@ -1,23 +1,22 @@
-import pytest
 import itertools
-
-from random import choice  # noqa
+from datetime import timedelta
 from decimal import Decimal
+from random import choice  # noqa
 from unittest.mock import patch
 
-from datetime import timedelta
+import pytest
 from model_bakery import baker
-from model_bakery.recipe import Recipe, foreign_key, RecipeForeignKey
-from model_bakery.timezone import now, tz_aware
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
+from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key
+from model_bakery.timezone import now, tz_aware
+from tests.generic.baker_recipes import SmallDogRecipe, pug
 from tests.generic.models import (
     TEST_TIME,
-    Person,
-    DummyNumbersModel,
-    DummyBlankFieldsModel,
     Dog,
+    DummyBlankFieldsModel,
+    DummyNumbersModel,
+    Person,
 )
-from tests.generic.baker_recipes import SmallDogRecipe, pug
 
 recipe_attrs = {
     "name": "John Doe",
@@ -26,7 +25,7 @@ recipe_attrs = {
     "bio": "Someone in the crowd",
     "birthday": now().date(),
     "appointment": now(),
-    "blog": "http://joe.blogspot.com",
+    "blog": "https://joe.example.com",
     "days_since_last_login": 4,
     "birth_time": now(),
 }
@@ -34,7 +33,7 @@ person_recipe = Recipe(Person, **recipe_attrs)
 
 
 def test_import_seq_from_recipe():
-    """Test import seq method from recipe module."""
+    """Import seq method directly from recipe module."""
     try:
         from model_bakery.recipe import seq  # NoQA
     except ImportError:
@@ -44,10 +43,7 @@ def test_import_seq_from_recipe():
 @pytest.mark.django_db
 class TestDefiningRecipes:
     def test_flat_model_make_recipe_with_the_correct_attributes(self):
-        """
-          A 'flat model' means a model without associations, like
-          foreign keys, many to many and one to one
-        """
+        """Test a 'flat model' - without associations, like FK, M2M and O2O."""
         person = person_recipe.make()
         assert person.name == recipe_attrs["name"]
         assert person.nickname == recipe_attrs["nickname"]
@@ -81,8 +77,8 @@ class TestDefiningRecipes:
             choice_mock.return_value = "foo"
             lst = ["foo", "bar", "spam", "eggs"]
             r = Recipe(DummyBlankFieldsModel, blank_char_field=lambda: choice_mock(lst))
-            r.make().blank_char_field
-            r.make().blank_char_field
+            assert r.make().blank_char_field
+            assert r.make().blank_char_field
             assert choice_mock.call_count == 2
 
     def test_always_calls_with_quantity(self):
@@ -94,9 +90,7 @@ class TestDefiningRecipes:
             assert choice_mock.call_count == 3
 
     def test_make_recipes_with_args(self):
-        """
-          Overriding some fields values at recipe execution
-        """
+        """Overriding some fields values at recipe execution."""
         person = person_recipe.make(name="Guido", age=56)
         assert person.name != recipe_attrs["name"]
         assert person.name == "Guido"
@@ -113,9 +107,7 @@ class TestDefiningRecipes:
         assert person.id is not None
 
     def test_prepare_recipes_with_args(self):
-        """
-          Overriding some fields values at recipe execution
-        """
+        """Overriding some fields values at recipe execution."""
         person = person_recipe.prepare(name="Guido", age=56)
         assert person.name != recipe_attrs["name"]
         assert person.name == "Guido"
@@ -169,9 +161,7 @@ class TestDefiningRecipes:
 
 @pytest.mark.django_db
 class TestExecutingRecipes:
-    """
-      Tests for calling recipes defined in baker_recipes.py
-    """
+    """Tests for calling recipes defined in baker_recipes.py."""
 
     def test_model_with_foreign_key(self):
         dog = baker.make_recipe("tests.generic.dog")
@@ -348,10 +338,7 @@ class TestForeignKey:
         assert str(exception) == "Not a recipe"
 
     def test_do_not_create_related_model(self):
-        """
-          It should not attempt to create other object when
-          passing the object as argument
-        """
+        """It should not create another object when passing the object as argument."""
         person = baker.make_recipe("tests.generic.person")
         assert Person.objects.count() == 1
         baker.make_recipe("tests.generic.dog", owner=person)
@@ -360,27 +347,18 @@ class TestForeignKey:
         assert Person.objects.count() == 1
 
     def test_do_query_lookup_for_recipes_make_method(self):
-        """
-          It should not attempt to create other object when
-          using query lookup syntax
-        """
+        """It should not create another object when using query lookup syntax."""
         dog = baker.make_recipe("tests.generic.dog", owner__name="James")
         assert Person.objects.count() == 1
         assert dog.owner.name == "James"
 
     def test_do_query_lookup_for_recipes_prepare_method(self):
-        """
-          It should not attempt to create other object when
-          using query lookup syntax
-        """
+        """It should not create another object when using query lookup syntax."""
         dog = baker.prepare_recipe("tests.generic.dog", owner__name="James")
         assert dog.owner.name == "James"
 
     def test_do_query_lookup_empty_recipes(self):
-        """
-          It should not attempt to create other object when
-          using query lookup syntax
-        """
+        """It should not create another object when using query lookup syntax."""
         dog_recipe = Recipe(Dog)
         dog = dog_recipe.make(owner__name="James")
         assert Person.objects.count() == 1
@@ -446,9 +424,7 @@ class TestSequences:
         assert dummy.default_float_field == 4.23
 
     def test_increment_for_numbers_2(self):
-        """
-        This test is a repeated one but it is necessary to ensure Sequences atomicity
-        """
+        """Repeated test to ensure Sequences atomicity."""
         dummy = baker.make_recipe("tests.generic.serial_numbers")
         assert dummy.default_int_field == 11
         assert dummy.default_decimal_field == Decimal("21.1")

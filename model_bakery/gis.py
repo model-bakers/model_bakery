@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 from django.apps import apps
 
 BAKER_GIS = apps.is_installed("django.contrib.gis")

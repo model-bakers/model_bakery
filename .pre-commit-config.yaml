@@ -1,6 +1,6 @@
 repos:
 -   repo: git@github.com:pre-commit/pre-commit-hooks
-    rev: v2.1.0
+    rev: v3.1.0
     hooks:
     -   id: check-added-large-files
     -   id: debug-statements
@@ -8,14 +8,18 @@ repos:
     -   id: requirements-txt-fixer
     -   id: trailing-whitespace
 -   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.7.6
+    rev: 3.8.3
     hooks:
     -   id: flake8
--   repo: https://gitlab.com/pycqa/pydocstyle
-    rev: 4.0.1
+-   repo: https://github.com/timothycrosley/isort
+    rev: 4.3.21
+    hooks:
+    -   id: isort
+-   repo: https://github.com/PyCQA/pydocstyle
+    rev: 5.0.2
     hooks:
     -   id: pydocstyle
--   repo: https://github.com/ambv/black
-    rev: stable
+-   repo: https://github.com/psf/black
+    rev: 19.10b0
     hooks:
     -   id: black

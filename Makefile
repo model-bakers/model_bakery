@@ -10,4 +10,3 @@ release:
 	@twine upload dist/*
 
 .PHONY: test release
-

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/master)
 
 ### Added
+- Add isort and fix imports [PR #77](https://github.com/model-bakers/model_bakery/pull/77)
 
 ### Changed
 - Enable `seq` to be imported from `baker` [PR #76](https://github.com/model-bakers/model_bakery/pull/76)

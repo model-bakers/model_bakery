@@ -6,21 +6,19 @@ import datetime as base_datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
-from model_bakery.gis import BAKER_GIS
-
-from django.core.files.storage import FileSystemStorage
-
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
+from django.core.files.storage import FileSystemStorage
+from model_bakery.gis import BAKER_GIS
+from model_bakery.timezone import smart_datetime as datetime
 
 from .fields import (
+    CustomFieldViaSettings,
     CustomFieldWithGenerator,
     CustomFieldWithoutGenerator,
-    CustomFieldViaSettings,
-    FakeListField,
     CustomForeignKey,
+    FakeListField,
 )
-from model_bakery.timezone import smart_datetime as datetime
 
 # check whether or not PIL is installed
 try:
@@ -70,7 +68,7 @@ class PaymentBill(models.Model):
 
 class Person(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    #  jards macalé is an amazing brazilian musician! =]
+    #  Jards Macalé is an amazing brazilian musician! =]
     enjoy_jards_macale = models.BooleanField(default=True)
     like_metal_music = models.BooleanField(default=False)
     name = models.CharField(max_length=30)
@@ -328,10 +326,11 @@ class Movie(models.Model):
 
 class MovieManager(models.Manager):
     def get_queryset(self):
-        """Annotate queryset with an alias field 'name'.
+        """
+        Annotate queryset with an alias field 'name'.
 
         We want to test whether this annotation has been run after
-        calling baker.make().
+        calling `baker.make()`.
         """
         return super(MovieManager, self).get_queryset().annotate(name=models.F("title"))
 
