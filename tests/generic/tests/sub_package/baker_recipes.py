@@ -1,7 +1,7 @@
+from datetime import date, datetime
+
 from model_bakery.recipe import Recipe
 from tests.generic.models import Person
-
-from datetime import date, datetime
 
 person = Recipe(
     Person,

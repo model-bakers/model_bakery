@@ -7,15 +7,17 @@ from tempfile import gettempdir
 import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-
+from django.core.validators import (
+    validate_ipv4_address,
+    validate_ipv6_address,
+    validate_ipv46_address,
+)
 from django.db import connection
-from django.db.models import fields, ImageField, FileField
-
+from django.db.models import FileField, ImageField, fields
 from model_bakery import baker
 from model_bakery.gis import BAKER_GIS
 from model_bakery.random_gen import gen_related
 from tests.generic import generators, models
-
 
 try:
     from django.contrib.postgres.fields import (
@@ -47,12 +49,6 @@ try:
 except ImportError:
     DecimalRangeField = None
 
-from django.core.validators import (
-    validate_ipv4_address,
-    validate_ipv6_address,
-    validate_ipv46_address,
-)
-
 
 @pytest.fixture
 def person(db):
@@ -72,13 +68,13 @@ class TestFillingFromChoice:
     def test_if_gender_is_populated_from_choices(self, person):
         from tests.generic.models import GENDER_CHOICES
 
-        person.gender in map(lambda x: x[0], GENDER_CHOICES)
+        assert person.gender in map(lambda x: x[0], GENDER_CHOICES)
 
     def test_if_occupation_populated_from_choices(self, person):
         from tests.generic.models import OCCUPATION_CHOICES
 
-        occupations = [item[0] for list in OCCUPATION_CHOICES for item in list[1]]
-        person.occupation in occupations
+        occupations = [item[0] for lst in OCCUPATION_CHOICES for item in lst[1]]
+        assert person.occupation in occupations
 
 
 class TestStringFieldsFilling:
@@ -276,18 +272,19 @@ class TestsFillingFileField:
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyFileFieldModel)
         with pytest.raises(ValueError):
-            dummy.file_field.path  # Django raises ValueError if file does not exist
+            # Django raises ValueError if file does not exist
+            assert dummy.file_field.path
 
 
 @pytest.mark.django_db
 class TestFillingCustomFields:
     def test_raises_unsupported_field_for_custom_field(self, custom_cfg):
-        """Should raise an exception if a generator is not provided for a custom field"""
+        """Should raise an exception if a generator is not provided for a custom field."""
         with pytest.raises(TypeError):
             baker.make(models.CustomFieldWithoutGeneratorModel)
 
     def test_uses_generator_defined_on_settings_for_custom_field(self, custom_cfg):
-        """Should use the function defined in settings as a generator"""
+        """Should use the function defined in settings as a generator."""
         generator_dict = {
             "tests.generic.fields.CustomFieldWithGenerator": generators.gen_value_string
         }
@@ -298,7 +295,7 @@ class TestFillingCustomFields:
     def test_uses_generator_defined_as_string_on_settings_for_custom_field(
         self, custom_cfg
     ):
-        """Should import and use the function present in the import path defined in settings"""
+        """Should import and use the function present in the import path defined in settings."""
         # fmt: off
         generator_dict = {
             "tests.generic.fields.CustomFieldWithGenerator":
@@ -310,7 +307,7 @@ class TestFillingCustomFields:
         assert "value" == obj.custom_value
 
     def test_uses_generator_defined_on_settings_for_custom_foreignkey(self, custom_cfg):
-        """Should use the function defined in the import path for a foreign key field"""
+        """Should use the function defined in the import path for a foreign key field."""
         generator_dict = {
             "tests.generic.fields.CustomForeignKey": "model_bakery.random_gen.gen_related"
         }
@@ -321,7 +318,7 @@ class TestFillingCustomFields:
         assert "a@b.com" == obj.custom_fk.email
 
     def test_uses_generator_defined_as_string_for_custom_field(self, custom_cfg):
-        """Should import and use the generator function used in the add method"""
+        """Should import and use the generator function used in the add method."""
         baker.generators.add(
             "tests.generic.fields.CustomFieldWithGenerator",
             "tests.generic.generators.gen_value_string",
@@ -330,7 +327,7 @@ class TestFillingCustomFields:
         assert "value" == obj.custom_value
 
     def test_uses_generator_function_for_custom_foreignkey(self, custom_cfg):
-        """Should use the generator function passed as a value for the add method"""
+        """Should use the generator function passed as a value for the add method."""
         baker.generators.add("tests.generic.fields.CustomForeignKey", gen_related)
         obj = baker.make(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
@@ -381,7 +378,8 @@ class TestFillingImageFileField:
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyImageFieldModel)
         with pytest.raises(ValueError):
-            dummy.image_field.path  # Django raises ValueError if file does not exist
+            # Django raises ValueError if image does not exist
+            assert dummy.image_field.path
 
 
 @pytest.mark.skipif(

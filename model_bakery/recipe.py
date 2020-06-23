@@ -1,11 +1,9 @@
 import inspect
 import itertools
+
 from . import baker
 from .exceptions import RecipeNotFound
-
-# Enable seq to be imported from recipes
-from .utils import seq  # NoQA
-
+from .utils import seq  # NoQA: Enable seq to be imported from recipes
 
 finder = baker.ModelFinder()
 

@@ -1,8 +1,8 @@
+from os.path import dirname, join
+
 import setuptools
-from os.path import join, dirname
 
 import model_bakery
-
 
 setuptools.setup(
     name="model_bakery",

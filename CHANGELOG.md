@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support to Postgres fields: `DecimalRangeField`, `FloatRangeField`, `IntegerRangeField`, `BigIntegerRangeField` [PR #80](https://github.com/model-bakers/model_bakery/pull/80)
 
 ### Changed
+- Add isort and fix imports [PR #77](https://github.com/model-bakers/model_bakery/pull/77)
+- Enable `seq` to be imported from `baker` [PR #76](https://github.com/model-bakers/model_bakery/pull/76)
 - Fix PostGIS model registration [PR #67](https://github.com/model-bakers/model_bakery/pull/67)
 
 ### Removed

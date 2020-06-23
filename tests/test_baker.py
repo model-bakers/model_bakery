@@ -1,23 +1,28 @@
-import pytest
 import datetime
 import itertools
 from decimal import Decimal
 from unittest.mock import patch
 
+import pytest
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
-
-from model_bakery import baker
-from model_bakery import random_gen
+from model_bakery import baker, random_gen
 from model_bakery.exceptions import (
-    ModelNotFound,
     AmbiguousModelName,
     InvalidQuantityException,
+    ModelNotFound,
 )
 from model_bakery.timezone import smart_datetime
-
 from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
+
+
+def test_import_seq_from_baker():
+    """Test import seq method from baker module."""
+    try:
+        from model_bakery.baker import seq  # NoQA
+    except ImportError:
+        pytest.fail("{} raised".format(ImportError.__name__))
 
 
 class TestsModelFinder:
@@ -105,7 +110,7 @@ class TestsBakerCreatesSimpleModel:
 @pytest.mark.django_db
 class TestsBakerRepeatedCreatesSimpleModel:
     def test_make_should_create_objects_respecting_quantity_parameter(self):
-        people = baker.make(models.Person, _quantity=5)
+        baker.make(models.Person, _quantity=5)
         assert models.Person.objects.count() == 5
 
         people = baker.make(models.Person, _quantity=5, name="George Washington")
@@ -136,7 +141,7 @@ class TestsBakerRepeatedCreatesSimpleModel:
             baker.prepare(_model=models.Person, _quantity=0)
 
     def test_accepts_generators_with_quantity(self):
-        people = baker.make(
+        baker.make(
             models.Person,
             name=itertools.cycle(["a", "b", "c"]),
             id_document=itertools.cycle(["d1", "d2", "d3", "d4", "d5"]),
@@ -156,7 +161,7 @@ class TestsBakerRepeatedCreatesSimpleModel:
         assert "d5" == p5.id_document
 
     def test_accepts_generators_with_quantity_for_unique_fields(self):
-        people = baker.make(
+        baker.make(
             models.DummyUniqueIntegerFieldModel,
             value=itertools.cycle([1, 2, 3]),
             _quantity=3,
@@ -171,9 +176,7 @@ class TestsBakerRepeatedCreatesSimpleModel:
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
-        people = baker.make(
-            User, username=itertools.cycle(["a", "b", "c"]), _quantity=3
-        )
+        baker.make(User, username=itertools.cycle(["a", "b", "c"]), _quantity=3)
         assert User.objects.count() == 3
         u1, u2, u3 = User.objects.all()
         assert "a" == u1.username
@@ -189,7 +192,7 @@ class TestBakerPrepareSavingRelatedInstances:
         assert dog.pk is None
         assert dog.owner.pk is None
         with pytest.raises(ValueError):
-            dog.friends_with
+            assert dog.friends_with
 
     def test_create_fk_instances(self):
         dog = baker.prepare(models.Dog, _save_related=True)
@@ -197,7 +200,7 @@ class TestBakerPrepareSavingRelatedInstances:
         assert dog.pk is None
         assert dog.owner.pk
         with pytest.raises(ValueError):
-            dog.friends_with
+            assert dog.friends_with
 
     def test_create_fk_instances_with_quantity(self):
         dog1, dog2 = baker.prepare(models.Dog, _save_related=True, _quantity=2)
@@ -205,12 +208,12 @@ class TestBakerPrepareSavingRelatedInstances:
         assert dog1.pk is None
         assert dog1.owner.pk
         with pytest.raises(ValueError):
-            dog1.friends_with
+            assert dog1.friends_with
 
         assert dog2.pk is None
         assert dog2.owner.pk
         with pytest.raises(ValueError):
-            dog2.friends_with
+            assert dog2.friends_with
 
     def test_create_one_to_one(self):
         lonely_person = baker.prepare(models.LonelyPerson, _save_related=True)
@@ -643,7 +646,7 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
         """
         movie = baker.make(models.MovieWithAnnotation)
         with pytest.raises(AttributeError):
-            movie.name
+            assert movie.name
 
         movie = baker.make(
             models.MovieWithAnnotation, title="Old Boy", _from_manager="objects",
