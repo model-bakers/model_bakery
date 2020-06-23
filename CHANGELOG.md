@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/master)
 
 ### Added
-- Support to Postgres: `DecimalRangeField`, `IntegerRangeField`, `BigIntegerRangeField` [PR #80](https://github.com/model-bakers/model_bakery/pull/80)
+- Support to Postgres fields: `DecimalRangeField`, `IntegerRangeField`, `BigIntegerRangeField` [PR #80](https://github.com/model-bakers/model_bakery/pull/80)
 
 ### Changed
 - Fixed PostGIS model registration [PR #67](https://github.com/model-bakers/model_bakery/pull/67)
