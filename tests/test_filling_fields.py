@@ -414,6 +414,7 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.decimal_range, NumericRange)
         assert isinstance(person.decimal_range.lower, Decimal)
         assert isinstance(person.decimal_range.upper, Decimal)
+        assert person.decimal_range.lower < person.decimal_range.upper
 
     def test_filling_integer_range_field(self, person):
         from psycopg2._range import NumericRange
@@ -423,6 +424,7 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.int_range, NumericRange)
         assert isinstance(person.int_range.lower, int)
         assert isinstance(person.int_range.upper, int)
+        assert person.int_range.lower < person.int_range.upper
 
     def test_filling_integer_range_field_for_big_int(self, person):
         from psycopg2._range import NumericRange
@@ -432,6 +434,7 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.bigint_range, NumericRange)
         assert isinstance(person.bigint_range.lower, int)
         assert isinstance(person.bigint_range.upper, int)
+        assert person.bigint_range.lower < person.bigint_range.upper
 
     def test_filling_float_range_field(self, person):
         from psycopg2._range import NumericRange
@@ -441,6 +444,7 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.float_range, NumericRange)
         assert isinstance(person.float_range.lower, float)
         assert isinstance(person.float_range.upper, float)
+        assert person.float_range.lower < person.float_range.upper
 
 
 @pytest.mark.skipif(
