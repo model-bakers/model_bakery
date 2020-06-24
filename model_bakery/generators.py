@@ -82,12 +82,14 @@ try:
         BigIntegerRangeField,
         FloatRangeField,
         DateRangeField,
+        DateTimeRangeField,
     )
 except ImportError:
     IntegerRangeField = None
     BigIntegerRangeField = None
     FloatRangeField = None
     DateRangeField = None
+    DateTimeRangeField = None
 
 
 def _make_integer_gen_by_range(field_type):
@@ -161,6 +163,8 @@ if FloatRangeField:
     default_mapping[FloatRangeField] = random_gen.gen_pg_numbers_range(float)
 if DateRangeField:
     default_mapping[DateRangeField] = random_gen.gen_date_range
+if DateTimeRangeField:
+    default_mapping[DateTimeRangeField] = random_gen.gen_datetime_range
 
 
 # Add GIS fields

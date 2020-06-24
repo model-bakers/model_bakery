@@ -329,3 +329,12 @@ def gen_date_range():
     interval = gen_interval()
     args = sorted([base_date - interval, base_date + interval])
     return DateRange(*args)
+
+
+def gen_datetime_range():
+    from psycopg2.extras import DateTimeTZRange
+
+    base_datetime = gen_datetime()
+    interval = gen_interval()
+    args = sorted([base_datetime - interval, base_datetime + interval])
+    return DateTimeTZRange(*args)
