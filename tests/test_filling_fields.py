@@ -32,6 +32,7 @@ try:
         IntegerRangeField,
         BigIntegerRangeField,
         FloatRangeField,
+        DateRangeField,
     )
 except ImportError:
     ArrayField = None
@@ -43,6 +44,7 @@ except ImportError:
     IntegerRangeField = None
     BigIntegerRangeField = None
     FloatRangeField = None
+    DateRangeField = None
 
 try:
     from django.contrib.postgres.fields.ranges import DecimalRangeField
@@ -445,6 +447,16 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.float_range.lower, float)
         assert isinstance(person.float_range.upper, float)
         assert person.float_range.lower < person.float_range.upper
+
+    def test_filling_date_range_field(self, person):
+        from psycopg2.extras import DateRange
+
+        date_range_field = models.Person._meta.get_field("date_range")
+        assert isinstance(date_range_field, DateRangeField)
+        assert isinstance(person.date_range, DateRange)
+        assert isinstance(person.date_range.lower, date)
+        assert isinstance(person.date_range.upper, date)
+        assert person.date_range.lower < person.date_range.upper
 
 
 @pytest.mark.skipif(

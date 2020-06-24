@@ -320,3 +320,12 @@ def gen_pg_numbers_range(number_cast=int):
         return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
 
     return gen_range
+
+
+def gen_date_range():
+    from psycopg2.extras import DateRange
+
+    base_date = gen_date()
+    interval = gen_interval()
+    args = sorted([base_date - interval, base_date + interval])
+    return DateRange(*args)

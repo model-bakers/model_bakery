@@ -98,6 +98,7 @@ class Person(models.Model):
             IntegerRangeField,
             BigIntegerRangeField,
             FloatRangeField,
+            DateRangeField,
         )
 
         acquaintances = ArrayField(models.IntegerField())
@@ -109,6 +110,7 @@ class Person(models.Model):
         int_range = IntegerRangeField()
         bigint_range = BigIntegerRangeField()
         float_range = FloatRangeField()
+        date_range = DateRangeField()
     except ImportError:
         # Skip PostgreSQL-related fields
         pass
