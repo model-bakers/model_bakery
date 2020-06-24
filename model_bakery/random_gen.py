@@ -310,3 +310,13 @@ def gen_geometry():
 
 def gen_geometry_collection():
     return "GEOMETRYCOLLECTION ({})".format(gen_point(),)
+
+
+def gen_pg_numbers_range(number_cast=int):
+    def gen_range():
+        from psycopg2._range import NumericRange
+
+        base_num = gen_integer(1, 100000)
+        return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
+
+    return gen_range

@@ -97,16 +97,6 @@ def _make_integer_gen_by_range(field_type):
     return gen_integer
 
 
-def _make_pg_numbers_range(number_cast=int):
-    def gen_range():
-        from psycopg2._range import NumericRange
-
-        base_num = random_gen.gen_integer(1, 100000)
-        return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
-
-    return gen_range
-
-
 default_mapping = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
@@ -160,13 +150,13 @@ if PositiveBigIntegerField:
         PositiveBigIntegerField
     )
 if DecimalRangeField:
-    default_mapping[DecimalRangeField] = _make_pg_numbers_range(Decimal)
+    default_mapping[DecimalRangeField] = random_gen.gen_pg_numbers_range(Decimal)
 if IntegerRangeField:
-    default_mapping[IntegerRangeField] = _make_pg_numbers_range(int)
+    default_mapping[IntegerRangeField] = random_gen.gen_pg_numbers_range(int)
 if BigIntegerRangeField:
-    default_mapping[BigIntegerRangeField] = _make_pg_numbers_range(int)
+    default_mapping[BigIntegerRangeField] = random_gen.gen_pg_numbers_range(int)
 if FloatRangeField:
-    default_mapping[FloatRangeField] = _make_pg_numbers_range(float)
+    default_mapping[FloatRangeField] = random_gen.gen_pg_numbers_range(float)
 
 
 # Add GIS fields
