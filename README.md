@@ -9,6 +9,7 @@ Model Bakery is a rename of the legacy [Model Mommy project](https://pypi.org/pr
 
 [![Test Status](https://travis-ci.com/model-bakers/model_bakery.svg?branch=master)](https://travis-ci.com/model-bakers/model_bakery/)
 [![Latest PyPI version](https://img.shields.io/pypi/v/model_bakery.svg)](https://pypi.python.org/pypi/model_bakery/)
+![PyPI - Django Version](https://img.shields.io/pypi/djversions/model_bakery)
 [![Documentation Status](https://readthedocs.org/projects/model-bakery/badge/?version=latest)](https://model-bakery.readthedocs.io/en/latest/?badge=latest)
 
 ## Install
