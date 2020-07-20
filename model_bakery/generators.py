@@ -47,14 +47,19 @@ except ImportError:
     PositiveBigIntegerField = None
 
 try:
+    from django.db.models import JSONField
+except ImportError:
+    JSONField = None
+
+try:
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
     ArrayField = None
 
 try:
-    from django.contrib.postgres.fields import JSONField
+    from django.contrib.postgres.fields import JSONField as PostgresJSONField
 except ImportError:
-    JSONField = None
+    PostgresJSONField = None
 
 try:
     from django.contrib.postgres.fields import HStoreField
@@ -135,6 +140,8 @@ if ArrayField:
     default_mapping[ArrayField] = random_gen.gen_array
 if JSONField:
     default_mapping[JSONField] = random_gen.gen_json
+if PostgresJSONField:
+    default_mapping[PostgresJSONField] = random_gen.gen_json
 if HStoreField:
     default_mapping[HStoreField] = random_gen.gen_hstore
 if CICharField:

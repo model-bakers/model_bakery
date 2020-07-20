@@ -89,7 +89,16 @@ class Person(models.Model):
     id_document = models.CharField(unique=True, max_length=10)
 
     try:
-        from django.contrib.postgres.fields import ArrayField, HStoreField, JSONField
+        from django.models import JSONField
+
+        data = JSONField()
+    except ImportError:
+        # Skip JSONField-related fields
+        pass
+
+    try:
+        from django.contrib.postgres.fields import ArrayField, HStoreField
+        from django.contrib.postgres.fields import JSONField as PostgresJSONField
         from django.contrib.postgres.fields.citext import (
             CICharField,
             CIEmailField,
@@ -105,7 +114,7 @@ class Person(models.Model):
 
         if settings.USING_POSTGRES:
             acquaintances = ArrayField(models.IntegerField())
-            data = JSONField()
+            postgres_data = PostgresJSONField()
             hstore_data = HStoreField()
             ci_char = CICharField(max_length=30)
             ci_email = CIEmailField()
