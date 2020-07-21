@@ -9,17 +9,18 @@ default_gis_mapping = {}
 __all__ = ["BAKER_GIS", "default_gis_mapping"]
 
 if BAKER_GIS:
-    from . import random_gen
     from django.contrib.gis.db.models import (
-        GeometryField,
-        PointField,
-        LineStringField,
-        PolygonField,
-        MultiPointField,
-        MultiLineStringField,
-        MultiPolygonField,
         GeometryCollectionField,
+        GeometryField,
+        LineStringField,
+        MultiLineStringField,
+        MultiPointField,
+        MultiPolygonField,
+        PointField,
+        PolygonField,
     )
+
+    from . import random_gen
 
     default_gis_mapping[GeometryField] = random_gen.gen_geometry
     default_gis_mapping[PointField] = random_gen.gen_point

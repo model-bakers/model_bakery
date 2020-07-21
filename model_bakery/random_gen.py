@@ -200,8 +200,8 @@ def gen_interval(interval_key="milliseconds"):
 
 
 def gen_content_type():
-    from django.contrib.contenttypes.models import ContentType
     from django.apps import apps
+    from django.contrib.contenttypes.models import ContentType
 
     try:
         return ContentType.objects.get_for_model(choice(apps.get_models()))
@@ -252,7 +252,7 @@ gen_related.prepare = _prepare_related
 
 
 def gen_m2m(model, **attrs):
-    from .baker import make, MAX_MANY_QUANTITY
+    from .baker import MAX_MANY_QUANTITY, make
 
     return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
 

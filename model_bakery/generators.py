@@ -78,11 +78,11 @@ except ImportError:
     DecimalRangeField = None
 try:
     from django.contrib.postgres.fields.ranges import (
-        IntegerRangeField,
         BigIntegerRangeField,
-        FloatRangeField,
         DateRangeField,
         DateTimeRangeField,
+        FloatRangeField,
+        IntegerRangeField,
     )
 except ImportError:
     IntegerRangeField = None
@@ -172,6 +172,7 @@ if DateTimeRangeField:
 
 def get_type_mapping():
     from django.contrib.contenttypes.models import ContentType
+
     from .gis import default_gis_mapping
 
     mapping = default_mapping.copy()
