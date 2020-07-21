@@ -122,7 +122,7 @@ class Person(models.Model):
 
         decimal_range = DecimalRangeField()
     except ImportError:
-        # Django version lower thant 2.2
+        # Django version lower than 2.2
         pass
 
     if BAKER_GIS:
