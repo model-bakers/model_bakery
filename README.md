@@ -61,6 +61,34 @@ class TestCustomerModel(TestCase):
 
 Check out [documentation](<http://model-bakery.readthedocs.org/>) for more complete examples.
 
+## Contributing
+
+1. Fork this repo and clone it to your computer:
+
+```
+$ git clone git@github.com:YOUR_USER/model_bakery.git
+```
+
+2. Install the dev dependencies:
+
+```
+$ pip install -r dev_requirements.txt
+```
+
+3. Change the code and run your tests with:
+
+```
+$ make test
+```
+
+4. Before opening your PR, make sure your code changes respect the project's format with:
+
+```
+$ make lint
+```
+
+If you don't follow the step 4, your PR may fail due to `black` or `flake8` warnings.
+
 ## Maintainers
 
   - [Ana Paula Gomes](https://github.com/anapaulagomes/)
