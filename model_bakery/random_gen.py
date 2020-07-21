@@ -200,8 +200,8 @@ def gen_interval(interval_key="milliseconds"):
 
 
 def gen_content_type():
-    from django.contrib.contenttypes.models import ContentType
     from django.apps import apps
+    from django.contrib.contenttypes.models import ContentType
 
     try:
         return ContentType.objects.get_for_model(choice(apps.get_models()))
@@ -252,7 +252,7 @@ gen_related.prepare = _prepare_related
 
 
 def gen_m2m(model, **attrs):
-    from .baker import make, MAX_MANY_QUANTITY
+    from .baker import MAX_MANY_QUANTITY, make
 
     return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
 
@@ -310,3 +310,31 @@ def gen_geometry():
 
 def gen_geometry_collection():
     return "GEOMETRYCOLLECTION ({})".format(gen_point(),)
+
+
+def gen_pg_numbers_range(number_cast=int):
+    def gen_range():
+        from psycopg2._range import NumericRange
+
+        base_num = gen_integer(1, 100000)
+        return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
+
+    return gen_range
+
+
+def gen_date_range():
+    from psycopg2.extras import DateRange
+
+    base_date = gen_date()
+    interval = gen_interval()
+    args = sorted([base_date - interval, base_date + interval])
+    return DateRange(*args)
+
+
+def gen_datetime_range():
+    from psycopg2.extras import DateTimeTZRange
+
+    base_datetime = gen_datetime()
+    interval = gen_interval()
+    args = sorted([base_datetime - interval, base_datetime + interval])
+    return DateTimeTZRange(*args)

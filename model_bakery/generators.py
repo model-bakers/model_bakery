@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
     BigIntegerField,
@@ -70,6 +72,25 @@ except ImportError:
     CIEmailField = None
     CITextField = None
 
+try:
+    from django.contrib.postgres.fields.ranges import DecimalRangeField
+except ImportError:
+    DecimalRangeField = None
+try:
+    from django.contrib.postgres.fields.ranges import (
+        BigIntegerRangeField,
+        DateRangeField,
+        DateTimeRangeField,
+        FloatRangeField,
+        IntegerRangeField,
+    )
+except ImportError:
+    IntegerRangeField = None
+    BigIntegerRangeField = None
+    FloatRangeField = None
+    DateRangeField = None
+    DateTimeRangeField = None
+
 
 def _make_integer_gen_by_range(field_type):
     min_int, max_int = BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
@@ -132,6 +153,18 @@ if PositiveBigIntegerField:
     default_mapping[PositiveBigIntegerField] = _make_integer_gen_by_range(
         PositiveBigIntegerField
     )
+if DecimalRangeField:
+    default_mapping[DecimalRangeField] = random_gen.gen_pg_numbers_range(Decimal)
+if IntegerRangeField:
+    default_mapping[IntegerRangeField] = random_gen.gen_pg_numbers_range(int)
+if BigIntegerRangeField:
+    default_mapping[BigIntegerRangeField] = random_gen.gen_pg_numbers_range(int)
+if FloatRangeField:
+    default_mapping[FloatRangeField] = random_gen.gen_pg_numbers_range(float)
+if DateRangeField:
+    default_mapping[DateRangeField] = random_gen.gen_date_range
+if DateTimeRangeField:
+    default_mapping[DateTimeRangeField] = random_gen.gen_datetime_range
 
 
 # Add GIS fields
@@ -139,6 +172,7 @@ if PositiveBigIntegerField:
 
 def get_type_mapping():
     from django.contrib.contenttypes.models import ContentType
+
     from .gis import default_gis_mapping
 
     mapping = default_mapping.copy()

@@ -49,6 +49,7 @@ Currently supported fields
 * ``FileField``, ``ImageField``
 * ``JSONField``, ``ArrayField``, ``HStoreField``
 * ``CICharField``, ``CIEmailField``, ``CITextField``
+* ``DecimalRangeField``, ``IntegerRangeField``, ``BigIntegerRangeField``, ``DateRangeField``, ``DateTimeRangeField``
 
 Require ``django.contrib.gis`` in ``INSTALLED_APPS``:
 

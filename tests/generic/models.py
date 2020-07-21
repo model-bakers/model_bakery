@@ -94,6 +94,13 @@ class Person(models.Model):
             CIEmailField,
             CITextField,
         )
+        from django.contrib.postgres.fields.ranges import (
+            IntegerRangeField,
+            BigIntegerRangeField,
+            FloatRangeField,
+            DateRangeField,
+            DateTimeRangeField,
+        )
 
         acquaintances = ArrayField(models.IntegerField())
         data = JSONField()
@@ -101,8 +108,21 @@ class Person(models.Model):
         ci_char = CICharField(max_length=30)
         ci_email = CIEmailField()
         ci_text = CITextField()
+        int_range = IntegerRangeField()
+        bigint_range = BigIntegerRangeField()
+        float_range = FloatRangeField()
+        date_range = DateRangeField()
+        datetime_range = DateTimeRangeField()
     except ImportError:
         # Skip PostgreSQL-related fields
+        pass
+
+    try:
+        from django.contrib.postgres.fields.ranges import DecimalRangeField
+
+        decimal_range = DecimalRangeField()
+    except ImportError:
+        # Django version lower than 2.2
         pass
 
     if BAKER_GIS:

@@ -28,6 +28,13 @@ try:
         HStoreField,
         JSONField,
     )
+    from django.contrib.postgres.fields.ranges import (
+        IntegerRangeField,
+        BigIntegerRangeField,
+        FloatRangeField,
+        DateRangeField,
+        DateTimeRangeField,
+    )
 except ImportError:
     ArrayField = None
     JSONField = None
@@ -35,6 +42,16 @@ except ImportError:
     CICharField = None
     CIEmailField = None
     CITextField = None
+    IntegerRangeField = None
+    BigIntegerRangeField = None
+    FloatRangeField = None
+    DateRangeField = None
+    DateTimeRangeField = None
+
+try:
+    from django.contrib.postgres.fields.ranges import DecimalRangeField
+except ImportError:
+    DecimalRangeField = None
 
 
 @pytest.fixture
@@ -388,6 +405,70 @@ class TestCIStringFieldsFilling:
         ci_text_field = models.Person._meta.get_field("ci_text")
         assert isinstance(ci_text_field, CITextField)
         assert isinstance(person.ci_text, str)
+
+    @pytest.mark.skipif(
+        not DecimalRangeField,
+        reason="Django version does not support DecimalRangeField",
+    )
+    def test_filling_decimal_range_field(self, person):
+        from psycopg2._range import NumericRange
+
+        decimal_range_field = models.Person._meta.get_field("decimal_range")
+        assert isinstance(decimal_range_field, DecimalRangeField)
+        assert isinstance(person.decimal_range, NumericRange)
+        assert isinstance(person.decimal_range.lower, Decimal)
+        assert isinstance(person.decimal_range.upper, Decimal)
+        assert person.decimal_range.lower < person.decimal_range.upper
+
+    def test_filling_integer_range_field(self, person):
+        from psycopg2._range import NumericRange
+
+        int_range_field = models.Person._meta.get_field("int_range")
+        assert isinstance(int_range_field, IntegerRangeField)
+        assert isinstance(person.int_range, NumericRange)
+        assert isinstance(person.int_range.lower, int)
+        assert isinstance(person.int_range.upper, int)
+        assert person.int_range.lower < person.int_range.upper
+
+    def test_filling_integer_range_field_for_big_int(self, person):
+        from psycopg2._range import NumericRange
+
+        bigint_range_field = models.Person._meta.get_field("bigint_range")
+        assert isinstance(bigint_range_field, BigIntegerRangeField)
+        assert isinstance(person.bigint_range, NumericRange)
+        assert isinstance(person.bigint_range.lower, int)
+        assert isinstance(person.bigint_range.upper, int)
+        assert person.bigint_range.lower < person.bigint_range.upper
+
+    def test_filling_float_range_field(self, person):
+        from psycopg2._range import NumericRange
+
+        float_range_field = models.Person._meta.get_field("float_range")
+        assert isinstance(float_range_field, FloatRangeField)
+        assert isinstance(person.float_range, NumericRange)
+        assert isinstance(person.float_range.lower, float)
+        assert isinstance(person.float_range.upper, float)
+        assert person.float_range.lower < person.float_range.upper
+
+    def test_filling_date_range_field(self, person):
+        from psycopg2.extras import DateRange
+
+        date_range_field = models.Person._meta.get_field("date_range")
+        assert isinstance(date_range_field, DateRangeField)
+        assert isinstance(person.date_range, DateRange)
+        assert isinstance(person.date_range.lower, date)
+        assert isinstance(person.date_range.upper, date)
+        assert person.date_range.lower < person.date_range.upper
+
+    def test_filling_datetime_range_field(self, person):
+        from psycopg2.extras import DateTimeTZRange
+
+        datetime_range_field = models.Person._meta.get_field("datetime_range")
+        assert isinstance(datetime_range_field, DateTimeRangeField)
+        assert isinstance(person.datetime_range, DateTimeTZRange)
+        assert isinstance(person.datetime_range.lower, datetime)
+        assert isinstance(person.datetime_range.upper, datetime)
+        assert person.datetime_range.lower < person.datetime_range.upper
 
 
 @pytest.mark.skipif(
