@@ -21,7 +21,7 @@ from .fields import (
     FakeListField,
 )
 
-USING_POSTGRES = bool('sqlite' not in settings.DATABASES['default']['ENGINE'])
+USING_POSTGRES = bool("sqlite" not in settings.DATABASES["default"]["ENGINE"])
 
 # check whether or not PIL is installed
 try:
