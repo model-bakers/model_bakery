@@ -9,6 +9,7 @@ from tempfile import gettempdir
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
+from django.conf import settings
 from model_bakery.gis import BAKER_GIS
 from model_bakery.timezone import smart_datetime as datetime
 
@@ -19,6 +20,8 @@ from .fields import (
     CustomForeignKey,
     FakeListField,
 )
+
+USING_POSTGRES = bool('sqlite' not in settings.DATABASES['default']['ENGINE'])
 
 # check whether or not PIL is installed
 try:
@@ -102,17 +105,18 @@ class Person(models.Model):
             DateTimeRangeField,
         )
 
-        acquaintances = ArrayField(models.IntegerField())
-        data = JSONField()
-        hstore_data = HStoreField()
-        ci_char = CICharField(max_length=30)
-        ci_email = CIEmailField()
-        ci_text = CITextField()
-        int_range = IntegerRangeField()
-        bigint_range = BigIntegerRangeField()
-        float_range = FloatRangeField()
-        date_range = DateRangeField()
-        datetime_range = DateTimeRangeField()
+        if USING_POSTGRES:
+            acquaintances = ArrayField(models.IntegerField())
+            data = JSONField()
+            hstore_data = HStoreField()
+            ci_char = CICharField(max_length=30)
+            ci_email = CIEmailField()
+            ci_text = CITextField()
+            int_range = IntegerRangeField()
+            bigint_range = BigIntegerRangeField()
+            float_range = FloatRangeField()
+            date_range = DateRangeField()
+            datetime_range = DateTimeRangeField()
     except ImportError:
         # Skip PostgreSQL-related fields
         pass
@@ -120,7 +124,8 @@ class Person(models.Model):
     try:
         from django.contrib.postgres.fields.ranges import DecimalRangeField
 
-        decimal_range = DecimalRangeField()
+        if USING_POSTGRES:
+            decimal_range = DecimalRangeField()
     except ImportError:
         # Django version lower than 2.2
         pass
