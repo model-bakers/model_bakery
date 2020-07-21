@@ -35,25 +35,7 @@ Install it with ``pip``
 Contributing
 ============
 
-1. Prepare a virtual environment.
-
-.. code-block:: console
-
-    $ pip install virtualenvwrapper
-    $ mkvirtualenv model_bakery
-
-2. Install the requirements.
-
-.. code-block:: console
-
-    $ pip install -r dev_requirements.txt
-
-3. Run the tests.
-
-.. code-block:: console
-
-    $ make test
-
+Take a look in our `Github repo <https://github.com/model-bakers/model_bakery#contributing>`_ for more instructions on how to set up your local environment to help Model Bakery to grow.
 
 Doubts? Loved it? Hated it? Suggestions?
 ========================================
