@@ -27,9 +27,7 @@ from .exceptions import (
     ModelNotFound,
     RecipeIteratorEmpty,
 )
-
-# Enable seq to be imported from baker
-from .utils import seq  # NoQA
+from .utils import seq  # NoQA: enable seq to be imported from baker
 from .utils import import_from_str
 
 recipes = None

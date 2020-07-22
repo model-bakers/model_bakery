@@ -1,5 +1,6 @@
 -r requirements.txt
 black
+isort
 pillow
 pre-commit
 pytest
