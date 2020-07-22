@@ -191,10 +191,10 @@ def gen_byte_string(max_length=16):
     return bytes(generator)
 
 
-def gen_interval(interval_key="milliseconds"):
+def gen_interval(interval_key="milliseconds", offset=0):
     from datetime import timedelta
 
-    interval = gen_integer()
+    interval = gen_integer() + offset
     kwargs = {interval_key: interval}
     return timedelta(**kwargs)
 
@@ -326,7 +326,7 @@ def gen_date_range():
     from psycopg2.extras import DateRange
 
     base_date = gen_date()
-    interval = gen_interval()
+    interval = gen_interval(offset=24 * 60 * 60 * 1000)  # force at least 1 day interval
     args = sorted([base_date - interval, base_date + interval])
     return DateRange(*args)
 
