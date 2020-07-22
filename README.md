@@ -81,13 +81,13 @@ $ pip install -r dev_requirements.txt
 $ make test
 ```
 
-4. Before opening your PR, make sure your code changes respect the project's format with:
+4. We use [pre-commit](https://pre-commit.com/) to ensure a unique code formatting for the project. But, if you ran into any CI issues with that, make sure your code changes respect it:
 
 ```
 $ make lint
 ```
 
-If you don't follow the step 4, your PR may fail due to `black` or `flake8` warnings.
+If you don't follow the step 4, your PR may fail due to `black`, `isort` or flake8` warnings.
 
 ## Maintainers
 
