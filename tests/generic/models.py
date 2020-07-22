@@ -21,8 +21,6 @@ from .fields import (
     FakeListField,
 )
 
-USING_POSTGRES = bool("sqlite" not in settings.DATABASES["default"]["ENGINE"])
-
 # check whether or not PIL is installed
 try:
     from PIL import ImageFile as PilImageFile  # NoQA
@@ -105,7 +103,7 @@ class Person(models.Model):
             DateTimeRangeField,
         )
 
-        if USING_POSTGRES:
+        if settings.USING_POSTGRES:
             acquaintances = ArrayField(models.IntegerField())
             data = JSONField()
             hstore_data = HStoreField()
@@ -124,7 +122,7 @@ class Person(models.Model):
     try:
         from django.contrib.postgres.fields.ranges import DecimalRangeField
 
-        if USING_POSTGRES:
+        if settings.USING_POSTGRES:
             decimal_range = DecimalRangeField()
     except ImportError:
         # Django version lower than 2.2
