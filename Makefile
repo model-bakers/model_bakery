@@ -9,4 +9,9 @@ release:
 	@python setup.py sdist bdist_wheel
 	@twine upload dist/*
 
+lint:
+	@isort model_bakery
+	@black model_bakery
+	@flake8 model_bakery
+
 .PHONY: test release

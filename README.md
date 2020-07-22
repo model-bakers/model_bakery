@@ -61,6 +61,10 @@ class TestCustomerModel(TestCase):
 
 Check out [documentation](<http://model-bakery.readthedocs.org/>) for more complete examples.
 
+## Contributing
+
+Detailed info [here](https://github.com/model-bakers/model_bakery/blob/master/CONTRIBUTING.md).
+
 ## Maintainers
 
   - [Ana Paula Gomes](https://github.com/anapaulagomes/)
