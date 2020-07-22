@@ -37,9 +37,8 @@ Take a look in our `Github repo <https://github.com/model-bakers/model_bakery/bl
 Doubts? Loved it? Hated it? Suggestions?
 ========================================
 
-Feel free to open an issue for support, development or ideas!
+Feel free to `open an issue <https://github.com/model-bakers/model_bakery/issues/new>`_ for support, development or ideas!
 
-*  https://github.com/model-bakers/model_bakery
 
 
 Contents:
