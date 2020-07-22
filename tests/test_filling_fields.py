@@ -20,13 +20,18 @@ from model_bakery.random_gen import gen_related
 from tests.generic import generators, models
 
 try:
+    from django.models import JSONField
+except ImportError:
+    JSONField = None
+
+try:
     from django.contrib.postgres.fields import (
         ArrayField,
         CICharField,
         CIEmailField,
         CITextField,
         HStoreField,
-        JSONField,
+        JSONField as PostgresJSONField,
     )
     from django.contrib.postgres.fields.ranges import (
         IntegerRangeField,
@@ -37,7 +42,7 @@ try:
     )
 except ImportError:
     ArrayField = None
-    JSONField = None
+    PostgresJSONField = None
     HStoreField = None
     CICharField = None
     CIEmailField = None
@@ -162,6 +167,14 @@ class TestUUIDFieldsFilling:
         uuid_field = models.Person._meta.get_field("uuid")
         assert isinstance(uuid_field, fields.UUIDField)
         assert isinstance(person.uuid, uuid.UUID)
+
+
+@pytest.mark.skipif(JSONField is None, reason="JSONField could not be imported")
+class TestJSONFieldsFilling:
+    def test_fill_JSONField_with_uuid_object(self, person):
+        json_field = models.Person._meta.get_field("data")
+        assert isinstance(json_field, JSONField)
+        assert isinstance(person.data, dict)
 
 
 @pytest.mark.django_db
@@ -479,7 +492,7 @@ class TestPostgreSQLFieldsFilling:
         assert person.acquaintances == []
 
     def test_fill_jsonfield_with_empty_dict(self, person):
-        assert person.data == {}
+        assert person.postgres_data == {}
 
     def test_fill_hstorefield_with_empty_dict(self, person):
         assert person.hstore_data == {}

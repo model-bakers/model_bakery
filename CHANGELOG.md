@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Support to Postgres fields: `DecimalRangeField`, `FloatRangeField`, `IntegerRangeField`, `BigIntegerRangeField`, `DateRangeField`, `DateTimeRangeField` [PR #80](https://github.com/model-bakers/model_bakery/pull/80)
+- Support to django 3.1 `JSONField` [PR #85](https://github.com/model-bakers/model_bakery/pull/85)
 
 ### Changed
 - Add isort and fix imports [PR #77](https://github.com/model-bakers/model_bakery/pull/77)
