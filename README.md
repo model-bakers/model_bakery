@@ -63,7 +63,7 @@ Check out [documentation](<http://model-bakery.readthedocs.org/>) for more compl
 
 ## Contributing
 
-1. Fork this repo and clone it to your computer:
+1. [Fork this repo](https://github.com/model-bakers/model_bakery/fork) and clone it to your computer:
 
 ```
 git clone git@github.com:YOUR_USER/model_bakery.git
