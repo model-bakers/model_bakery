@@ -7,7 +7,7 @@ line of code.
 
 Model Bakery is a rename of the legacy [Model Mommy project](https://pypi.org/project/model_mommy/).
 
-[![Test Status](https://travis-ci.com/model-bakers/model_bakery.svg?branch=master)](https://travis-ci.com/model-bakers/model_bakery/)
+![Tests](https://github.com/model-bakers/model_bakery/workflows/Tests/badge.svg)
 [![Latest PyPI version](https://img.shields.io/pypi/v/model_bakery.svg)](https://pypi.python.org/pypi/model_bakery/)
 [![Documentation Status](https://readthedocs.org/projects/model-bakery/badge/?version=latest)](https://model-bakery.readthedocs.io/en/latest/?badge=latest)
 
