@@ -40,8 +40,8 @@ Doubts? Loved it? Hated it? Suggestions?
 Feel free to `open an issue <https://github.com/model-bakers/model_bakery/issues/new>`_ for support, development or ideas!
 
 
-
-Contents:
+Contents
+--------
 
 .. toctree::
    :maxdepth: 4
