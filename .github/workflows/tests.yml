@@ -1,10 +1,6 @@
 name: Tests
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+on: [push]
 
 jobs:
   tests:
@@ -40,7 +36,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -VV
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install --upgrade tox tox-gh-actions
       - name: Run tox targets for ${{ matrix.python-version }}
