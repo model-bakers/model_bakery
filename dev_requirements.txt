@@ -1,12 +1,11 @@
 -r requirements.txt
 black
+flake8
 isort
 pillow
 pre-commit
+psycopg2-binary
 pytest
 pytest-django
 sphinx
 tox
-twine==2.0.0
-wheel
-psycopg2==2.8.5

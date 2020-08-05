@@ -1,0 +1,42 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  tests:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup PostgreSQL with PostGIS
+        uses: huaxk/postgis-action@v1
+        with:
+          postgresql version: '11'
+          postgresql db: 'postgres'
+          postgresql user: 'postgres'
+
+      - name: Install PostgreSQL dependencies
+        run: |
+          sudo apt-get install -y gdal-bin
+          psql -c "CREATE ROLE runner SUPERUSER LOGIN CREATEDB;" -U postgres -h localhost -p 5432
+          psql template1 -c "CREATE EXTENSION citext;" -U postgres -h localhost -p 5432
+          psql template1 -c "CREATE EXTENSION hstore;" -U postgres -h localhost -p 5432
+          psql template1 -c "CREATE EXTENSION postgis;" -U postgres -h localhost -p 5432
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade tox tox-gh-actions
+      - name: Run tox targets for ${{ matrix.python-version }}
+        run: python -m tox
