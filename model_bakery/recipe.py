@@ -68,7 +68,7 @@ class Recipe(object):
 
 
 class RecipeForeignKey(object):
-    def __init__(self, recipe: Union[str, int, Recipe]) -> None:
+    def __init__(self, recipe: Union[str, Recipe]) -> None:
         if isinstance(recipe, Recipe):
             self.recipe = recipe
         elif isinstance(recipe, str):
@@ -83,7 +83,7 @@ class RecipeForeignKey(object):
             raise TypeError("Not a recipe")
 
 
-def foreign_key(recipe: Union[Recipe, int, str]) -> RecipeForeignKey:
+def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
     """Return a `RecipeForeignKey`.
 
     Return the callable, so that the associated `_model` will not be created

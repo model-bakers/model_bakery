@@ -101,15 +101,7 @@ def gen_from_list(a_list: Union[List[str], range]) -> Callable:
 # -- DEFAULT GENERATORS --
 
 
-def gen_from_choices(
-    choices: Union[
-        List[Tuple[str, str]],
-        Tuple[
-            Tuple[str, Tuple[Tuple[str, str], Tuple[str, str]]],
-            Tuple[str, Tuple[Tuple[str, str], Tuple[str, str]]],
-        ],
-    ]
-) -> Callable:
+def gen_from_choices(choices: List) -> Callable:
     choice_list = []
     for value, label in choices:
         if isinstance(label, (list, tuple)):
