@@ -15,12 +15,12 @@ except ImportError:
         return datetime.now()
 
 
-def smart_datetime(*args):
+def smart_datetime(*args) -> datetime:
     value = datetime(*args)
     return tz_aware(value)
 
 
-def tz_aware(d):
+def tz_aware(d: datetime) -> datetime:
     value = d
     if settings.USE_TZ:
         value = d.replace(tzinfo=utc)

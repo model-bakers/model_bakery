@@ -11,11 +11,29 @@ argument.
 
 import string
 import warnings
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import choice, randint, random, uniform
+from typing import (
+    Any,
+    Callable,
+    List,
+    Literal,
+    Optional,
+    Protocol,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    runtime_checkable,
+)
+from uuid import UUID
 
-from model_bakery.timezone import now
+from django.core.files.base import ContentFile
+from django.db.models import Field, Model
+
+from .timezone import now
 
 MAX_LENGTH = 300
 # Using sys.maxint here breaks a bunch of tests when running against a
@@ -23,27 +41,50 @@ MAX_LENGTH = 300
 MAX_INT = 100000000000
 
 
-def get_content_file(content, name):
-    from django.core.files.base import ContentFile
+# Hack to make mypy happy with attributes on functions
+# See https://github.com/python/mypy/issues/2087#issuecomment-587741762
+F = TypeVar("F", bound=Callable[..., object])
 
+
+@runtime_checkable
+class ActionGenerator(Protocol[F]):
+    required: Optional[
+        List[Union[str, Callable[[Field], Tuple[Literal["model"], Optional[Model]]]]]
+    ]
+    prepare: Optional[Callable[..., Union[Model, List[Model]]]]
+    __call__: F
+
+
+def action_generator(action: F) -> ActionGenerator[F]:
+    action_generator = cast(ActionGenerator[F], action)
+    # Make sure the cast isn't a lie.
+    action_generator.required = None
+    action_generator.prepare = None
+    return action_generator
+
+
+# End mypy hack
+
+
+def get_content_file(content: bytes, name: str) -> ContentFile:
     return ContentFile(content, name=name)
 
 
-def gen_file_field():
+def gen_file_field() -> ContentFile:
     name = "mock_file.txt"
     file_path = abspath(join(dirname(__file__), name))
     with open(file_path, "rb") as f:
         return get_content_file(f.read(), name=name)
 
 
-def gen_image_field():
+def gen_image_field() -> ContentFile:
     name = "mock_img.jpeg"
     file_path = abspath(join(dirname(__file__), name))
     with open(file_path, "rb") as f:
         return get_content_file(f.read(), name=name)
 
 
-def gen_from_list(a_list):
+def gen_from_list(a_list: Union[List[str], range]) -> Callable:
     """Make sure all values of the field are generated from a list.
 
     Examples:
@@ -60,7 +101,15 @@ def gen_from_list(a_list):
 # -- DEFAULT GENERATORS --
 
 
-def gen_from_choices(choices):
+def gen_from_choices(
+    choices: Union[
+        List[Tuple[str, str]],
+        Tuple[
+            Tuple[str, Tuple[Tuple[str, str], Tuple[str, str]]],
+            Tuple[str, Tuple[Tuple[str, str], Tuple[str, str]]],
+        ],
+    ]
+) -> Callable:
     choice_list = []
     for value, label in choices:
         if isinstance(label, (list, tuple)):
@@ -71,15 +120,16 @@ def gen_from_choices(choices):
     return gen_from_list(choice_list)
 
 
-def gen_integer(min_int=-MAX_INT, max_int=MAX_INT):
+def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
     return randint(min_int, max_int)
 
 
-def gen_float():
+def gen_float() -> float:
     return random() * gen_integer()
 
 
-def gen_decimal(max_digits, decimal_places):
+@action_generator
+def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
     def num_as_str(x):
         return "".join([str(randint(0, 9)) for _ in range(x)])
 
@@ -94,26 +144,28 @@ def gen_decimal(max_digits, decimal_places):
 gen_decimal.required = ["max_digits", "decimal_places"]
 
 
-def gen_date():
+def gen_date() -> date:
     return now().date()
 
 
-def gen_datetime():
+def gen_datetime() -> datetime:
     return now()
 
 
-def gen_time():
+def gen_time() -> time:
     return now().time()
 
 
-def gen_string(max_length):
+@action_generator
+def gen_string(max_length: int) -> str:
     return str("".join(choice(string.ascii_letters) for _ in range(max_length)))
 
 
 gen_string.required = ["max_length"]
 
 
-def gen_slug(max_length):
+@action_generator
+def gen_slug(max_length: int) -> str:
     valid_chars = string.ascii_letters + string.digits + "_-"
     return str("".join(choice(valid_chars) for _ in range(max_length)))
 
@@ -121,11 +173,11 @@ def gen_slug(max_length):
 gen_slug.required = ["max_length"]
 
 
-def gen_text():
+def gen_text() -> str:
     return gen_string(MAX_LENGTH)
 
 
-def gen_boolean():
+def gen_boolean() -> bool:
     return choice((True, False))
 
 
@@ -133,28 +185,29 @@ def gen_null_boolean():
     return choice((True, False, None))
 
 
-def gen_url():
+def gen_url() -> str:
     return str("http://www.%s.com/" % gen_string(30))
 
 
-def gen_email():
+def gen_email() -> str:
     return "%s@example.com" % gen_string(10)
 
 
-def gen_ipv6():
+def gen_ipv6() -> str:
     return ":".join(format(randint(1, 65535), "x") for _ in range(8))
 
 
-def gen_ipv4():
+def gen_ipv4() -> str:
     return ".".join(str(randint(1, 255)) for _ in range(4))
 
 
-def gen_ipv46():
+def gen_ipv46() -> str:
     ip_gen = choice([gen_ipv4, gen_ipv6])
     return ip_gen()
 
 
-def gen_ip(protocol, default_validators):
+@action_generator
+def gen_ip(protocol: str, default_validators: List[Callable]) -> str:
     from django.core.exceptions import ValidationError
 
     protocol = (protocol or "").lower()
@@ -186,14 +239,12 @@ def gen_ip(protocol, default_validators):
 gen_ip.required = ["protocol", "default_validators"]
 
 
-def gen_byte_string(max_length=16):
+def gen_byte_string(max_length: int = 16) -> bytes:
     generator = (randint(0, 255) for x in range(max_length))
     return bytes(generator)
 
 
-def gen_interval(interval_key="milliseconds", offset=0):
-    from datetime import timedelta
-
+def gen_interval(interval_key: str = "milliseconds", offset: int = 0) -> timedelta:
     interval = gen_integer() + offset
     kwargs = {interval_key: interval}
     return timedelta(**kwargs)
@@ -210,7 +261,7 @@ def gen_content_type():
         return ContentType()
 
 
-def gen_uuid():
+def gen_uuid() -> UUID:
     import uuid
 
     return uuid.uuid4()
@@ -228,19 +279,20 @@ def gen_hstore():
     return {}
 
 
-def _fk_model(field):
+def _fk_model(field: Field) -> Tuple[Literal["model"], Optional[Model]]:
     try:
         return ("model", field.related_model)
     except AttributeError:
         return ("model", field.related.parent_model)
 
 
-def _prepare_related(model, **attrs):
+def _prepare_related(model: str, **attrs: Any) -> Union[Model, List[Model]]:
     from .baker import prepare
 
     return prepare(model, **attrs)
 
 
+@action_generator
 def gen_related(model, **attrs):
     from .baker import make
 
@@ -251,6 +303,7 @@ gen_related.required = [_fk_model]
 gen_related.prepare = _prepare_related
 
 
+@action_generator
 def gen_m2m(model, **attrs):
     from .baker import MAX_MANY_QUANTITY, make
 
@@ -312,7 +365,7 @@ def gen_geometry_collection():
     return "GEOMETRYCOLLECTION ({})".format(gen_point(),)
 
 
-def gen_pg_numbers_range(number_cast=int):
+def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
     def gen_range():
         from psycopg2._range import NumericRange
 

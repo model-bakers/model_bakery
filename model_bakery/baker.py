@@ -1,8 +1,10 @@
 from os.path import dirname, join
+from typing import Any, Callable, Dict, Iterator, List, Optional, Type, Union, cast
 
 from django.apps import apps
 from django.conf import settings
 from django.contrib import contenttypes
+from django.db import models
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -10,13 +12,16 @@ from django.db.models import (
     FileField,
     ForeignKey,
     ManyToManyField,
+    Model,
+    ModelBase,
     OneToOneField,
 )
-from django.db.models.base import ModelBase
 from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
+from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
+from tests.generic.fields import CustomForeignKey
 
 from . import generators, random_gen
 from .exceptions import (
@@ -27,6 +32,7 @@ from .exceptions import (
     ModelNotFound,
     RecipeIteratorEmpty,
 )
+from .random_gen import ActionGenerator
 from .utils import seq  # NoQA: enable seq to be imported from baker
 from .utils import import_from_str
 
@@ -39,7 +45,7 @@ mock_file_txt = join(dirname(__file__), "mock_file.txt")
 MAX_MANY_QUANTITY = 5
 
 
-def _valid_quantity(quantity):
+def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
 
@@ -95,7 +101,7 @@ def prepare(_model, _quantity=None, _save_related=False, **attrs):
         return baker.prepare(_save_related=_save_related, **attrs)
 
 
-def _recipe(name):
+def _recipe(name: str) -> Any:
     app, recipe_name = name.rsplit(".", 1)
     return import_from_str(".".join((app, "baker_recipes", recipe_name)))
 
@@ -113,8 +119,8 @@ def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new
 class ModelFinder(object):
     """Encapsulates all the logic for finding a model to Baker."""
 
-    _unique_models = None
-    _ambiguous_models = None
+    _unique_models: Optional[Dict[str, Type[models.Model]]] = None
+    _ambiguous_models: Optional[List[str]] = None
 
     def get_model(self, name):
         """Get a model.
@@ -140,7 +146,7 @@ class ModelFinder(object):
 
         return model
 
-    def get_model_by_name(self, name):
+    def get_model_by_name(self, name: str) -> Optional[Type[models.Model]]:
         """Get a model by name.
 
         If a model with that name exists in more than one app, raises
@@ -148,18 +154,18 @@ class ModelFinder(object):
         """
         name = name.lower()
 
-        if self._unique_models is None:
+        if self._unique_models is None or self._ambiguous_models is None:
             self._populate()
 
-        if name in self._ambiguous_models:
+        if name in cast(List, self._ambiguous_models):
             raise AmbiguousModelName(
                 "%s is a model in more than one app. "
                 'Use the form "app.model".' % name.title()
             )
 
-        return self._unique_models.get(name)
+        return cast(Dict, self._unique_models).get(name)
 
-    def _populate(self):
+    def _populate(self) -> None:
         """Cache models for faster self._get_model."""
         unique_models = {}
         ambiguous_models = []
@@ -180,14 +186,14 @@ class ModelFinder(object):
         self._unique_models = unique_models
 
 
-def is_iterator(value):
+def is_iterator(value: Any) -> bool:
     if not hasattr(value, "__iter__"):
         return False
 
     return hasattr(value, "__next__")
 
 
-def _custom_baker_class():
+def _custom_baker_class() -> Optional[Type]:
     """Return the specified custom baker class.
 
     Returns:
@@ -217,27 +223,31 @@ def _custom_baker_class():
 
 
 class Baker(object):
-    attr_mapping = {}
-    type_mapping = None
+    attr_mapping: Dict[str, Any] = {}
+    type_mapping: Dict = {}
 
     # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
 
     @classmethod
-    def create(cls, _model, make_m2m=False, create_files=False):
+    def create(
+        cls, _model: str, make_m2m: bool = False, create_files: bool = False
+    ) -> "Baker":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
         return baker_class(_model, make_m2m, create_files)
 
-    def __init__(self, _model, make_m2m=False, create_files=False):
+    def __init__(
+        self, _model: str, make_m2m: bool = False, create_files: bool = False
+    ) -> None:
         self.make_m2m = make_m2m
         self.create_files = create_files
-        self.m2m_dict = {}
-        self.iterator_attrs = {}
-        self.model_attrs = {}
-        self.rel_attrs = {}
-        self.rel_fields = []
+        self.m2m_dict: Dict[str, List] = {}
+        self.iterator_attrs: Dict[str, Iterator] = {}
+        self.model_attrs: Dict[str, Any] = {}
+        self.rel_attrs: Dict[str, Any] = {}
+        self.rel_fields: List[str] = []
 
         if isinstance(_model, ModelBase):
             self.model = _model
@@ -246,7 +256,7 @@ class Baker(object):
 
         self.init_type_mapping()
 
-    def init_type_mapping(self):
+    def init_type_mapping(self) -> None:
         self.type_mapping = generators.get_type_mapping()
         generators_from_settings = getattr(settings, "BAKER_CUSTOM_FIELDS_GEN", {})
         for k, v in generators_from_settings.items():
@@ -276,10 +286,10 @@ class Baker(object):
         """Create, but do not persist, an instance of the associated model."""
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
-    def get_fields(self):
+    def get_fields(self) -> Any:
         return self.model._meta.fields + self.model._meta.many_to_many
 
-    def get_related(self):
+    def get_related(self,) -> List[Union[ManyToOneRel, OneToOneRel]]:
         return [r for r in self.model._meta.related_objects if not r.many_to_many]
 
     def _make(
@@ -336,7 +346,7 @@ class Baker(object):
 
         return instance
 
-    def m2m_value(self, field):
+    def m2m_value(self, field: ManyToManyField) -> List[Any]:
         if field.name in self.rel_fields:
             return self.generate_value(field)
         if not self.make_m2m or field.null and not field.fill_optional:
@@ -363,7 +373,7 @@ class Baker(object):
                 # within its get_queryset() method (e.g. annotations)
                 # is run.
                 manager = getattr(self.model, _from_manager)
-                instance = manager.get(pk=instance.pk)
+                instance: Model = manager.get(pk=instance.pk)
 
         return instance
 
@@ -378,7 +388,7 @@ class Baker(object):
 
         make(**kwargs)
 
-    def _clean_attrs(self, attrs):
+    def _clean_attrs(self, attrs: Dict[str, Any]) -> None:
         def is_rel_field(x):
             return "__" in x
 
@@ -401,7 +411,7 @@ class Baker(object):
             x.split("__")[0] for x in self.rel_attrs.keys() if is_rel_field(x)
         ]
 
-    def _skip_field(self, field):
+    def _skip_field(self, field: Any) -> bool:
         from django.contrib.contenttypes.fields import GenericRelation
 
         # check for fill optional argument
@@ -473,10 +483,12 @@ class Baker(object):
                     }
                     make(through_model, **base_kwargs)
 
-    def _remote_field(self, field):
+    def _remote_field(
+        self, field: Union[CustomForeignKey, ForeignKey, OneToOneField]
+    ) -> Union[OneToOneRel, ManyToOneRel]:
         return field.remote_field
 
-    def generate_value(self, field, commit=True):
+    def generate_value(self, field: Field, commit: bool = True) -> Any:
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
@@ -520,7 +532,9 @@ class Baker(object):
         return generator(**generator_attrs)
 
 
-def get_required_values(generator, field):
+def get_required_values(
+    generator: Callable, field: Field
+) -> Dict[str, Union[bool, int, str, List[Callable]]]:
     """Get required values for a generator from the field.
 
     If required value is a function, calls it with field as argument. If
@@ -528,8 +542,8 @@ def get_required_values(generator, field):
     and return.
     """
     # FIXME: avoid abbreviations
-    rt = {}
-    if hasattr(generator, "required"):
+    rt: Dict[str, Any] = {}
+    if isinstance(generator, ActionGenerator):
         for item in generator.required:
 
             if callable(item):  # baker can deal with the nasty hacking too!
@@ -549,7 +563,7 @@ def get_required_values(generator, field):
     return rt
 
 
-def filter_rel_attrs(field_name, **rel_attrs):
+def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, str]:
     clean_dict = {}
 
     for k, v in rel_attrs.items():

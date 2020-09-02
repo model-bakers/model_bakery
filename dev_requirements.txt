@@ -2,6 +2,7 @@
 black
 flake8
 isort
+mypy
 pillow
 pre-commit
 psycopg2-binary
