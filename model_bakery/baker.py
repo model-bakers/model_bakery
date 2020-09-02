@@ -4,7 +4,6 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Type, Union, c
 from django.apps import apps
 from django.conf import settings
 from django.contrib import contenttypes
-from django.db import models
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -119,7 +118,7 @@ def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new
 class ModelFinder(object):
     """Encapsulates all the logic for finding a model to Baker."""
 
-    _unique_models: Optional[Dict[str, Type[models.Model]]] = None
+    _unique_models: Optional[Dict[str, Type[Model]]] = None
     _ambiguous_models: Optional[List[str]] = None
 
     def get_model(self, name):
@@ -146,7 +145,7 @@ class ModelFinder(object):
 
         return model
 
-    def get_model_by_name(self, name: str) -> Optional[Type[models.Model]]:
+    def get_model_by_name(self, name: str) -> Optional[Type[Model]]:
         """Get a model by name.
 
         If a model with that name exists in more than one app, raises
