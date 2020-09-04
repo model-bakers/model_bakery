@@ -42,7 +42,6 @@ def pytest_configure():
         LANGUAGE_CODE="en",
         SITE_ID=1,
         MIDDLEWARE=(),
-        USE_TZ=os.environ.get("USE_TZ", False),
         USING_POSTGRES=using_postgres_flag,
     )
 

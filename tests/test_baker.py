@@ -13,7 +13,6 @@ from model_bakery.exceptions import (
     InvalidQuantityException,
     ModelNotFound,
 )
-from model_bakery.timezone import smart_datetime
 from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
 
@@ -567,7 +566,7 @@ class TestSkipDefaultsTestCase:
         assert dummy.default_int_field == 123
         assert dummy.default_float_field == 123.0
         assert dummy.default_date_field == "2012-01-01"
-        assert dummy.default_date_time_field == smart_datetime(2012, 1, 1)
+        assert dummy.default_date_time_field == datetime.datetime(2012, 1, 1)
         assert dummy.default_time_field == "00:00:00"
         assert dummy.default_decimal_field == Decimal("0")
         assert dummy.default_email_field == "foo@bar.org"

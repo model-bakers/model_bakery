@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] consistent use of pydocstyle
 
 ### Removed
+- `model_bakery/timezone.py` module is dropped as obsolete
 
 ## [1.1.1](https://pypi.org/project/model-bakery/1.1.1/)
 

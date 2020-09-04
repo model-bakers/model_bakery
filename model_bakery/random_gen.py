@@ -15,7 +15,7 @@ from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import choice, randint, random, uniform
 
-from model_bakery.timezone import now
+from django.utils.timezone import now
 
 MAX_LENGTH = 300
 # Using sys.maxint here breaks a bunch of tests when running against a

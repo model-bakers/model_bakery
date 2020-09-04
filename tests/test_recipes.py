@@ -5,11 +5,11 @@ from random import choice  # noqa
 from unittest.mock import patch
 
 import pytest
+from django.utils.timezone import now
 
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
 from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key
-from model_bakery.timezone import now, tz_aware
 from tests.generic.baker_recipes import SmallDogRecipe, pug
 from tests.generic.models import (
     TEST_TIME,
@@ -470,11 +470,11 @@ class TestSequences:
     def test_increment_by_timedelta(self):
         dummy = baker.make_recipe("tests.generic.serial_datetime")
         assert dummy.default_date_field == (TEST_TIME.date() + timedelta(days=1))
-        assert dummy.default_date_time_field == tz_aware(TEST_TIME + timedelta(hours=3))
+        assert dummy.default_date_time_field == TEST_TIME + timedelta(hours=3)
         assert dummy.default_time_field == (TEST_TIME + timedelta(seconds=15)).time()
         dummy = baker.make_recipe("tests.generic.serial_datetime")
         assert dummy.default_date_field == (TEST_TIME.date() + timedelta(days=2))
-        assert dummy.default_date_time_field == tz_aware(TEST_TIME + timedelta(hours=6))
+        assert dummy.default_date_time_field == TEST_TIME + timedelta(hours=6)
         assert dummy.default_time_field == (TEST_TIME + timedelta(seconds=30)).time()
 
     def test_creates_unique_timedelta_recipe_using_quantity_argument(self):
