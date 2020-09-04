@@ -14,6 +14,7 @@ from django.core.validators import (
 )
 from django.db import connection
 from django.db.models import FileField, ImageField, fields
+
 from model_bakery import baker
 from model_bakery.gis import BAKER_GIS
 from model_bakery.random_gen import gen_related
@@ -31,14 +32,14 @@ try:
         CIEmailField,
         CITextField,
         HStoreField,
-        JSONField as PostgresJSONField,
     )
+    from django.contrib.postgres.fields import JSONField as PostgresJSONField
     from django.contrib.postgres.fields.ranges import (
-        IntegerRangeField,
         BigIntegerRangeField,
-        FloatRangeField,
         DateRangeField,
         DateTimeRangeField,
+        FloatRangeField,
+        IntegerRangeField,
     )
 except ImportError:
     ArrayField = None
