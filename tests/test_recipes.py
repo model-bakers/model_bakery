@@ -5,6 +5,7 @@ from random import choice  # noqa
 from unittest.mock import patch
 
 import pytest
+
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
 from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key
@@ -255,7 +256,10 @@ class TestExecutingRecipes:
 
     def test_prepare_recipe_with_foreign_key(self):
         person_recipe = Recipe(Person, name="John Doe")
-        dog_recipe = Recipe(Dog, owner=foreign_key(person_recipe),)
+        dog_recipe = Recipe(
+            Dog,
+            owner=foreign_key(person_recipe),
+        )
         dog = dog_recipe.prepare()
 
         assert dog.id is None

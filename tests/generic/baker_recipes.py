@@ -25,7 +25,10 @@ person = Recipe(
     birth_time=now(),
 )
 
-serial_person = Recipe(Person, name=seq("joe"),)
+serial_person = Recipe(
+    Person,
+    name=seq("joe"),
+)
 
 serial_numbers = Recipe(
     DummyDefaultFieldsModel,
@@ -50,15 +53,24 @@ serial_datetime = Recipe(
 
 dog = Recipe(Dog, breed="Pug", owner=foreign_key(person))
 
-homeless_dog = Recipe(Dog, breed="Pug",)
+homeless_dog = Recipe(
+    Dog,
+    breed="Pug",
+)
 
 other_dog = Recipe(Dog, breed="Basset", owner=foreign_key("person"))
 
-dog_with_friends = dog.extend(friends_with=related(dog, dog),)
+dog_with_friends = dog.extend(
+    friends_with=related(dog, dog),
+)
 
-dog_with_more_friends = dog.extend(friends_with=related(dog_with_friends),)
+dog_with_more_friends = dog.extend(
+    friends_with=related(dog_with_friends),
+)
 
-extended_dog = dog.extend(breed="Super basset",)
+extended_dog = dog.extend(
+    breed="Super basset",
+)
 
 
 class SmallDogRecipe(Recipe):
@@ -68,11 +80,16 @@ class SmallDogRecipe(Recipe):
 small_dog = SmallDogRecipe(Dog)
 
 
-pug = small_dog.extend(breed="Pug",)
+pug = small_dog.extend(
+    breed="Pug",
+)
 
 other_dog_unicode = Recipe(Dog, breed="Basset", owner=foreign_key("person"))
 
-dummy_unique_field = Recipe(DummyUniqueIntegerFieldModel, value=seq(10),)
+dummy_unique_field = Recipe(
+    DummyUniqueIntegerFieldModel,
+    value=seq(10),
+)
 
 dog_lady = Recipe(Person, dog_set=related("dog", other_dog))
 

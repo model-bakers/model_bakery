@@ -11,7 +11,7 @@ git clone git@github.com:YOUR_USER/model_bakery.git
 2. Install the dev dependencies:
 
 ```
-pip install -r dev_requirements.txt
+pip install -r requirements_dev.txt
 ```
 
 3. Change the code and run your tests with:
@@ -26,4 +26,4 @@ make test
 make lint
 ```
 
-If you don't follow the step 4, your PR may fail due to `black`, `isort` or flake8` warnings.
+If you don't follow the step 4, your PR may fail due to `black`, `isort`, `flake8` or `pydocstyle` warnings.

@@ -3,7 +3,7 @@ include model_bakery/mock_img.jpeg
 include LICENSE
 include README.md
 include CHANGELOG.md
-include requirements.txt dev_requirements.txt
+include requirements.txt requirements_dev.txt
 include .travis.yml
 include tox.ini
 recursive-include tests *.py

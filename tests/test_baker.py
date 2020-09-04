@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
+
 from model_bakery import baker, random_gen
 from model_bakery.exceptions import (
     AmbiguousModelName,
@@ -268,10 +269,18 @@ class TestBakerCreatesAssociatedModels:
 
     def test_save_object_instances_when_handling_one_to_many_relations(self):
         owner = baker.make(models.Person)
-        dogs_set = baker.prepare(models.Dog, owner=owner, _quantity=2,)
+        dogs_set = baker.prepare(
+            models.Dog,
+            owner=owner,
+            _quantity=2,
+        )
 
         assert 0 == models.Dog.objects.count()  # ensure there're no dogs in our db
-        home = baker.make(models.Home, owner=owner, dogs=dogs_set,)
+        home = baker.make(
+            models.Home,
+            owner=owner,
+            dogs=dogs_set,
+        )
         assert home.dogs.count() == 2
         assert 2 == models.Dog.objects.count()  # dogs in dogs_set were created
 
@@ -407,7 +416,9 @@ class TestBakerCreatesAssociatedModels:
 
     def test_field_lookup_for_related_field(self):
         person = baker.make(
-            models.Person, one_related__name="Foo", fk_related__name="Bar",
+            models.Person,
+            one_related__name="Foo",
+            fk_related__name="Bar",
         )
 
         assert person.pk
@@ -418,7 +429,9 @@ class TestBakerCreatesAssociatedModels:
 
     def test_field_lookup_for_related_field_does_not_work_with_prepare(self):
         person = baker.prepare(
-            models.Person, one_related__name="Foo", fk_related__name="Bar",
+            models.Person,
+            one_related__name="Foo",
+            fk_related__name="Bar",
         )
 
         assert not person.pk
@@ -565,7 +578,8 @@ class TestSkipDefaultsTestCase:
 class TestBakerHandlesModelWithNext:
     def test_creates_instance_for_model_with_next(self):
         instance = baker.make(
-            models.BaseModelForNext, fk=baker.make(models.ModelWithNext),
+            models.BaseModelForNext,
+            fk=baker.make(models.ModelWithNext),
         )
 
         assert instance.id
@@ -649,6 +663,8 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
             assert movie.name
 
         movie = baker.make(
-            models.MovieWithAnnotation, title="Old Boy", _from_manager="objects",
+            models.MovieWithAnnotation,
+            title="Old Boy",
+            _from_manager="objects",
         )
         assert movie.title == movie.name

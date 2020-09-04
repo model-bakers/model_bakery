@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support to django 3.1 `JSONField` [PR #85](https://github.com/model-bakers/model_bakery/pull/85)
 
 ### Changed
+- [dev] Freeze dev requirements
+- [dev] Add Django 3.1 to test matrix
+- [dev] pre-commit to use local packages (so versions will match)
+- [dev] consistent use of pydocstyle
 
 ### Removed
 

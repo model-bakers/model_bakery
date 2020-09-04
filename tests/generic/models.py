@@ -6,10 +6,11 @@ import datetime as base_datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
-from django.conf import settings
+
 from model_bakery.gis import BAKER_GIS
 from model_bakery.timezone import smart_datetime as datetime
 
@@ -105,11 +106,11 @@ class Person(models.Model):
             CITextField,
         )
         from django.contrib.postgres.fields.ranges import (
-            IntegerRangeField,
             BigIntegerRangeField,
-            FloatRangeField,
             DateRangeField,
             DateTimeRangeField,
+            FloatRangeField,
+            IntegerRangeField,
         )
 
         if settings.USING_POSTGRES:
