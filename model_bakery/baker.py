@@ -418,7 +418,7 @@ class Baker(object):
             x.split("__")[0] for x in self.rel_attrs.keys() if is_rel_field(x)
         ]
 
-    def _skip_field(self, field: Any) -> bool:
+    def _skip_field(self, field: Field) -> bool:
         from django.contrib.contenttypes.fields import GenericRelation
 
         # check for fill optional argument
