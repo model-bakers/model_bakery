@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
@@ -107,7 +107,7 @@ def _make_integer_gen_by_range(field_type: Any) -> Callable:
     return gen_integer
 
 
-default_mapping = {
+default_mapping: Dict[Type, Callable] = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
@@ -178,7 +178,7 @@ if DateTimeRangeField:
 # Add GIS fields
 
 
-def get_type_mapping():
+def get_type_mapping() -> Dict[Type, Callable]:
     from django.contrib.contenttypes.models import ContentType
 
     from .gis import default_gis_mapping

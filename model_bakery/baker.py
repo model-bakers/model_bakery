@@ -20,6 +20,7 @@ from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
 from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
+
 from tests.generic.fields import CustomForeignKey
 
 from . import generators, random_gen
@@ -49,13 +50,13 @@ def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
 
 
 def make(
-    _model,
-    _quantity=None,
-    make_m2m=False,
-    _save_kwargs=None,
-    _refresh_after_create=False,
+    _model: str,
+    _quantity: Optional[int] = None,
+    make_m2m: bool = False,
+    _save_kwargs: Optional[Dict] = None,
+    _refresh_after_create: bool = False,
     _create_files=False,
-    **attrs
+    **attrs: Any
 ):
     """Create a persisted instance from a given model its associated models.
 
@@ -81,7 +82,7 @@ def make(
     )
 
 
-def prepare(_model, _quantity=None, _save_related=False, **attrs):
+def prepare(_model: str, _quantity=None, _save_related=False, **attrs) -> Model:
     """Create but do not persist an instance from a given model.
 
     It fill the fields with random values or you can specify which
@@ -121,7 +122,7 @@ class ModelFinder(object):
     _unique_models: Optional[Dict[str, Type[Model]]] = None
     _ambiguous_models: Optional[List[str]] = None
 
-    def get_model(self, name):
+    def get_model(self, name: str) -> Type[Model]:
         """Get a model.
 
         Args:
@@ -265,10 +266,10 @@ class Baker(object):
 
     def make(
         self,
-        _save_kwargs=None,
-        _refresh_after_create=False,
+        _save_kwargs: Optional[Dict[str, Any]] = None,
+        _refresh_after_create: bool = False,
         _from_manager=None,
-        **attrs
+        **attrs: Any
     ):
         """Create and persist an instance of the model associated with Baker instance."""
         params = {
@@ -281,14 +282,16 @@ class Baker(object):
         params.update(attrs)
         return self._make(**params)
 
-    def prepare(self, _save_related=False, **attrs):
+    def prepare(self, _save_related=False, **attrs: Any) -> Model:
         """Create, but do not persist, an instance of the associated model."""
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
     def get_fields(self) -> Any:
         return self.model._meta.fields + self.model._meta.many_to_many
 
-    def get_related(self,) -> List[Union[ManyToOneRel, OneToOneRel]]:
+    def get_related(
+        self,
+    ) -> List[Union[ManyToOneRel, OneToOneRel]]:
         return [r for r in self.model._meta.related_objects if not r.many_to_many]
 
     def _make(
@@ -298,8 +301,8 @@ class Baker(object):
         _save_kwargs=None,
         _refresh_after_create=False,
         _from_manager=None,
-        **attrs
-    ):
+        **attrs: Any
+    ) -> Model:
         _save_kwargs = _save_kwargs or {}
 
         self._clean_attrs(attrs)
@@ -352,14 +355,16 @@ class Baker(object):
             return []
         return self.generate_value(field)
 
-    def instance(self, attrs, _commit, _save_kwargs, _from_manager):
+    def instance(
+        self, attrs: Dict[str, Any], _commit, _save_kwargs, _from_manager
+    ) -> Model:
         one_to_many_keys = {}
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
             if isinstance(field, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[k] = attrs.pop(k)
 
-        instance = self.model(**attrs)
+        instance: Model = self.model(**attrs)
         # m2m only works for persisted instances
         if _commit:
             instance.save(**_save_kwargs)
@@ -372,23 +377,24 @@ class Baker(object):
                 # within its get_queryset() method (e.g. annotations)
                 # is run.
                 manager = getattr(self.model, _from_manager)
-                instance: Model = manager.get(pk=instance.pk)
+                instance = manager.get(pk=instance.pk)
 
         return instance
 
-    def create_by_related_name(self, instance, related):
+    def create_by_related_name(
+        self, instance: Model, related: Union[ManyToOneRel, OneToOneRel]
+    ) -> None:
         rel_name = related.get_accessor_name()
         if rel_name not in self.rel_fields:
             return
 
         kwargs = filter_rel_attrs(rel_name, **self.rel_attrs)
         kwargs[related.field.name] = instance
-        kwargs["_model"] = related.field.model
 
-        make(**kwargs)
+        make(related.field.model, **kwargs)
 
     def _clean_attrs(self, attrs: Dict[str, Any]) -> None:
-        def is_rel_field(x):
+        def is_rel_field(x: str):
             return "__" in x
 
         self.fill_in_optional = attrs.pop("_fill_optional", False)
@@ -453,7 +459,7 @@ class Baker(object):
 
         return False
 
-    def _handle_one_to_many(self, instance, attrs):
+    def _handle_one_to_many(self, instance: Model, attrs: Dict[str, Any]):
         for k, v in attrs.items():
             manager = getattr(instance, k)
 
@@ -463,7 +469,7 @@ class Baker(object):
                 # for many-to-many relationships the bulk keyword argument doesn't exist
                 manager.set(v, clear=True)
 
-    def _handle_m2m(self, instance):
+    def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
             for value in values:
                 if not value.pk:
@@ -562,7 +568,7 @@ def get_required_values(
     return rt
 
 
-def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, str]:
+def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     clean_dict = {}
 
     for k, v in rel_attrs.items():

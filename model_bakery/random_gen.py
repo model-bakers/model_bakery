@@ -122,7 +122,7 @@ def gen_float() -> float:
 
 @action_generator
 def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
-    def num_as_str(x):
+    def num_as_str(x: int):
         return "".join([str(randint(0, 9)) for _ in range(x)])
 
     if decimal_places:
