@@ -253,10 +253,10 @@ class Baker(object):
         self.rel_attrs = {}  # type: Dict[str, Any]
         self.rel_fields = []  # type: List[str]
 
-        if isinstance(_model, ModelBase):
-            self.model = _model
-        else:
+        if isinstance(_model, str):
             self.model = self.finder.get_model(_model)
+        else:
+            self.model = _model
 
         self.init_type_mapping()
 
