@@ -14,6 +14,7 @@ from django.db.models import (
     Model,
     OneToOneField,
 )
+from django.db.models.base import ModelBase
 from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
@@ -239,7 +240,10 @@ class Baker(object):
         return baker_class(_model, make_m2m, create_files)
 
     def __init__(
-        self, _model: str, make_m2m: bool = False, create_files=False  # type: bool
+        self,
+        _model: Union[str, Type[ModelBase]],
+        make_m2m: bool = False,
+        create_files: bool = False,
     ) -> None:
         self.make_m2m = make_m2m
         self.create_files = create_files
@@ -249,7 +253,7 @@ class Baker(object):
         self.rel_attrs = {}  # type: Dict[str, Any]
         self.rel_fields = []  # type: List[str]
 
-        if isinstance(_model, Model):
+        if isinstance(_model, ModelBase):
             self.model = _model
         else:
             self.model = self.finder.get_model(_model)
