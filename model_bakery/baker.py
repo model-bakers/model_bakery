@@ -21,8 +21,6 @@ from django.db.models.fields.related import (
 )
 from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
 
-from tests.generic.fields import CustomForeignKey
-
 from . import generators, random_gen
 from .exceptions import (
     AmbiguousModelName,
@@ -493,7 +491,7 @@ class Baker(object):
                     make(through_model, **base_kwargs)
 
     def _remote_field(
-        self, field: Union[CustomForeignKey, ForeignKey, OneToOneField]
+        self, field: Union[ForeignKey, OneToOneField]
     ) -> Union[OneToOneRel, ManyToOneRel]:
         return field.remote_field
 
