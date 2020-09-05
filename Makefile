@@ -10,8 +10,9 @@ release:
 	@twine upload dist/*
 
 lint:
-	@isort model_bakery
-	@black model_bakery
-	@flake8 model_bakery
+	@flake8 .
+	@isort .
+	@pydocstyle .
+	@black .
 
 .PHONY: test release

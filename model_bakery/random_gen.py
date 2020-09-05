@@ -317,11 +317,16 @@ def gen_coords():
 
 
 def gen_point():
-    return "POINT ({})".format(gen_coords(),)
+    return "POINT ({})".format(
+        gen_coords(),
+    )
 
 
 def _gen_line_string_without_prefix():
-    return "({}, {})".format(gen_coords(), gen_coords(),)
+    return "({}, {})".format(
+        gen_coords(),
+        gen_coords(),
+    )
 
 
 def gen_line_string():
@@ -334,19 +339,27 @@ def _gen_polygon_without_prefix():
 
 
 def gen_polygon():
-    return "POLYGON {}".format(_gen_polygon_without_prefix(),)
+    return "POLYGON {}".format(
+        _gen_polygon_without_prefix(),
+    )
 
 
 def gen_multi_point():
-    return "MULTIPOINT (({}))".format(gen_coords(),)
+    return "MULTIPOINT (({}))".format(
+        gen_coords(),
+    )
 
 
 def gen_multi_line_string():
-    return "MULTILINESTRING ({})".format(_gen_line_string_without_prefix(),)
+    return "MULTILINESTRING ({})".format(
+        _gen_line_string_without_prefix(),
+    )
 
 
 def gen_multi_polygon():
-    return "MULTIPOLYGON ({})".format(_gen_polygon_without_prefix(),)
+    return "MULTIPOLYGON ({})".format(
+        _gen_polygon_without_prefix(),
+    )
 
 
 def gen_geometry():
@@ -354,7 +367,9 @@ def gen_geometry():
 
 
 def gen_geometry_collection():
-    return "GEOMETRYCOLLECTION ({})".format(gen_point(),)
+    return "GEOMETRYCOLLECTION ({})".format(
+        gen_point(),
+    )
 
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
