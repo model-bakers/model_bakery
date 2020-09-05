@@ -233,7 +233,7 @@ class Baker(object):
 
     @classmethod
     def create(
-        cls, _model: str, make_m2m: bool = False, create_files=False  # type: bool
+        cls, _model: str, make_m2m: bool = False, create_files: bool = False
     ) -> "Baker":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
@@ -270,7 +270,7 @@ class Baker(object):
 
     def make(
         self,
-        _save_kwargs=None,  # type: Optional[Dict[str, Any]]
+        _save_kwargs: Optional[Dict[str, Any]] = None,
         _refresh_after_create: bool = False,
         _from_manager=None,
         **attrs: Any
@@ -497,9 +497,7 @@ class Baker(object):
     ) -> Union[OneToOneRel, ManyToOneRel]:
         return field.remote_field
 
-    def generate_value(
-        self, field: Field, commit=True  # type: bool
-    ) -> Any:
+    def generate_value(self, field: Field, commit: bool = True) -> Any:
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
@@ -539,7 +537,11 @@ class Baker(object):
             generator_attrs.update(filter_rel_attrs(field.name, **self.rel_attrs))
 
         if not commit:
+            old_generator = generator
             generator = getattr(generator, "prepare", generator)
+            if generator is None:
+                generator = old_generator
+
         return generator(**generator_attrs)
 
 
