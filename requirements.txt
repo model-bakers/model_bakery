@@ -1,2 +1,2 @@
 django>=1.11.0<3.2
-typing-extensions==3.7.4.3
+typing-extensions
