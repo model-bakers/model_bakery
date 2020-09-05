@@ -16,7 +16,7 @@ class Recipe(object):
         self.attr_mapping = attrs
         self._model = _model
         # _iterator_backups will hold values of the form (backup_iterator, usable_iterator).
-        self._iterator_backups: Dict[str, Any] = {}
+        self._iterator_backups = {}  # type: Dict[str, Any]
 
     def _mapping(self, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
         _save_related = new_attrs.get("_save_related", True)
@@ -94,7 +94,7 @@ def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
 
 class related(object):  # FIXME
     def __init__(self, *args) -> None:
-        self.related: List[Recipe] = []
+        self.related = []  # type: List[Recipe]
         for recipe in args:
             if isinstance(recipe, Recipe):
                 self.related.append(recipe)

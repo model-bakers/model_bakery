@@ -119,8 +119,9 @@ def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new
 class ModelFinder(object):
     """Encapsulates all the logic for finding a model to Baker."""
 
-    _unique_models: Optional[Dict[str, Type[Model]]] = None
-    _ambiguous_models: Optional[List[str]] = None
+    def __init__(self) -> None:
+        self._unique_models = None  # type: Optional[Dict[str, Type[Model]]]
+        self._ambiguous_models = None  # type: Optional[List[str]]
 
     def get_model(self, name: str) -> Type[Model]:
         """Get a model.
@@ -223,8 +224,8 @@ def _custom_baker_class() -> Optional[Type]:
 
 
 class Baker(object):
-    attr_mapping: Dict[str, Any] = {}
-    type_mapping: Dict = {}
+    attr_mapping = {}  # type: Dict[str, Any]
+    type_mapping = {}  # type: Dict
 
     # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
@@ -232,22 +233,22 @@ class Baker(object):
 
     @classmethod
     def create(
-        cls, _model: str, make_m2m: bool = False, create_files: bool = False
+        cls, _model: str, make_m2m: bool = False, create_files=False  # type: bool
     ) -> "Baker":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
         return baker_class(_model, make_m2m, create_files)
 
     def __init__(
-        self, _model: str, make_m2m: bool = False, create_files: bool = False
+        self, _model: str, make_m2m: bool = False, create_files=False  # type: bool
     ) -> None:
         self.make_m2m = make_m2m
         self.create_files = create_files
-        self.m2m_dict: Dict[str, List] = {}
-        self.iterator_attrs: Dict[str, Iterator] = {}
-        self.model_attrs: Dict[str, Any] = {}
-        self.rel_attrs: Dict[str, Any] = {}
-        self.rel_fields: List[str] = []
+        self.m2m_dict = {}  # type: Dict[str, List]
+        self.iterator_attrs = {}  # type: Dict[str, Iterator]
+        self.model_attrs = {}  # type: Dict[str, Any]
+        self.rel_attrs = {}  # type: Dict[str, Any]
+        self.rel_fields = []  # type: List[str]
 
         if isinstance(_model, ModelBase):
             self.model = _model
@@ -266,7 +267,7 @@ class Baker(object):
 
     def make(
         self,
-        _save_kwargs: Optional[Dict[str, Any]] = None,
+        _save_kwargs=None,  # type: Optional[Dict[str, Any]]
         _refresh_after_create: bool = False,
         _from_manager=None,
         **attrs: Any
@@ -364,7 +365,7 @@ class Baker(object):
             if isinstance(field, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[k] = attrs.pop(k)
 
-        instance: Model = self.model(**attrs)
+        instance = self.model(**attrs)  # type: Model
         # m2m only works for persisted instances
         if _commit:
             instance.save(**_save_kwargs)
@@ -493,7 +494,9 @@ class Baker(object):
     ) -> Union[OneToOneRel, ManyToOneRel]:
         return field.remote_field
 
-    def generate_value(self, field: Field, commit: bool = True) -> Any:
+    def generate_value(
+        self, field: Field, commit=True  # type: bool
+    ) -> Any:
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
@@ -547,7 +550,7 @@ def get_required_values(
     and return.
     """
     # FIXME: avoid abbreviations
-    rt: Dict[str, Any] = {}
+    rt = {}  # type: Dict[str, Any]
     if isinstance(generator, ActionGenerator):
         for item in generator.required:
 

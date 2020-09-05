@@ -107,7 +107,7 @@ def _make_integer_gen_by_range(field_type: Any) -> Callable:
     return gen_integer
 
 
-default_mapping: Dict[Type, Callable] = {
+default_mapping = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
@@ -135,7 +135,7 @@ default_mapping: Dict[Type, Callable] = {
     FileField: random_gen.gen_file_field,
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
-}
+}  # type: Dict[Type, Callable]
 
 if ArrayField:
     default_mapping[ArrayField] = random_gen.gen_array

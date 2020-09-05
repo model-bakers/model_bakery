@@ -19,7 +19,6 @@ from typing import (
     Any,
     Callable,
     List,
-    Literal,
     Optional,
     Protocol,
     Tuple,
@@ -48,11 +47,11 @@ F = TypeVar("F", bound=Callable[..., object])
 
 @runtime_checkable
 class ActionGenerator(Protocol[F]):
-    required: Optional[
-        List[Union[str, Callable[[Field], Tuple[Literal["model"], Optional[Model]]]]]
-    ]
-    prepare: Optional[Callable[..., Union[Model, List[Model]]]]
-    __call__: F
+    required = (
+        None
+    )  # type: Optional[List[Union[str, Callable[[Field], Tuple[str, Optional[Model]]]]]]
+    prepare = None  # type: Optional[Callable[..., Union[Model, List[Model]]]]
+    __call__ = None  # type: F
 
 
 def action_generator(action: F) -> ActionGenerator[F]:
@@ -271,7 +270,7 @@ def gen_hstore():
     return {}
 
 
-def _fk_model(field: Field) -> Tuple[Literal["model"], Optional[Model]]:
+def _fk_model(field: Field) -> Tuple[str, Optional[Model]]:
     try:
         return ("model", field.related_model)
     except AttributeError:
