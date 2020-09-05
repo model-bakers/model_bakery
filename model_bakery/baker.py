@@ -12,7 +12,6 @@ from django.db.models import (
     ForeignKey,
     ManyToManyField,
     Model,
-    ModelBase,
     OneToOneField,
 )
 from django.db.models.fields.proxy import OrderWrt
@@ -250,7 +249,7 @@ class Baker(object):
         self.rel_attrs = {}  # type: Dict[str, Any]
         self.rel_fields = []  # type: List[str]
 
-        if isinstance(_model, ModelBase):
+        if isinstance(_model, Model):
             self.model = _model
         else:
             self.model = self.finder.get_model(_model)
