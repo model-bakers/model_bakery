@@ -15,22 +15,12 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import choice, randint, random, uniform
-from typing import (
-    Any,
-    Callable,
-    List,
-    Optional,
-    Protocol,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-    runtime_checkable,
-)
+from typing import Any, Callable, List, Optional, Tuple, TypeVar, Union, cast
 from uuid import UUID
 
 from django.core.files.base import ContentFile
 from django.db.models import Field, Model
+from typing_extensions import Protocol, runtime_checkable
 
 from .timezone import now
 
