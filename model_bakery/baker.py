@@ -53,7 +53,7 @@ def make(
     make_m2m: bool = False,
     _save_kwargs: Optional[Dict] = None,
     _refresh_after_create: bool = False,
-    _create_files=False,
+    _create_files: bool = False,
     **attrs: Any
 ):
     """Create a persisted instance from a given model its associated models.
