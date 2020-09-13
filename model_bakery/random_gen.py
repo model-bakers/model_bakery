@@ -15,12 +15,11 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import choice, randint, random, uniform
-from typing import Any, Callable, List, Optional, Tuple, TypeVar, Union, cast
+from typing import Any, Callable, List, Optional, Tuple, Union
 from uuid import UUID
 
 from django.core.files.base import ContentFile
 from django.db.models import Field, Model
-from typing_extensions import Protocol, runtime_checkable
 
 from .timezone import now
 
@@ -28,31 +27,6 @@ MAX_LENGTH = 300
 # Using sys.maxint here breaks a bunch of tests when running against a
 # Postgres database.
 MAX_INT = 100000000000
-
-
-# Hack to make mypy happy with attributes on functions
-# See https://github.com/python/mypy/issues/2087#issuecomment-587741762
-F = TypeVar("F", bound=Callable[..., object])
-
-
-@runtime_checkable
-class ActionGenerator(Protocol[F]):
-    required = (
-        None
-    )  # type: Optional[List[Union[str, Callable[[Field], Tuple[str, Optional[Model]]]]]]
-    prepare = None  # type: Optional[Callable[..., Union[Model, List[Model]]]]
-    __call__ = None  # type: F
-
-
-def action_generator(action: F) -> ActionGenerator[F]:
-    action_generator = cast(ActionGenerator[F], action)
-    # Make sure the cast isn't a lie.
-    action_generator.required = None
-    action_generator.prepare = None
-    return action_generator
-
-
-# End mypy hack
 
 
 def get_content_file(content: bytes, name: str) -> ContentFile:
@@ -109,7 +83,6 @@ def gen_float() -> float:
     return random() * gen_integer()
 
 
-@action_generator
 def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
     def num_as_str(x: int):
         return "".join([str(randint(0, 9)) for _ in range(x)])
@@ -122,7 +95,7 @@ def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
     return Decimal(num_as_str(max_digits))
 
 
-gen_decimal.required = ["max_digits", "decimal_places"]
+gen_decimal.required = ["max_digits", "decimal_places"]  # type: ignore[attr-defined]
 
 
 def gen_date() -> date:
@@ -137,21 +110,19 @@ def gen_time() -> time:
     return now().time()
 
 
-@action_generator
 def gen_string(max_length: int) -> str:
     return str("".join(choice(string.ascii_letters) for _ in range(max_length)))
 
 
-gen_string.required = ["max_length"]
+gen_string.required = ["max_length"]  # type: ignore[attr-defined]
 
 
-@action_generator
 def gen_slug(max_length: int) -> str:
     valid_chars = string.ascii_letters + string.digits + "_-"
     return str("".join(choice(valid_chars) for _ in range(max_length)))
 
 
-gen_slug.required = ["max_length"]
+gen_slug.required = ["max_length"]  # type: ignore[attr-defined]
 
 
 def gen_text() -> str:
@@ -187,7 +158,6 @@ def gen_ipv46() -> str:
     return ip_gen()
 
 
-@action_generator
 def gen_ip(protocol: str, default_validators: List[Callable]) -> str:
     from django.core.exceptions import ValidationError
 
@@ -217,7 +187,7 @@ def gen_ip(protocol: str, default_validators: List[Callable]) -> str:
     return generator()
 
 
-gen_ip.required = ["protocol", "default_validators"]
+gen_ip.required = ["protocol", "default_validators"]  # type: ignore[attr-defined]
 
 
 def gen_byte_string(max_length: int = 16) -> bytes:
@@ -273,25 +243,23 @@ def _prepare_related(model: str, **attrs: Any) -> Union[Model, List[Model]]:
     return prepare(model, **attrs)
 
 
-@action_generator
 def gen_related(model, **attrs):
     from .baker import make
 
     return make(model, **attrs)
 
 
-gen_related.required = [_fk_model]
-gen_related.prepare = _prepare_related
+gen_related.required = [_fk_model]  # type: ignore[attr-defined]
+gen_related.prepare = _prepare_related  # type: ignore[attr-defined]
 
 
-@action_generator
 def gen_m2m(model, **attrs):
     from .baker import MAX_MANY_QUANTITY, make
 
     return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
 
 
-gen_m2m.required = [_fk_model]
+gen_m2m.required = [_fk_model]  # type: ignore[attr-defined]
 
 
 # GIS generators

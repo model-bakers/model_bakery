@@ -30,7 +30,6 @@ from .exceptions import (
     ModelNotFound,
     RecipeIteratorEmpty,
 )
-from .random_gen import ActionGenerator
 from .utils import seq  # NoQA: enable seq to be imported from baker
 from .utils import import_from_str
 
@@ -534,10 +533,7 @@ class Baker(object):
             generator_attrs.update(filter_rel_attrs(field.name, **self.rel_attrs))
 
         if not commit:
-            old_generator = generator
             generator = getattr(generator, "prepare", generator)
-            if generator is None:
-                generator = old_generator
 
         return generator(**generator_attrs)
 
@@ -553,8 +549,8 @@ def get_required_values(
     """
     # FIXME: avoid abbreviations
     rt = {}  # type: Dict[str, Any]
-    if isinstance(generator, ActionGenerator):
-        for item in generator.required:
+    if hasattr(generator, "required"):
+        for item in generator.required:  # type: ignore[attr-defined]
 
             if callable(item):  # baker can deal with the nasty hacking too!
                 key, value = item(field)
