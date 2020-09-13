@@ -117,9 +117,8 @@ def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new
 class ModelFinder(object):
     """Encapsulates all the logic for finding a model to Baker."""
 
-    def __init__(self) -> None:
-        self._unique_models = None  # type: Optional[Dict[str, Type[Model]]]
-        self._ambiguous_models = None  # type: Optional[List[str]]
+    _unique_models = None  # type: Optional[Dict[str, Type[Model]]]
+    _ambiguous_models = None  # type: Optional[List[str]]
 
     def get_model(self, name: str) -> Type[Model]:
         """Get a model.
