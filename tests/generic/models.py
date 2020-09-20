@@ -90,7 +90,7 @@ class Person(models.Model):
     id_document = models.CharField(unique=True, max_length=10)
 
     try:
-        from django.models import JSONField
+        from django.db.models import JSONField
 
         data = JSONField()
     except ImportError:
