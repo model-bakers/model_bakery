@@ -21,7 +21,7 @@ from model_bakery.random_gen import gen_related
 from tests.generic import generators, models
 
 try:
-    from django.models import JSONField
+    from django.db.models import JSONField
 except ImportError:
     JSONField = None
 
