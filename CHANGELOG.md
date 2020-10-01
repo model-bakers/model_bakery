@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] pre-commit to use local packages (so versions will match)
 - [dev] consistent use of pydocstyle
 - [dev] Updates to MANIFEST.in
+- [dev] Correct field in recipe docs
 
 ### Removed
 
