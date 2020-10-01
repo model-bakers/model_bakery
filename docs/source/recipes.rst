@@ -117,7 +117,7 @@ You can define ``foreign_key`` relations:
     )
 
     history = Recipe(PurchaseHistory,
-        customer=foreign_key(customer)
+        owner=foreign_key(customer)
     )
 
 Notice that ``customer`` is a *recipe*.
