@@ -463,11 +463,14 @@ class TestSequences:
         from model_bakery.recipe import seq  # NoQA
 
         with pytest.raises(TypeError) as exc:
-            dummy = baker.make_recipe(
+            baker.make_recipe(
                 "tests.generic.serial_numbers",
-                default_int_field=seq(1, suffix='will not work')
+                default_int_field=seq(1, suffix="will not work"),
             )
-            assert str(exc.value) == "Sequences with suffix can only be used with text values"
+            assert (
+                str(exc.value)
+                == "Sequences with suffix can only be used with text values"
+            )
 
     def test_creates_unique_field_recipe_using_for_iterator(self):
         for i in range(1, 4):
