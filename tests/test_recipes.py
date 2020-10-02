@@ -416,13 +416,19 @@ class TestSequences:
     def test_increment_for_strings_with_suffix(self):
         from model_bakery.recipe import seq  # NoQA
 
-        fred_person = person_recipe.extend(name=seq("fred", suffix="@example.com"))
+        fred_person = person_recipe.extend(email=seq("fred", suffix="@example.com"))
         person = fred_person.make()
-        assert person.name == "fred1@example.com"
+        assert person.email == "fred1@example.com"
         person = fred_person.make()
-        assert person.name == "fred2@example.com"
+        assert person.email == "fred2@example.com"
         person = fred_person.make()
-        assert person.name == "fred3@example.com"
+        assert person.email == "fred3@example.com"
+
+        # Bad suffix
+        bob_person = person_recipe.extend(email=seq("bob", suffix=42))
+        with pytest.raises(TypeError) as exc:
+            person = bob_person.make()
+            assert str(exc.value) == "Sequences suffix can only be a string"
 
     def test_increment_for_numbers(self):
         dummy = baker.make_recipe("tests.generic.serial_numbers")
@@ -456,16 +462,12 @@ class TestSequences:
     def test_increment_for_numbers_with_suffix(self):
         from model_bakery.recipe import seq  # NoQA
 
-        dummy = baker.make_recipe(
-            "tests.generic.serial_numbers", default_int_field=seq(1, suffix=1)
-        )
-        assert dummy.default_int_field == 3
-
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError) as exc:
             dummy = baker.make_recipe(
                 "tests.generic.serial_numbers",
-                default_int_field=seq(1, suffix="this should fail"),
+                default_int_field=seq(1, suffix='will not work')
             )
+            assert str(exc.value) == "Sequences with suffix can only be used with text values"
 
     def test_creates_unique_field_recipe_using_for_iterator(self):
         for i in range(1, 4):

@@ -45,5 +45,15 @@ def seq(value, increment_by=1, start=None, suffix=None):
             else:
                 yield series_date
     else:
+        if suffix and type(suffix) is not str:
+            raise TypeError("Sequences suffix can only be a string")
+
         for n in itertools.count(start or increment_by, increment_by):
-            yield value + type(value)(n) + (suffix or type(value)())
+            if suffix and type(value) is not str:
+                raise TypeError(
+                    "Sequences with suffix can only be used with text values"
+                )
+            elif suffix:
+                yield value + str(n) + suffix
+            else:
+                yield value + type(value)(n)
