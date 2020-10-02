@@ -20,7 +20,7 @@ def import_from_str(import_string):
         return import_string
 
 
-def seq(value, increment_by=1, start=None):
+def seq(value, increment_by=1, start=None, suffix=None):
     if type(value) in [datetime.datetime, datetime.date, datetime.time]:
         if start:
             msg = "start parameter is ignored when using seq with date, time or datetime objects"
@@ -46,4 +46,4 @@ def seq(value, increment_by=1, start=None):
                 yield series_date
     else:
         for n in itertools.count(start or increment_by, increment_by):
-            yield value + type(value)(n)
+            yield value + type(value)(n) + (suffix or type(value)())

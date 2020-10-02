@@ -413,6 +413,17 @@ class TestSequences:
         person = baker.make_recipe("tests.generic.serial_person")
         assert person.name == "joe3"
 
+    def test_increment_for_strings_with_suffix(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        fred_person = person_recipe.extend(name=seq("fred", suffix="@example.com"))
+        person = fred_person.make()
+        assert person.name == "fred1@example.com"
+        person = fred_person.make()
+        assert person.name == "fred2@example.com"
+        person = fred_person.make()
+        assert person.name == "fred3@example.com"
+
     def test_increment_for_numbers(self):
         dummy = baker.make_recipe("tests.generic.serial_numbers")
         assert dummy.default_int_field == 11
@@ -441,6 +452,20 @@ class TestSequences:
         assert dummy.default_int_field == 13
         assert dummy.default_decimal_field == Decimal("23.1")
         assert dummy.default_float_field == 4.23
+
+    def test_increment_for_numbers_with_suffix(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        dummy = baker.make_recipe(
+            "tests.generic.serial_numbers", default_int_field=seq(1, suffix=1)
+        )
+        assert dummy.default_int_field == 3
+
+        with pytest.raises(TypeError):
+            dummy = baker.make_recipe(
+                "tests.generic.serial_numbers",
+                default_int_field=seq(1, suffix="this should fail"),
+            )
 
     def test_creates_unique_field_recipe_using_for_iterator(self):
         for i in range(1, 4):

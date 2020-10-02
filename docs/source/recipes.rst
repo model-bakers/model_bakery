@@ -225,6 +225,24 @@ Sometimes, you have a field with an unique value and using ``make`` can cause ra
 
 This will append a counter to strings to avoid uniqueness problems and it will sum the counter with numerical values.
 
+An optional ``suffix`` parameter can be supplied to augment the value for cases like generating emails
+or other strings with common suffixes.
+
+.. code-block:: python
+
+    >>> from model_bakery import.recipe import Recipe, seq
+    >>> from shop.models import Customer
+
+    >>> customer = Recipe(Customer, email=seq('user', suffix='@example.com'))
+
+    >>> customer = baker.make_recipe('shop.customer')
+    >>> customer.email
+    'user1@example.com'
+
+    >>> customer = baker.make_recipe('shop.customer')
+    >>> customer.email
+    'user2@example.com'
+
 Sequences and iterables can be used not only for recipes, but with ``baker`` as well:
 
 .. code-block:: python
