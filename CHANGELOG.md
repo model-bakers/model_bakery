@@ -15,11 +15,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - [dev] CI switched to GitHub Actions
 - [dev] Freeze dev requirements
-- [dev] Add Django 3.1 to test matrix
+- [dev] Add Django 3.1 to test matrix [PR #103](https://github.com/model-bakers/model_bakery/pull/103) and [PR #112](https://github.com/model-bakers/model_bakery/pull/112)
 - [dev] pre-commit to use local packages (so versions will match)
 - [dev] consistent use of pydocstyle
 - [dev] Updates to MANIFEST.in
 - [dev] Correct field in recipe docs
+- [dev] Adjust imports for Django 3.1 compatibility [PR #112](https://github.com/model-bakers/model_bakery/pull/112)
 
 ### Removed
 

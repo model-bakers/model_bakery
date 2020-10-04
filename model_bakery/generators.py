@@ -87,15 +87,17 @@ try:
         BigIntegerRangeField,
         DateRangeField,
         DateTimeRangeField,
-        FloatRangeField,
         IntegerRangeField,
     )
 except ImportError:
     IntegerRangeField = None
     BigIntegerRangeField = None
-    FloatRangeField = None
     DateRangeField = None
     DateTimeRangeField = None
+try:
+    from django.contrib.postgres.fields.ranges import FloatRangeField
+except ImportError:
+    FloatRangeField = None
 
 
 def _make_integer_gen_by_range(field_type: Any) -> Callable:
