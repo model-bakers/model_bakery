@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] pre-commit to use local packages (so versions will match)
 - [dev] consistent use of pydocstyle
 - [dev] Updates to MANIFEST.in
+- [dev] Correct field in recipe docs
 - Support for `prefix` in `seq` values ([PR #111](https://github.com/model-bakers/model_bakery/pull/111) fixes [Issue #93](https://github.com/model-bakers/model_bakery/issues/93))
 
 ### Removed
