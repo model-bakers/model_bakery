@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
@@ -97,7 +98,7 @@ except ImportError:
     DateTimeRangeField = None
 
 
-def _make_integer_gen_by_range(field_type):
+def _make_integer_gen_by_range(field_type: Any) -> Callable:
     min_int, max_int = BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
 
     def gen_integer():
@@ -134,7 +135,7 @@ default_mapping = {
     FileField: random_gen.gen_file_field,
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
-}
+}  # type: Dict[Type, Callable]
 
 if ArrayField:
     default_mapping[ArrayField] = random_gen.gen_array
@@ -177,7 +178,7 @@ if DateTimeRangeField:
 # Add GIS fields
 
 
-def get_type_mapping():
+def get_type_mapping() -> Dict[Type, Callable]:
     from django.contrib.contenttypes.models import ContentType
 
     from .gis import default_gis_mapping
@@ -192,9 +193,9 @@ def get_type_mapping():
 user_mapping = {}
 
 
-def add(field, func):
+def add(field: str, func: Optional[Union[Callable, str]]) -> None:
     user_mapping[import_from_str(field)] = import_from_str(func)
 
 
-def get(field):
+def get(field: Any) -> Optional[Callable]:
     return user_mapping.get(field)

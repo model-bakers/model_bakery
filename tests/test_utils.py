@@ -1,4 +1,5 @@
 import pytest
+
 from model_bakery.utils import import_from_str
 from tests.generic.models import User
 
