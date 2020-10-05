@@ -430,7 +430,7 @@ class TestSequences:
         # Bad suffix
         bob_person = person_recipe.extend(email=seq("bob", suffix=42))
         with pytest.raises(TypeError) as exc:
-            person = bob_person.make()
+            bob_person.make()
             assert str(exc.value) == "Sequences suffix can only be a string"
 
     def test_increment_for_strings_with_suffix_and_start(self):
