@@ -21,6 +21,27 @@ def import_from_str(import_string):
 
 
 def seq(value, increment_by=1, start=None, suffix=None):
+    """Generate a sequence of values based on a running count.
+
+    This function can be used to generate sequences of `int`, `float`,
+    `datetime`, `date`, `time`, or `str`: whatever the `type` is of the
+    provided `value`.
+
+    Args:
+        value (object): the value at which to begin generation (this will
+            be ignored for types `datetime`, `date`, and `time`)
+        increment_by (`int` or `float`, optional): the amount by which to
+            increment for each generated value (defaults to `1`)
+        start (`int` or `float`, optional): the value at which the sequence
+            will begin to add to `value` (if `value` is a `str`, `start` will
+            be appended to it)
+        suffix (`str`, optional): for `str` `value` sequences, this will be
+            appended to the end of each generated value (after the counting
+            value is appended)
+
+    Returns:
+        object: generated values for sequential data
+    """
     if type(value) in [datetime.datetime, datetime.date, datetime.time]:
         if start:
             msg = "start parameter is ignored when using seq with date, time or datetime objects"
