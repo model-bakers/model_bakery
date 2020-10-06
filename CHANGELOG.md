@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Support to django 3.1 `JSONField` [PR #85](https://github.com/model-bakers/model_bakery/pull/85) and [PR #106](https://github.com/model-bakers/model_bakery/pull/106)
 - Added type annotations [PR #100](https://github.com/model-bakers/model_bakery/pull/100)
+- Support for Python 3.9 [PR #113](https://github.com/model-bakers/model_bakery/pull/113/)
 - [dev] Changelog reminder (GitHub action)
 
 ### Changed
