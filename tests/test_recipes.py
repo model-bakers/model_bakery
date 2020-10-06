@@ -413,6 +413,39 @@ class TestSequences:
         person = baker.make_recipe("tests.generic.serial_person")
         assert person.name == "joe3"
 
+    def test_increment_for_strings_with_suffix(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        fred_person = person_recipe.extend(email=seq("fred", suffix="@example.com"))
+        person = fred_person.make()
+        assert person.email == "fred1@example.com"
+        person = fred_person.make()
+        assert person.email == "fred2@example.com"
+        person = fred_person.make()
+        assert person.email == "fred3@example.com"
+
+    def test_increment_for_strings_with_bad_suffix(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        # Bad suffix
+        bob_person = person_recipe.extend(email=seq("bob", suffix=42))
+        with pytest.raises(TypeError) as exc:
+            bob_person.make()
+            assert str(exc.value) == "Sequences suffix can only be a string"
+
+    def test_increment_for_strings_with_suffix_and_start(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        fred_person = person_recipe.extend(
+            email=seq("fred", start=5, suffix="@example.com")
+        )
+        person = fred_person.make()
+        assert person.email == "fred5@example.com"
+        person = fred_person.make()
+        assert person.email == "fred6@example.com"
+        person = fred_person.make()
+        assert person.email == "fred7@example.com"
+
     def test_increment_for_numbers(self):
         dummy = baker.make_recipe("tests.generic.serial_numbers")
         assert dummy.default_int_field == 11
@@ -441,6 +474,19 @@ class TestSequences:
         assert dummy.default_int_field == 13
         assert dummy.default_decimal_field == Decimal("23.1")
         assert dummy.default_float_field == 4.23
+
+    def test_increment_for_numbers_with_suffix(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        with pytest.raises(TypeError) as exc:
+            baker.make_recipe(
+                "tests.generic.serial_numbers",
+                default_int_field=seq(1, suffix="will not work"),
+            )
+            assert (
+                str(exc.value)
+                == "Sequences with suffix can only be used with text values"
+            )
 
     def test_creates_unique_field_recipe_using_for_iterator(self):
         for i in range(1, 4):
