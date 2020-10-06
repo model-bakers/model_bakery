@@ -6,7 +6,7 @@ jobs:
   remind:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - uses: peterjgrainger/action-changelog-reminder@v1.2.0
       with:
         changelog_regex: 'CHANGELOG.md'
