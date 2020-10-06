@@ -1,5 +1,8 @@
 import inspect
 import itertools
+from typing import Any, Dict, List, Union, cast
+
+from django.db.models import Model
 
 from . import baker
 from .exceptions import RecipeNotFound
@@ -9,13 +12,13 @@ finder = baker.ModelFinder()
 
 
 class Recipe(object):
-    def __init__(self, _model, **attrs):
+    def __init__(self, _model: str, **attrs) -> None:
         self.attr_mapping = attrs
         self._model = _model
         # _iterator_backups will hold values of the form (backup_iterator, usable_iterator).
-        self._iterator_backups = {}
+        self._iterator_backups = {}  # type: Dict[str, Any]
 
-    def _mapping(self, new_attrs):
+    def _mapping(self, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
         _save_related = new_attrs.get("_save_related", True)
         rel_fields_attrs = dict((k, v) for k, v in new_attrs.items() if "__" in k)
         new_attrs = dict((k, v) for k, v in new_attrs.items() if "__" not in k)
@@ -50,22 +53,22 @@ class Recipe(object):
         mapping.update(rel_fields_attrs)
         return mapping
 
-    def make(self, **attrs):
+    def make(self, **attrs: Any) -> Union[Model, List[Model]]:
         return baker.make(self._model, **self._mapping(attrs))
 
-    def prepare(self, **attrs):
+    def prepare(self, **attrs: Any) -> Union[Model, List[Model]]:
         defaults = {"_save_related": False}
         defaults.update(attrs)
         return baker.prepare(self._model, **self._mapping(defaults))
 
-    def extend(self, **attrs):
+    def extend(self, **attrs) -> "Recipe":
         attr_mapping = self.attr_mapping.copy()
         attr_mapping.update(attrs)
         return type(self)(self._model, **attr_mapping)
 
 
 class RecipeForeignKey(object):
-    def __init__(self, recipe):
+    def __init__(self, recipe: Union[str, Recipe]) -> None:
         if isinstance(recipe, Recipe):
             self.recipe = recipe
         elif isinstance(recipe, str):
@@ -73,14 +76,14 @@ class RecipeForeignKey(object):
             caller_module = inspect.getmodule(frame[0])
             recipe = getattr(caller_module, recipe)
             if recipe:
-                self.recipe = recipe
+                self.recipe = cast(Recipe, recipe)
             else:
                 raise RecipeNotFound
         else:
             raise TypeError("Not a recipe")
 
 
-def foreign_key(recipe):
+def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
     """Return a `RecipeForeignKey`.
 
     Return the callable, so that the associated `_model` will not be created
@@ -90,8 +93,8 @@ def foreign_key(recipe):
 
 
 class related(object):  # FIXME
-    def __init__(self, *args):
-        self.related = []
+    def __init__(self, *args) -> None:
+        self.related = []  # type: List[Recipe]
         for recipe in args:
             if isinstance(recipe, Recipe):
                 self.related.append(recipe)
@@ -106,6 +109,6 @@ class related(object):  # FIXME
             else:
                 raise TypeError("Not a recipe")
 
-    def make(self):
+    def make(self) -> List[Union[Model, List[Model]]]:
         """Persist objects to m2m relation."""
         return [m.make() for m in self.related]

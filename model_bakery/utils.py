@@ -2,11 +2,12 @@ import datetime
 import importlib
 import itertools
 import warnings
+from typing import Any, Callable, Optional, Union
 
 from .timezone import tz_aware
 
 
-def import_from_str(import_string):
+def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
     """Import an object defined as import if it is an string.
 
     If `import_string` follows the format `path.to.module.object_name`,

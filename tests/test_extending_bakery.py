@@ -1,4 +1,5 @@
 import pytest
+
 from model_bakery import baker
 from model_bakery.exceptions import CustomBakerNotFound, InvalidCustomBaker
 from model_bakery.random_gen import gen_from_list

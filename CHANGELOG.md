@@ -8,18 +8,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/master)
 
 ### Added
-- Support to django 3.1 `JSONField`[PR #85](https://github.com/model-bakers/model_bakery/pull/85) and [PR #106](https://github.com/model-bakers/model_bakery/pull/106)
+- Support to django 3.1 `JSONField` [PR #85](https://github.com/model-bakers/model_bakery/pull/85) and [PR #106](https://github.com/model-bakers/model_bakery/pull/106)
+- Added type annotations [PR #100](https://github.com/model-bakers/model_bakery/pull/100)
 - [dev] Changelog reminder (GitHub action)
 
 ### Changed
+- Support for `prefix` in `seq` values ([PR #111](https://github.com/model-bakers/model_bakery/pull/111) fixes [Issue #93](https://github.com/model-bakers/model_bakery/issues/93))
 - [dev] CI switched to GitHub Actions
 - [dev] Freeze dev requirements
-- [dev] Add Django 3.1 to test matrix
+- [dev] Add Django 3.1 to test matrix [PR #103](https://github.com/model-bakers/model_bakery/pull/103) and [PR #112](https://github.com/model-bakers/model_bakery/pull/112)
 - [dev] pre-commit to use local packages (so versions will match)
 - [dev] consistent use of pydocstyle
 - [dev] Updates to MANIFEST.in
 - [dev] Correct field in recipe docs
-- Support for `prefix` in `seq` values ([PR #111](https://github.com/model-bakers/model_bakery/pull/111) fixes [Issue #93](https://github.com/model-bakers/model_bakery/issues/93))
+- [dev] Adjust imports for Django 3.1 compatibility [PR #112](https://github.com/model-bakers/model_bakery/pull/112)
 
 ### Removed
 

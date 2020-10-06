@@ -109,7 +109,6 @@ class Person(models.Model):
             BigIntegerRangeField,
             DateRangeField,
             DateTimeRangeField,
-            FloatRangeField,
             IntegerRangeField,
         )
 
@@ -122,11 +121,19 @@ class Person(models.Model):
             ci_text = CITextField()
             int_range = IntegerRangeField()
             bigint_range = BigIntegerRangeField()
-            float_range = FloatRangeField()
             date_range = DateRangeField()
             datetime_range = DateTimeRangeField()
     except ImportError:
         # Skip PostgreSQL-related fields
+        pass
+
+    try:
+        from django.contrib.postgres.fields.ranges import FloatRangeField
+
+        if settings.USING_POSTGRES:
+            float_range = FloatRangeField()
+    except ImportError:
+        # Django version greater or equal than 3.1
         pass
 
     try:
