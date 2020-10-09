@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fixes bug when field has callable `default` [PR #117](https://github.com/model-bakers/model_bakery/pull/117)
 
 ### Removed
 
