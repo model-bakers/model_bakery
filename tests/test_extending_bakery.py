@@ -57,6 +57,11 @@ class TestLessSimpleExtendBaker:
         assert person.enjoy_jards_macale is enjoy_jards_macale_field.default
         assert person.like_metal_music is like_metal_music_field.default
 
+    def test_kwarg_used_over_attr_mapping_generator(self):
+        sad_people_factory = SadPeopleBaker(Person)
+        person = sad_people_factory.make(name="test")
+        assert person.name == "test"
+
     @pytest.mark.parametrize("value", [18, 18.5, [], {}, True])
     def test_fail_pass_non_string_to_generator_required(self, value):
         teens_bakers_factory = TeenagerBaker(Person)
