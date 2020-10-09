@@ -267,9 +267,7 @@ class DummyBlankFieldsModel(models.Model):
 
 
 class ExtendedDefaultField(models.IntegerField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("default", 42)
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class DummyDefaultFieldsModel(models.Model):
@@ -286,7 +284,7 @@ class DummyDefaultFieldsModel(models.Model):
     )
     default_email_field = models.EmailField(default="foo@bar.org")
     default_slug_field = models.SlugField(default="a-slug")
-    default_unknown_class_field = ExtendedDefaultField()
+    default_unknown_class_field = ExtendedDefaultField(default=42)
     default_callable_int_field = models.IntegerField(default=lambda: 12)
     default_callable_datetime_field = models.DateTimeField(default=now)
 
