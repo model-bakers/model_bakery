@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fixed _model parameter annotations [PR #115](https://github.com/model-bakers/model_bakery/pull/115)
+- [dev] Drop Python 3.5 support as it is retired (https://www.python.org/downloads/release/python-3510/)
 
 ### Removed
 
