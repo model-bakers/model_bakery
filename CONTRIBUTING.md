@@ -27,3 +27,25 @@ make lint
 ```
 
 If you don't follow the step 4, your PR may fail due to `black`, `isort`, `flake8` or `pydocstyle` warnings.
+
+To run `postgresql` and `postgis` specific tests:
+
+1. [Install `docker`](https://docs.docker.com/get-docker/).
+
+2. Install the `postgis` dependencies. Follow the
+[instructions from the Django docs](https://docs.djangoproject.com/en/3.1/ref/contrib/gis/install/geolibs/):
+
+If you are on Ubuntu/Debian you run the following:
+
+```shell
+sudo apt update -y && sudo apt install -y binutils libproj-dev gdal-bin
+```
+
+3. Run the following script:
+
+```shell
+./postgis-tests.sh
+```
+
+That will spn up a `docker` container with `postgresql` and `postgis` enabled and run the full test
+suite.

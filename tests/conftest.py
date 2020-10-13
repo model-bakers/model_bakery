@@ -36,7 +36,15 @@ def pytest_configure():
 
     settings.configure(
         DATABASES={
-            "default": {"ENGINE": db_engine, "NAME": db_name, "HOST": "localhost"}
+            "default": {
+                "ENGINE": db_engine,
+                "NAME": db_name,
+                "HOST": "localhost",
+                # The following DB settings are only used for `postgresql` and `postgis`
+                "PORT": os.environ.get("PGPORT", ""),
+                "USER": os.environ.get("PGUSER", ""),
+                "PASSWORD": os.environ.get("PGPASSWORD", "")
+            }
         },
         INSTALLED_APPS=installed_apps,
         LANGUAGE_CODE="en",

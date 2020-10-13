@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/master)
 
 ### Added
+- [dev] Add instructions and script for running `postgres` and `postgis` tests.
 
 ### Changed
 
