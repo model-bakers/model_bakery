@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fixed _model parameter annotations [PR #115](https://github.com/model-bakers/model_bakery/pull/115)
 
 ### Removed
 
