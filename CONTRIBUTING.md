@@ -47,5 +47,5 @@ sudo apt update -y && sudo apt install -y binutils libproj-dev gdal-bin
 ./postgis-tests.sh
 ```
 
-That will spn up a `docker` container with `postgresql` and `postgis` enabled and run the full test
+That will spin up a `docker` container with `postgresql` and `postgis` enabled and run the full test
 suite.
