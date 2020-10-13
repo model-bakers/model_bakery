@@ -64,7 +64,7 @@ Check out [documentation](<http://model-bakery.readthedocs.org/>) for more compl
 
 ## Contributing
 
-Detailed info [here](https://github.com/model-bakers/model_bakery/blob/master/CONTRIBUTING.md).
+Detailed info [here](https://github.com/model-bakers/model_bakery/blob/main/CONTRIBUTING.md).
 
 ## Maintainers
 
