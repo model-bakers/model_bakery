@@ -542,6 +542,15 @@ class TestFillBlanksTestCase:
         with pytest.raises(TypeError):
             baker.make(models.DummyBlankFieldsModel, _fill_optional=1)
 
+    def test_fill_optional_with_default(self):
+        dummy = baker.make(models.DummyDefaultFieldsModel, _fill_optional=True)
+        assert dummy.default_callable_int_field == 12
+        assert isinstance(dummy.default_callable_datetime_field, datetime.datetime)
+
+    def test_fill_optional_with_default_unknown_class(self):
+        dummy = baker.make(models.DummyDefaultFieldsModel, _fill_optional=True)
+        assert dummy.default_unknown_class_field == 42
+
 
 @pytest.mark.django_db
 class TestFillAutoFieldsTestCase:
@@ -572,6 +581,9 @@ class TestSkipDefaultsTestCase:
         assert dummy.default_decimal_field == Decimal("0")
         assert dummy.default_email_field == "foo@bar.org"
         assert dummy.default_slug_field == "a-slug"
+        assert dummy.default_unknown_class_field == 42
+        assert dummy.default_callable_int_field == 12
+        assert isinstance(dummy.default_callable_datetime_field, datetime.datetime)
 
 
 @pytest.mark.django_db

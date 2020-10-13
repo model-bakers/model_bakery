@@ -515,7 +515,11 @@ class Baker(object):
             self._remote_field(field).model, contenttypes.models.ContentType
         )
 
-        if field.name in self.attr_mapping:
+        if field.has_default():
+            if callable(field.default):
+                return field.default()
+            return field.default
+        elif field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
         elif getattr(field, "choices"):
             generator = random_gen.gen_from_choices(field.choices)
@@ -525,8 +529,6 @@ class Baker(object):
             generator = generators.get(field.__class__)
         elif field.__class__ in self.type_mapping:
             generator = self.type_mapping[field.__class__]
-        elif field.has_default():
-            return field.default
         else:
             raise TypeError("%s is not supported by baker." % field.__class__)
 

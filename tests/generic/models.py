@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
+from django.utils.timezone import now
 
 from model_bakery.gis import BAKER_GIS
 from model_bakery.timezone import smart_datetime as datetime
@@ -265,6 +266,10 @@ class DummyBlankFieldsModel(models.Model):
     blank_text_field = models.TextField(max_length=300, blank=True)
 
 
+class ExtendedDefaultField(models.IntegerField):
+    pass
+
+
 class DummyDefaultFieldsModel(models.Model):
     default_id = models.AutoField(primary_key=True)
     default_char_field = models.CharField(max_length=50, default="default")
@@ -279,6 +284,9 @@ class DummyDefaultFieldsModel(models.Model):
     )
     default_email_field = models.EmailField(default="foo@bar.org")
     default_slug_field = models.SlugField(default="a-slug")
+    default_unknown_class_field = ExtendedDefaultField(default=42)
+    default_callable_int_field = models.IntegerField(default=lambda: 12)
+    default_callable_datetime_field = models.DateTimeField(default=now)
 
 
 class DummyFileFieldModel(models.Model):
