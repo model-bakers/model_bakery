@@ -47,7 +47,7 @@ def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
 
 
 def make(
-    _model: str,
+    _model: Union[str, Type[ModelBase]],
     _quantity: Optional[int] = None,
     make_m2m: bool = False,
     _save_kwargs: Optional[Dict] = None,
@@ -79,7 +79,9 @@ def make(
     )
 
 
-def prepare(_model: str, _quantity=None, _save_related=False, **attrs) -> Model:
+def prepare(
+    _model: Union[str, Type[ModelBase]], _quantity=None, _save_related=False, **attrs
+) -> Model:
     """Create but do not persist an instance from a given model.
 
     It fill the fields with random values or you can specify which
@@ -229,7 +231,10 @@ class Baker(object):
 
     @classmethod
     def create(
-        cls, _model: str, make_m2m: bool = False, create_files: bool = False
+        cls,
+        _model: Union[str, Type[ModelBase]],
+        make_m2m: bool = False,
+        create_files: bool = False,
     ) -> "Baker":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls

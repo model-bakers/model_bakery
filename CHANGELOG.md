@@ -5,11 +5,12 @@ All notable changes to `model_bakery` will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased](https://github.com/model-bakers/model_bakery/tree/master)
+## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
 
 ### Changed
+- Fixed _model parameter annotations [PR #115](https://github.com/model-bakers/model_bakery/pull/115)
 - Fixes bug when field has callable `default` [PR #117](https://github.com/model-bakers/model_bakery/pull/117)
 
 ### Removed
