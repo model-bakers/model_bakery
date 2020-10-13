@@ -43,7 +43,7 @@ def pytest_configure():
                 # The following DB settings are only used for `postgresql` and `postgis`
                 "PORT": os.environ.get("PGPORT", ""),
                 "USER": os.environ.get("PGUSER", ""),
-                "PASSWORD": os.environ.get("PGPASSWORD", "")
+                "PASSWORD": os.environ.get("PGPASSWORD", ""),
             }
         },
         INSTALLED_APPS=installed_apps,
