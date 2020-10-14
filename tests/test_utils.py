@@ -1,7 +1,8 @@
-import pytest
 from inspect import getmodule
 
-from model_bakery.utils import import_from_str, get_calling_module
+import pytest
+
+from model_bakery.utils import get_calling_module, import_from_str
 from tests.generic.models import User
 
 
@@ -30,11 +31,7 @@ def test_get_calling_module():
         return get_calling_module(2), get_calling_module(3)
 
     def dummy_method():
-        return (
-            *dummy_secondary_method(),
-            get_calling_module(1),
-            get_calling_module(2)
-        )
+        return (*dummy_secondary_method(), get_calling_module(1), get_calling_module(2))
 
     # Unpack results from the function chain
     sec_mod, sec_pytest_mod, dummy_mod, pytest_mod = dummy_method()

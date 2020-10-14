@@ -1,4 +1,3 @@
-import inspect
 import itertools
 from typing import Any, Dict, List, Type, Union, cast
 
@@ -7,7 +6,10 @@ from django.db.models.base import ModelBase
 
 from . import baker
 from .exceptions import RecipeNotFound
-from .utils import seq, get_calling_module  # NoQA: Enable seq to be imported from recipes
+from .utils import (  # NoQA: Enable seq to be imported from recipes
+    get_calling_module,
+    seq,
+)
 
 finder = baker.ModelFinder()
 
@@ -87,7 +89,8 @@ def _load_recipe_from_calling_module(recipe: str) -> Recipe:
 
 class RecipeForeignKey(object):
     """A `Recipe` to use for making ManyToOne related objects."""
-    def __init__(self, recipe: Union[str, Recipe]) -> None:
+
+    def __init__(self, recipe: Recipe) -> None:
         if isinstance(recipe, Recipe):
             self.recipe = recipe
         else:
@@ -104,7 +107,7 @@ def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
     the calling code's module.
     """
     if isinstance(recipe, str):
-        # Load `Recipe` from string before handing off to `RecipeFOreignKey`
+        # Load `Recipe` from string before handing off to `RecipeForeignKey`
         try:
             # Try to load from another module
             recipe = baker._recipe(recipe)
@@ -122,9 +125,7 @@ class related(object):  # FIXME
             if isinstance(recipe, Recipe):
                 self.related.append(recipe)
             elif isinstance(recipe, str):
-                frame = inspect.stack()[1]
-                caller_module = inspect.getmodule(frame[0])
-                recipe = getattr(caller_module, recipe)
+                recipe = _load_recipe_from_calling_module(recipe)
                 if recipe:
                     self.related.append(recipe)
                 else:

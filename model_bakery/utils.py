@@ -3,7 +3,6 @@ import importlib
 import inspect
 import itertools
 import warnings
-
 from types import ModuleType
 from typing import Any, Callable, Optional, Union
 
@@ -38,7 +37,6 @@ def get_calling_module(levels_back: int) -> ModuleType:
     """
     frame = inspect.stack()[levels_back + 1][0]
     return inspect.getmodule(frame)
-
 
 
 def seq(value, increment_by=1, start=None, suffix=None):
