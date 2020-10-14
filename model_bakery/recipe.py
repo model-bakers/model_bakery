@@ -113,9 +113,9 @@ def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
             recipe = baker._recipe(recipe)
         except (AttributeError, ImportError, ValueError):
             # Probably not in another module, so load it from calling module
-            recipe = _load_recipe_from_calling_module(recipe)
+            recipe = _load_recipe_from_calling_module(cast(str, recipe))
 
-    return RecipeForeignKey(recipe)
+    return RecipeForeignKey(cast(Recipe, recipe))
 
 
 class related(object):  # FIXME

@@ -23,7 +23,7 @@ def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
         return import_string
 
 
-def get_calling_module(levels_back: int) -> ModuleType:
+def get_calling_module(levels_back: int) -> Optional[ModuleType]:
     """Get the module some number of stack frames back from the current one.
 
     Make sure to account for the number of stacks between the "calling" code
