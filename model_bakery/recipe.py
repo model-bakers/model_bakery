@@ -7,7 +7,7 @@ from django.db.models.base import ModelBase
 
 from . import baker
 from .exceptions import RecipeNotFound
-from .utils import seq  # NoQA: Enable seq to be imported from recipes
+from .utils import seq, get_calling_module  # NoQA: Enable seq to be imported from recipes
 
 finder = baker.ModelFinder()
 
@@ -68,18 +68,28 @@ class Recipe(object):
         return type(self)(self._model, **attr_mapping)
 
 
+def _load_recipe_from_calling_module(recipe: str) -> Recipe:
+    """Load `Recipe` from the string attribute given from the calling module.
+
+    Args:
+        recipe (str): the name of the recipe attribute within the module from
+            which it should be loaded
+
+    Returns:
+        (Recipe): recipe resolved from calling module
+    """
+    recipe = getattr(get_calling_module(2), recipe)
+    if recipe:
+        return cast(Recipe, recipe)
+    else:
+        raise RecipeNotFound
+
+
 class RecipeForeignKey(object):
+    """A `Recipe` to use for making ManyToOne related objects."""
     def __init__(self, recipe: Union[str, Recipe]) -> None:
         if isinstance(recipe, Recipe):
             self.recipe = recipe
-        elif isinstance(recipe, str):
-            frame = inspect.stack()[2]
-            caller_module = inspect.getmodule(frame[0])
-            recipe = getattr(caller_module, recipe)
-            if recipe:
-                self.recipe = cast(Recipe, recipe)
-            else:
-                raise RecipeNotFound
         else:
             raise TypeError("Not a recipe")
 
@@ -89,7 +99,19 @@ def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
 
     Return the callable, so that the associated `_model` will not be created
     during the recipe definition.
+
+    This resolves recipes supplied as strings from other module paths or from
+    the calling code's module.
     """
+    if isinstance(recipe, str):
+        # Load `Recipe` from string before handing off to `RecipeFOreignKey`
+        try:
+            # Try to load from another module
+            recipe = baker._recipe(recipe)
+        except (AttributeError, ImportError, ValueError):
+            # Probably not in another module, so load it from calling module
+            recipe = _load_recipe_from_calling_module(recipe)
+
     return RecipeForeignKey(recipe)
 
 
