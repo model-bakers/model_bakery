@@ -49,4 +49,5 @@ Contents
    basic_usage
    recipes
    how_bakery_behaves
+   test_runners
    migrating_from_mommy
