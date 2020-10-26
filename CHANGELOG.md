@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added type annotations [PR #100](https://github.com/model-bakers/model_bakery/pull/100)
 - Support for Python 3.9 [PR #113](https://github.com/model-bakers/model_bakery/pull/113/)
 - [dev] Changelog reminder (GitHub action)
+- Add pytest example
 
 ### Changed
 - Support for `prefix` in `seq` values ([PR #111](https://github.com/model-bakers/model_bakery/pull/111) fixes [Issue #93](https://github.com/model-bakers/model_bakery/issues/93))
