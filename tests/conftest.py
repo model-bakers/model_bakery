@@ -34,7 +34,9 @@ def pytest_configure():
     else:
         raise NotImplementedError("Tests for % are not supported", test_db)
 
+    EXTRA_DB = "extra"
     settings.configure(
+        EXTRA_DB=EXTRA_DB,
         DATABASES={
             "default": {
                 "ENGINE": db_engine,
@@ -44,6 +46,15 @@ def pytest_configure():
                 "PORT": os.environ.get("PGPORT", ""),
                 "USER": os.environ.get("PGUSER", ""),
                 "PASSWORD": os.environ.get("PGPASSWORD", ""),
+            },
+            # Extra DB used to test multi database support
+            EXTRA_DB: {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": ":memory:",
+                "HOST": "localhost",
+                "PORT": "",
+                "USER": "",
+                "PASSWORD": "",
             }
         },
         INSTALLED_APPS=installed_apps,
