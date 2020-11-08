@@ -497,7 +497,7 @@ class Baker(object):
                         m2m_relation.source_field_name: instance,
                         m2m_relation.target_field_name: value,
                     }
-                    make(through_model, **base_kwargs)
+                    make(through_model, _using=self._using, **base_kwargs)
 
     def _remote_field(
         self, field: Union[ForeignKey, OneToOneField]

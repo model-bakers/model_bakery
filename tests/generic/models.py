@@ -317,7 +317,7 @@ class Ambiguous(models.Model):
 
 
 class School(models.Model):
-    name = models.CharField(max_length=10)
+    name = models.CharField(max_length=50)
     students = models.ManyToManyField(Person, through="SchoolEnrollment")
 
 

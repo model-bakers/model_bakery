@@ -10,6 +10,7 @@ from django.conf import settings
 from django.test import TestCase
 
 from model_bakery import baker, random_gen
+from model_bakery.baker import MAX_MANY_QUANTITY
 from model_bakery.exceptions import (
     AmbiguousModelName,
     InvalidQuantityException,
@@ -702,6 +703,43 @@ class TestBakerSupportsMultiDatabase(TestCase):
             dog.refresh_from_db()
             assert dog in dog_qs
             assert dog.owner in person_qs
+
+    def test_related_m2m_database_speficied_via_using_kwarg(self):
+        dog = baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert MAX_MANY_QUANTITY + 1 == dog_qs.count()
+        assert not models.Dog.objects.exists()
+
+    def test_related_m2m_database_speficied_via_using_kwarg_and_quantity(self):
+        qtd = 3
+        dog = baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True, _quantity=qtd)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert MAX_MANY_QUANTITY * qtd + qtd == dog_qs.count()
+        assert not models.Dog.objects.exists()
+
+    def test_create_many_to_many_with_through_option_and_custom_db(self):
+        # School student's attr is a m2m relationship with a model through
+        school = baker.make(models.School, make_m2m=True, _using=settings.EXTRA_DB)
+        assert models.School.objects.using(settings.EXTRA_DB).count() == 1
+        assert school.students.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+        assert models.SchoolEnrollment.objects.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+        assert models.Person.objects.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+
+    def test_recipe_m2m_with_custom_db(self):
+        school = baker.make_recipe("generic.paulo_freire_school", _using=settings.EXTRA_DB, make_m2m=True)
+        school.refresh_from_db()
+        assert school.pk
+        assert school.name == "Escola Municipal Paulo Freire"
+        assert models.School.objects.using(settings.EXTRA_DB).count() == 1
+        assert school.students.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+        assert models.SchoolEnrollment.objects.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+        assert models.Person.objects.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+
+        assert not models.School.objects.exists()
+        assert not models.SchoolEnrollment.objects.exists()
+        assert not models.Person.objects.exists()
+
+
 @pytest.mark.django_db
 class TestBakerAutomaticallyRefreshFromDB:
     def test_refresh_from_db_if_true(self):

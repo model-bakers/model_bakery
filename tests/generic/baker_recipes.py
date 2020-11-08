@@ -10,6 +10,7 @@ from tests.generic.models import (
     DummyDefaultFieldsModel,
     DummyUniqueIntegerFieldModel,
     Person,
+    School,
 )
 
 person = Recipe(
@@ -71,6 +72,8 @@ dog_with_more_friends = dog.extend(
 extended_dog = dog.extend(
     breed="Super basset",
 )
+
+paulo_freire_school = Recipe(School, name="Escola Municipal Paulo Freire")
 
 
 class SmallDogRecipe(Recipe):
