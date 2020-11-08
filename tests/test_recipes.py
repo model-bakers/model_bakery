@@ -233,7 +233,7 @@ class TestExecutingRecipes:
     def test_save_related_instances_on_prepare_recipe(self):
         dog = baker.prepare_recipe("tests.generic.homeless_dog")
         assert not dog.id
-        assert not dog.owner.id
+        assert not dog.owner_id
 
         dog = baker.prepare_recipe("tests.generic.homeless_dog", _save_related=True)
         assert not dog.id
