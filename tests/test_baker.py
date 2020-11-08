@@ -675,6 +675,33 @@ class TestBakerSupportsMultiDatabase(TestCase):
             assert dog in dog_qs
             assert dog.owner in person_qs
 
+    def test_allow_recipe_to_specify_database_via_using(self):
+        dog = baker.make_recipe('generic.homeless_dog', _using=settings.EXTRA_DB)
+        qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert 1 == qs.count()
+        assert dog in qs
+
+    def test_recipe_related_fk_database_specified_via_using_kwarg(self):
+        dog = baker.make_recipe('generic.dog', _using=settings.EXTRA_DB)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+        dog.refresh_from_db()
+        assert dog.owner
+        assert 1 == dog_qs.count()
+        assert dog in dog_qs
+        assert 1 == person_qs.count()
+        assert dog.owner in person_qs
+
+    def test_recipe_related_fk_database_specified_via_using_kwarg_and_quantity(self):
+        dogs = baker.make_recipe('generic.dog', _using=settings.EXTRA_DB, _quantity=5)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+        assert 5 == dog_qs.count()
+        assert 1 == person_qs.count()  # since we're using recipes, all dogs belongs to the same owner
+        for dog in dogs:
+            dog.refresh_from_db()
+            assert dog in dog_qs
+            assert dog.owner in person_qs
 @pytest.mark.django_db
 class TestBakerAutomaticallyRefreshFromDB:
     def test_refresh_from_db_if_true(self):

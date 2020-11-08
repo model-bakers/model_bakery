@@ -106,13 +106,13 @@ def _recipe(name: str) -> Any:
     return import_from_str(".".join((app, "baker_recipes", recipe_name)))
 
 
-def make_recipe(baker_recipe_name, _quantity=None, **new_attrs):
-    return _recipe(baker_recipe_name).make(_quantity=_quantity, **new_attrs)
+def make_recipe(baker_recipe_name, _quantity=None, _using="", **new_attrs):
+    return _recipe(baker_recipe_name).make(_quantity=_quantity, _using=_using, **new_attrs)
 
 
-def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, **new_attrs):
+def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, _using="", **new_attrs):
     return _recipe(baker_recipe_name).prepare(
-        _quantity=_quantity, _save_related=_save_related, **new_attrs
+        _quantity=_quantity, _save_related=_save_related, _using=_using, **new_attrs
     )
 
 

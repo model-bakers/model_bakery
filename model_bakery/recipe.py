@@ -21,7 +21,7 @@ class Recipe(object):
         # _iterator_backups will hold values of the form (backup_iterator, usable_iterator).
         self._iterator_backups = {}  # type: Dict[str, Any]
 
-    def _mapping(self, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
+    def _mapping(self, _using, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
         _save_related = new_attrs.get("_save_related", True)
         rel_fields_attrs = dict((k, v) for k, v in new_attrs.items() if "__" in k)
         new_attrs = dict((k, v) for k, v in new_attrs.items() if "__" not in k)
@@ -47,22 +47,22 @@ class Recipe(object):
                         a[key] = rel_fields_attrs.pop(key)
                 recipe_attrs = baker.filter_rel_attrs(k, **a)
                 if _save_related:
-                    mapping[k] = v.recipe.make(**recipe_attrs)
+                    mapping[k] = v.recipe.make(_using=_using, **recipe_attrs)
                 else:
-                    mapping[k] = v.recipe.prepare(**recipe_attrs)
+                    mapping[k] = v.recipe.prepare(_using=_using, **recipe_attrs)
             elif isinstance(v, related):
                 mapping[k] = v.make()
         mapping.update(new_attrs)
         mapping.update(rel_fields_attrs)
         return mapping
 
-    def make(self, **attrs: Any) -> Union[Model, List[Model]]:
-        return baker.make(self._model, **self._mapping(attrs))
+    def make(self, _using="", **attrs: Any) -> Union[Model, List[Model]]:
+        return baker.make(self._model, _using=_using, **self._mapping(_using, attrs))
 
-    def prepare(self, **attrs: Any) -> Union[Model, List[Model]]:
+    def prepare(self, _using="", **attrs: Any) -> Union[Model, List[Model]]:
         defaults = {"_save_related": False}
         defaults.update(attrs)
-        return baker.prepare(self._model, **self._mapping(defaults))
+        return baker.prepare(self._model, _using=_using, **self._mapping(_using, defaults))
 
     def extend(self, **attrs) -> "Recipe":
         attr_mapping = self.attr_mapping.copy()
