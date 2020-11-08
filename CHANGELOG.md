@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] Drop Python 3.5 support as it is retired (https://www.python.org/downloads/release/python-3510/)
 
 ### Removed
+- [dev] Remove support for Django<2.2 ([more about Django supported versions](https://www.djangoproject.com/download/#supported-versions))
 
 ## [1.2.0](https://pypi.org/project/model-bakery/1.2.0/)
 
