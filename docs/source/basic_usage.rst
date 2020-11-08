@@ -215,3 +215,23 @@ It also works with ``prepare``:
 
     customers = baker.prepare('shop.Customer', _quantity=3)
     assert len(customers) == 3
+
+Multi-database support
+----------------------
+
+Model Bakery supports django application with more than one database.
+If you want to determine which datasase bakery should use, you have the ``_using`` parameter:
+
+
+.. code-block:: python
+
+    from model_bakery import baker
+
+    custom_db = "your_custom_db"
+    assert custom_db in settings.DATABASES
+    history = baker.make('shop.PurchaseHistory', _using=custom_db)
+    assert history in PurchaseHistory.objects.using(custom_db).all()
+    assert history.customer in Customer.objects.using(custom_db).all()
+    # default database tables with no data
+    assert not PurchaseHistory.objects.exists()
+    assert not Customer.objects.exists()
