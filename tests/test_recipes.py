@@ -341,6 +341,18 @@ class TestForeignKey:
         exception = c.value
         assert str(exception) == "Not a recipe"
 
+    def test_load_from_other_module_recipe(self):
+        dog = Recipe(Dog, owner=foreign_key("tests.generic.person")).make()
+        assert dog.owner.name == "John Doe"
+
+    def test_fail_load_invalid_recipe(self):
+        with pytest.raises(AttributeError):
+            foreign_key("tests.generic.nonexisting_recipe")
+
+    def test_class_directly_with_string(self):
+        with pytest.raises(TypeError):
+            RecipeForeignKey("foo")
+
     def test_do_not_create_related_model(self):
         """It should not create another object when passing the object as argument."""
         person = baker.make_recipe("tests.generic.person")

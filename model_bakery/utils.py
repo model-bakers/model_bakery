@@ -1,7 +1,9 @@
 import datetime
 import importlib
+import inspect
 import itertools
 import warnings
+from types import ModuleType
 from typing import Any, Callable, Optional, Union
 
 from .timezone import tz_aware
@@ -19,6 +21,22 @@ def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
         return getattr(module, field_name)
     else:
         return import_string
+
+
+def get_calling_module(levels_back: int) -> Optional[ModuleType]:
+    """Get the module some number of stack frames back from the current one.
+
+    Make sure to account for the number of frames between the "calling" code
+    and the one that calls this function.
+
+    Args:
+        levels_back (int): Number of stack frames back from the current
+
+    Returns:
+        (ModuleType): the module from which the code was called
+    """
+    frame = inspect.stack()[levels_back + 1][0]
+    return inspect.getmodule(frame)
 
 
 def seq(value, increment_by=1, start=None, suffix=None):
