@@ -6,6 +6,8 @@ from unittest.mock import patch
 import pytest
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
+from django.conf import settings
+from django.test import TestCase
 
 from model_bakery import baker, random_gen
 from model_bakery.exceptions import (
@@ -620,8 +622,9 @@ class TestBakerGeneratesIPAdresses:
         assert DummyGenericIPAddressFieldForm(form_data).is_valid()
 
 
-@pytest.mark.django_db
-class TestBakerAllowsSaveParameters:
+class TestBakerAllowsSaveParameters(TestCase):
+    databases = ["default", settings.EXTRA_DB]
+
     def test_allows_save_kwargs_on_baker_make(self):
         owner = baker.make(models.Person)
         dog = baker.make(models.ModelWithOverridedSave, _save_kwargs={"owner": owner})
@@ -633,6 +636,44 @@ class TestBakerAllowsSaveParameters:
         assert owner == dog1.owner
         assert owner == dog2.owner
 
+    def test_allow_user_to_specify_database_via_save_kwargs_for_retro_compatibility(self):
+        profile = baker.make(models.Profile, _save_kwargs={"using": settings.EXTRA_DB})
+        qs = models.Profile.objects.using(settings.EXTRA_DB).all()
+
+        assert 1 == qs.count()
+        assert profile in qs
+
+
+class TestBakerSupportsMultiDatabase(TestCase):
+    databases = ["default", settings.EXTRA_DB]
+
+    def test_allow_user_to_specify_database_via_using(self):
+        profile = baker.make(models.Profile, _using=settings.EXTRA_DB)
+        qs = models.Profile.objects.using(settings.EXTRA_DB).all()
+
+        assert 1 == qs.count()
+        assert profile in qs
+
+    def test_related_fk_database_speficied_via_using_kwarg(self):
+        dog = baker.make(models.Dog, _using=settings.EXTRA_DB)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert 1 == dog_qs.count()
+        assert dog in dog_qs
+
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+        assert 1 == person_qs.count()
+        assert dog.owner in person_qs
+
+    def test_related_fk_database_speficied_via_using_kwarg_combined_with_quantity(self):
+        dogs = baker.make(models.Dog, _using=settings.EXTRA_DB, _quantity=5)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+
+        assert 5 == person_qs.count()
+        assert 5 == dog_qs.count()
+        for dog in dogs:
+            assert dog in dog_qs
+            assert dog.owner in person_qs
 
 @pytest.mark.django_db
 class TestBakerAutomaticallyRefreshFromDB:

@@ -53,6 +53,7 @@ def make(
     _save_kwargs: Optional[Dict] = None,
     _refresh_after_create: bool = False,
     _create_files: bool = False,
+    _using: str = "",
     **attrs: Any
 ):
     """Create a persisted instance from a given model its associated models.
@@ -61,7 +62,7 @@ def make(
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
-    baker = Baker.create(_model, make_m2m=make_m2m, create_files=_create_files)
+    baker = Baker.create(_model, make_m2m=make_m2m, create_files=_create_files, _using=_using)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
@@ -80,14 +81,14 @@ def make(
 
 
 def prepare(
-    _model: Union[str, Type[ModelBase]], _quantity=None, _save_related=False, **attrs
+    _model: Union[str, Type[ModelBase]], _quantity=None, _save_related=False, _using="", **attrs
 ) -> Model:
     """Create but do not persist an instance from a given model.
 
     It fill the fields with random values or you can specify which
     fields you want to define its values by yourself.
     """
-    baker = Baker.create(_model)
+    baker = Baker.create(_model, _using=_using)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
@@ -235,16 +236,18 @@ class Baker(object):
         _model: Union[str, Type[ModelBase]],
         make_m2m: bool = False,
         create_files: bool = False,
+        _using: str = "",
     ) -> "Baker":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
-        return baker_class(_model, make_m2m, create_files)
+        return baker_class(_model, make_m2m, create_files, _using=_using)
 
     def __init__(
         self,
         _model: Union[str, Type[ModelBase]],
         make_m2m: bool = False,
         create_files: bool = False,
+        _using: str = "",
     ) -> None:
         self.make_m2m = make_m2m
         self.create_files = create_files
@@ -253,6 +256,7 @@ class Baker(object):
         self.model_attrs = {}  # type: Dict[str, Any]
         self.rel_attrs = {}  # type: Dict[str, Any]
         self.rel_fields = []  # type: List[str]
+        self._using = _using
 
         if isinstance(_model, str):
             self.model = self.finder.get_model(_model)
@@ -309,6 +313,8 @@ class Baker(object):
         **attrs: Any
     ) -> Model:
         _save_kwargs = _save_kwargs or {}
+        if self._using:
+            _save_kwargs["using"] = self._using
 
         self._clean_attrs(attrs)
         for field in self.get_fields():
@@ -341,8 +347,8 @@ class Baker(object):
         instance = self.instance(
             self.model_attrs,
             _commit=commit,
-            _save_kwargs=_save_kwargs,
             _from_manager=_from_manager,
+            _save_kwargs=_save_kwargs,
         )
         if commit:
             for related in self.get_related():
@@ -534,6 +540,7 @@ class Baker(object):
 
         # attributes like max_length, decimal_places are taken into account when
         # generating the value.
+        field._using = self._using
         generator_attrs = get_required_values(generator, field)
 
         if field.name in self.rel_fields:

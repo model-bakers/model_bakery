@@ -249,7 +249,7 @@ def gen_related(model, **attrs):
     return make(model, **attrs)
 
 
-gen_related.required = [_fk_model]  # type: ignore[attr-defined]
+gen_related.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 gen_related.prepare = _prepare_related  # type: ignore[attr-defined]
 
 
