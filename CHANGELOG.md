@@ -8,8 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
-- [dev] Add instructions and script for running `postgres` and `postgis` tests.
 - Add ability to pass `str` values to `foreign_key` for recipes from other modules [PR #120](https://github.com/model-bakers/model_bakery/pull/120)
+- Add new parameter `_using` to support multi database Django applications
+- [dev] Add instructions and script for running `postgres` and `postgis` tests.
 
 ### Changed
 - Fixed _model parameter annotations [PR #115](https://github.com/model-bakers/model_bakery/pull/115)
