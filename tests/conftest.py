@@ -18,15 +18,18 @@ def pytest_configure():
     if test_db == "sqlite":
         db_engine = "django.db.backends.sqlite3"
         db_name = ":memory:"
+        extra_db_name = ":memory:"
     elif test_db == "postgresql":
         using_postgres_flag = True
         db_engine = "django.db.backends.postgresql_psycopg2"
         db_name = "postgres"
         installed_apps = ["django.contrib.postgres"] + installed_apps
+        extra_db_name = "extra_db"
     elif test_db == "postgis":
         using_postgres_flag = True
         db_engine = "django.contrib.gis.db.backends.postgis"
         db_name = "postgres"
+        extra_db_name = "extra_db"
         installed_apps = [
             "django.contrib.postgres",
             "django.contrib.gis",
@@ -49,12 +52,12 @@ def pytest_configure():
             },
             # Extra DB used to test multi database support
             EXTRA_DB: {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": ":memory:",
+                "ENGINE": db_engine,
+                "NAME": extra_db_name,
                 "HOST": "localhost",
-                "PORT": "",
-                "USER": "",
-                "PASSWORD": "",
+                "PORT": os.environ.get("PGPORT", ""),
+                "USER": os.environ.get("PGUSER", ""),
+                "PASSWORD": os.environ.get("PGPASSWORD", ""),
             }
         },
         INSTALLED_APPS=installed_apps,
