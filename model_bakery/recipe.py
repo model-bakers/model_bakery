@@ -62,7 +62,9 @@ class Recipe(object):
     def prepare(self, _using="", **attrs: Any) -> Union[Model, List[Model]]:
         defaults = {"_save_related": False}
         defaults.update(attrs)
-        return baker.prepare(self._model, _using=_using, **self._mapping(_using, defaults))
+        return baker.prepare(
+            self._model, _using=_using, **self._mapping(_using, defaults)
+        )
 
     def extend(self, **attrs) -> "Recipe":
         attr_mapping = self.attr_mapping.copy()

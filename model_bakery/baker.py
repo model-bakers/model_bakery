@@ -62,7 +62,9 @@ def make(
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
-    baker = Baker.create(_model, make_m2m=make_m2m, create_files=_create_files, _using=_using)
+    baker = Baker.create(
+        _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
+    )
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
@@ -81,7 +83,11 @@ def make(
 
 
 def prepare(
-    _model: Union[str, Type[ModelBase]], _quantity=None, _save_related=False, _using="", **attrs
+    _model: Union[str, Type[ModelBase]],
+    _quantity=None,
+    _save_related=False,
+    _using="",
+    **attrs
 ) -> Model:
     """Create but do not persist an instance from a given model.
 
@@ -107,10 +113,14 @@ def _recipe(name: str) -> Any:
 
 
 def make_recipe(baker_recipe_name, _quantity=None, _using="", **new_attrs):
-    return _recipe(baker_recipe_name).make(_quantity=_quantity, _using=_using, **new_attrs)
+    return _recipe(baker_recipe_name).make(
+        _quantity=_quantity, _using=_using, **new_attrs
+    )
 
 
-def prepare_recipe(baker_recipe_name, _quantity=None, _save_related=False, _using="", **new_attrs):
+def prepare_recipe(
+    baker_recipe_name, _quantity=None, _save_related=False, _using="", **new_attrs
+):
     return _recipe(baker_recipe_name).prepare(
         _quantity=_quantity, _save_related=_save_related, _using=_using, **new_attrs
     )

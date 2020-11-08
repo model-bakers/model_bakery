@@ -58,7 +58,7 @@ def pytest_configure():
                 "PORT": os.environ.get("PGPORT", ""),
                 "USER": os.environ.get("PGUSER", ""),
                 "PASSWORD": os.environ.get("PGPASSWORD", ""),
-            }
+            },
         },
         INSTALLED_APPS=installed_apps,
         LANGUAGE_CODE="en",
