@@ -10,9 +10,9 @@ release:
 	@twine upload dist/*
 
 lint:
+	@black .
 	@flake8 .
 	@isort .
 	@pydocstyle .
-	@black .
 
 .PHONY: test release

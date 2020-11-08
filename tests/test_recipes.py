@@ -535,6 +535,22 @@ class TestSequences:
         assert dummy.default_date_time_field == tz_aware(TEST_TIME + timedelta(hours=6))
         assert dummy.default_time_field == (TEST_TIME + timedelta(seconds=30)).time()
 
+    def test_increment_by_timedelta_seq_combined_with_quantity(self):
+        quantity = 5
+        entries = baker.make_recipe("tests.generic.serial_datetime", _quantity=quantity)
+        for i, e in enumerate(entries):
+            index = i + 1
+            assert e.default_date_field == (
+                TEST_TIME.date() + timedelta(days=1 * index)
+            )
+            assert e.default_date_time_field == tz_aware(
+                TEST_TIME + timedelta(hours=3 * index)
+            )
+            assert (
+                e.default_time_field
+                == (TEST_TIME + timedelta(seconds=15 * index)).time()
+            )
+
     def test_creates_unique_timedelta_recipe_using_quantity_argument(self):
         dummies = baker.make_recipe("tests.generic.serial_datetime", _quantity=3)
         assert dummies[0].default_date_field == TEST_TIME.date() + timedelta(days=1)
