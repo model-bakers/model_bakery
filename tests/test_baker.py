@@ -634,8 +634,8 @@ class TestBakerAllowsSaveParameters(TestCase):
         dog1, dog2 = baker.make(
             models.ModelWithOverridedSave, _save_kwargs={"owner": owner}, _quantity=2
         )
-        assert owner == dog1.owner
-        assert owner == dog2.owner
+        assert dog1.owner == owner
+        assert dog2.owner == owner
 
     def test_allow_user_to_specify_database_via_save_kwargs_for_retro_compatibility(
         self,
@@ -643,7 +643,7 @@ class TestBakerAllowsSaveParameters(TestCase):
         profile = baker.make(models.Profile, _save_kwargs={"using": settings.EXTRA_DB})
         qs = models.Profile.objects.using(settings.EXTRA_DB).all()
 
-        assert 1 == qs.count()
+        assert qs.count() == 1
         assert profile in qs
 
 
@@ -654,17 +654,17 @@ class TestBakerSupportsMultiDatabase(TestCase):
         profile = baker.make(models.Profile, _using=settings.EXTRA_DB)
         qs = models.Profile.objects.using(settings.EXTRA_DB).all()
 
-        assert 1 == qs.count()
+        assert qs.count() == 1
         assert profile in qs
 
     def test_related_fk_database_speficied_via_using_kwarg(self):
         dog = baker.make(models.Dog, _using=settings.EXTRA_DB)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
-        assert 1 == dog_qs.count()
+        assert dog_qs.count() == 1
         assert dog in dog_qs
 
         person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
-        assert 1 == person_qs.count()
+        assert person_qs.count() == 1
         assert dog.owner in person_qs
 
     def test_related_fk_database_speficied_via_using_kwarg_combined_with_quantity(self):
@@ -672,8 +672,8 @@ class TestBakerSupportsMultiDatabase(TestCase):
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
         person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
 
-        assert 5 == person_qs.count()
-        assert 5 == dog_qs.count()
+        assert person_qs.count() == 5
+        assert dog_qs.count() == 5
         for dog in dogs:
             assert dog in dog_qs
             assert dog.owner in person_qs
@@ -681,7 +681,7 @@ class TestBakerSupportsMultiDatabase(TestCase):
     def test_allow_recipe_to_specify_database_via_using(self):
         dog = baker.make_recipe("generic.homeless_dog", _using=settings.EXTRA_DB)
         qs = models.Dog.objects.using(settings.EXTRA_DB).all()
-        assert 1 == qs.count()
+        assert qs.count() == 1
         assert dog in qs
 
     def test_recipe_related_fk_database_specified_via_using_kwarg(self):
@@ -690,19 +690,18 @@ class TestBakerSupportsMultiDatabase(TestCase):
         person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
         dog.refresh_from_db()
         assert dog.owner
-        assert 1 == dog_qs.count()
+        assert dog_qs.count() == 1
         assert dog in dog_qs
-        assert 1 == person_qs.count()
+        assert person_qs.count() == 1
         assert dog.owner in person_qs
 
     def test_recipe_related_fk_database_specified_via_using_kwarg_and_quantity(self):
         dogs = baker.make_recipe("generic.dog", _using=settings.EXTRA_DB, _quantity=5)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
         person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
-        assert 5 == dog_qs.count()
-        assert (
-            1 == person_qs.count()
-        )  # since we're using recipes, all dogs belongs to the same owner
+        assert dog_qs.count() == 5
+        # since we're using recipes, all dogs belongs to the same owner
+        assert person_qs.count() == 1
         for dog in dogs:
             dog.refresh_from_db()
             assert dog in dog_qs
@@ -711,14 +710,14 @@ class TestBakerSupportsMultiDatabase(TestCase):
     def test_related_m2m_database_speficied_via_using_kwarg(self):
         baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
-        assert MAX_MANY_QUANTITY + 1 == dog_qs.count()
+        assert dog_qs.count() == MAX_MANY_QUANTITY + 1
         assert not models.Dog.objects.exists()
 
     def test_related_m2m_database_speficied_via_using_kwarg_and_quantity(self):
         qtd = 3
         baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True, _quantity=qtd)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
-        assert MAX_MANY_QUANTITY * qtd + qtd == dog_qs.count()
+        assert dog_qs.count() == MAX_MANY_QUANTITY * qtd + qtd
         assert not models.Dog.objects.exists()
 
     def test_create_many_to_many_with_through_option_and_custom_db(self):
