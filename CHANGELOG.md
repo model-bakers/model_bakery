@@ -24,9 +24,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Fixed _model parameter annotations [PR #115](https://github.com/model-bakers/model_bakery/pull/115)
 - Fixes bug when field has callable `default` [PR #117](https://github.com/model-bakers/model_bakery/pull/117)
-- [dev] Drop Python 3.5 support as it is retired (https://www.python.org/downloads/release/python-3510/)
 
 ### Removed
+- [dev] Drop Python 3.5 support as it is retired (https://www.python.org/downloads/release/python-3510/)
 - [dev] Remove support for Django<2.2 ([more about Django supported versions](https://www.djangoproject.com/download/#supported-versions))
 
 ## [1.2.0](https://pypi.org/project/model-bakery/1.2.0/)
