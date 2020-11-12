@@ -220,7 +220,7 @@ Multi-database support
 ----------------------
 
 Model Bakery supports django application with more than one database.
-If you want to determine which datasase bakery should use, you have the ``_using`` parameter:
+If you want to determine which database bakery should use, you have the ``_using`` parameter:
 
 
 .. code-block:: python
