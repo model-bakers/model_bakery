@@ -4,10 +4,13 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
+from django.test import TestCase
 
 from model_bakery import baker, random_gen
+from model_bakery.baker import MAX_MANY_QUANTITY
 from model_bakery.exceptions import (
     AmbiguousModelName,
     InvalidQuantityException,
@@ -620,8 +623,9 @@ class TestBakerGeneratesIPAdresses:
         assert DummyGenericIPAddressFieldForm(form_data).is_valid()
 
 
-@pytest.mark.django_db
-class TestBakerAllowsSaveParameters:
+class TestBakerAllowsSaveParameters(TestCase):
+    databases = ["default", settings.EXTRA_DB]
+
     def test_allows_save_kwargs_on_baker_make(self):
         owner = baker.make(models.Person)
         dog = baker.make(models.ModelWithOverridedSave, _save_kwargs={"owner": owner})
@@ -630,8 +634,131 @@ class TestBakerAllowsSaveParameters:
         dog1, dog2 = baker.make(
             models.ModelWithOverridedSave, _save_kwargs={"owner": owner}, _quantity=2
         )
-        assert owner == dog1.owner
-        assert owner == dog2.owner
+        assert dog1.owner == owner
+        assert dog2.owner == owner
+
+    def test_allow_user_to_specify_database_via_save_kwargs_for_retro_compatibility(
+        self,
+    ):
+        profile = baker.make(models.Profile, _save_kwargs={"using": settings.EXTRA_DB})
+        qs = models.Profile.objects.using(settings.EXTRA_DB).all()
+
+        assert qs.count() == 1
+        assert profile in qs
+
+
+class TestBakerSupportsMultiDatabase(TestCase):
+    databases = ["default", settings.EXTRA_DB]
+
+    def test_allow_user_to_specify_database_via_using(self):
+        profile = baker.make(models.Profile, _using=settings.EXTRA_DB)
+        qs = models.Profile.objects.using(settings.EXTRA_DB).all()
+
+        assert qs.count() == 1
+        assert profile in qs
+
+    def test_related_fk_database_speficied_via_using_kwarg(self):
+        dog = baker.make(models.Dog, _using=settings.EXTRA_DB)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert dog_qs.count() == 1
+        assert dog in dog_qs
+
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+        assert person_qs.count() == 1
+        assert dog.owner in person_qs
+
+    def test_related_fk_database_speficied_via_using_kwarg_combined_with_quantity(self):
+        dogs = baker.make(models.Dog, _using=settings.EXTRA_DB, _quantity=5)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+
+        assert person_qs.count() == 5
+        assert dog_qs.count() == 5
+        for dog in dogs:
+            assert dog in dog_qs
+            assert dog.owner in person_qs
+
+    def test_allow_recipe_to_specify_database_via_using(self):
+        dog = baker.make_recipe("generic.homeless_dog", _using=settings.EXTRA_DB)
+        qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert qs.count() == 1
+        assert dog in qs
+
+    def test_recipe_related_fk_database_specified_via_using_kwarg(self):
+        dog = baker.make_recipe("generic.dog", _using=settings.EXTRA_DB)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+        dog.refresh_from_db()
+        assert dog.owner
+        assert dog_qs.count() == 1
+        assert dog in dog_qs
+        assert person_qs.count() == 1
+        assert dog.owner in person_qs
+
+    def test_recipe_related_fk_database_specified_via_using_kwarg_and_quantity(self):
+        dogs = baker.make_recipe("generic.dog", _using=settings.EXTRA_DB, _quantity=5)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
+        assert dog_qs.count() == 5
+        # since we're using recipes, all dogs belongs to the same owner
+        assert person_qs.count() == 1
+        for dog in dogs:
+            dog.refresh_from_db()
+            assert dog in dog_qs
+            assert dog.owner in person_qs
+
+    def test_related_m2m_database_speficied_via_using_kwarg(self):
+        baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert dog_qs.count() == MAX_MANY_QUANTITY + 1
+        assert not models.Dog.objects.exists()
+
+    def test_related_m2m_database_speficied_via_using_kwarg_and_quantity(self):
+        qtd = 3
+        baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True, _quantity=qtd)
+        dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
+        assert dog_qs.count() == MAX_MANY_QUANTITY * qtd + qtd
+        assert not models.Dog.objects.exists()
+
+    def test_create_many_to_many_with_through_option_and_custom_db(self):
+        # School student's attr is a m2m relationship with a model through
+        school = baker.make(models.School, make_m2m=True, _using=settings.EXTRA_DB)
+        assert models.School.objects.using(settings.EXTRA_DB).count() == 1
+        assert (
+            school.students.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+        )
+        assert (
+            models.SchoolEnrollment.objects.using(settings.EXTRA_DB).count()
+            == baker.MAX_MANY_QUANTITY
+        )
+        assert (
+            models.Person.objects.using(settings.EXTRA_DB).count()
+            == baker.MAX_MANY_QUANTITY
+        )
+
+    def test_recipe_m2m_with_custom_db(self):
+        school = baker.make_recipe(
+            "generic.paulo_freire_school", _using=settings.EXTRA_DB, make_m2m=True
+        )
+        school.refresh_from_db()
+        assert school.pk
+        assert school.name == "Escola Municipal Paulo Freire"
+        assert models.School.objects.using(settings.EXTRA_DB).count() == 1
+        assert (
+            school.students.using(settings.EXTRA_DB).count() == baker.MAX_MANY_QUANTITY
+        )
+        assert (
+            models.SchoolEnrollment.objects.using(settings.EXTRA_DB).count()
+            == baker.MAX_MANY_QUANTITY
+        )
+        assert (
+            models.Person.objects.using(settings.EXTRA_DB).count()
+            == baker.MAX_MANY_QUANTITY
+        )
+
+        assert not models.School.objects.exists()
+        assert not models.SchoolEnrollment.objects.exists()
+        assert not models.Person.objects.exists()
 
 
 @pytest.mark.django_db

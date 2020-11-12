@@ -249,7 +249,7 @@ def gen_related(model, **attrs):
     return make(model, **attrs)
 
 
-gen_related.required = [_fk_model]  # type: ignore[attr-defined]
+gen_related.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 gen_related.prepare = _prepare_related  # type: ignore[attr-defined]
 
 
@@ -259,7 +259,7 @@ def gen_m2m(model, **attrs):
     return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
 
 
-gen_m2m.required = [_fk_model]  # type: ignore[attr-defined]
+gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 
 
 # GIS generators

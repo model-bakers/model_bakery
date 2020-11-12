@@ -18,15 +18,18 @@ def pytest_configure():
     if test_db == "sqlite":
         db_engine = "django.db.backends.sqlite3"
         db_name = ":memory:"
+        extra_db_name = ":memory:"
     elif test_db == "postgresql":
         using_postgres_flag = True
         db_engine = "django.db.backends.postgresql_psycopg2"
         db_name = "postgres"
         installed_apps = ["django.contrib.postgres"] + installed_apps
+        extra_db_name = "extra_db"
     elif test_db == "postgis":
         using_postgres_flag = True
         db_engine = "django.contrib.gis.db.backends.postgis"
         db_name = "postgres"
+        extra_db_name = "extra_db"
         installed_apps = [
             "django.contrib.postgres",
             "django.contrib.gis",
@@ -34,7 +37,9 @@ def pytest_configure():
     else:
         raise NotImplementedError("Tests for % are not supported", test_db)
 
+    EXTRA_DB = "extra"
     settings.configure(
+        EXTRA_DB=EXTRA_DB,
         DATABASES={
             "default": {
                 "ENGINE": db_engine,
@@ -44,7 +49,16 @@ def pytest_configure():
                 "PORT": os.environ.get("PGPORT", ""),
                 "USER": os.environ.get("PGUSER", ""),
                 "PASSWORD": os.environ.get("PGPASSWORD", ""),
-            }
+            },
+            # Extra DB used to test multi database support
+            EXTRA_DB: {
+                "ENGINE": db_engine,
+                "NAME": extra_db_name,
+                "HOST": "localhost",
+                "PORT": os.environ.get("PGPORT", ""),
+                "USER": os.environ.get("PGUSER", ""),
+                "PASSWORD": os.environ.get("PGPASSWORD", ""),
+            },
         },
         INSTALLED_APPS=installed_apps,
         LANGUAGE_CODE="en",
