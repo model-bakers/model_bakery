@@ -2,7 +2,6 @@ import itertools
 from typing import Any, Dict, List, Type, Union, cast
 
 from django.db.models import Model
-from django.db.models.base import ModelBase
 
 from . import baker
 from .exceptions import RecipeNotFound
@@ -15,7 +14,7 @@ finder = baker.ModelFinder()
 
 
 class Recipe(object):
-    def __init__(self, _model: Union[str, Type[ModelBase]], **attrs) -> None:
+    def __init__(self, _model: Union[str, Type[Model]], **attrs) -> None:
         self.attr_mapping = attrs
         self._model = _model
         # _iterator_backups will hold values of the form (backup_iterator, usable_iterator).
