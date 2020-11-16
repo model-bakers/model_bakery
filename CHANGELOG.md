@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Type hinting fixed for Recipe "_model" parameter
+
 ### Removed
 
 
