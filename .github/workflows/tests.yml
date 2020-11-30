@@ -27,6 +27,7 @@ jobs:
 
       - name: Install PostgreSQL dependencies
         run: |
+          sudo apt-get update
           sudo apt-get install -y gdal-bin
           psql -c "CREATE ROLE runner SUPERUSER LOGIN CREATEDB;" -U postgres -h localhost -p 5432
           psql template1 -c "CREATE EXTENSION citext;" -U postgres -h localhost -p 5432
