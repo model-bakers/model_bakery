@@ -154,11 +154,17 @@ class TestsBakerCreatesSimpleModel:
 @pytest.mark.django_db
 class TestsBakerRepeatedCreatesSimpleModel:
     def test_make_should_create_objects_respecting_quantity_parameter(self):
-        baker.make(models.Person, _quantity=5)
-        assert models.Person.objects.count() == 5
+        queries = QueryCount()
 
-        people = baker.make(models.Person, _quantity=5, name="George Washington")
-        assert all(p.name == "George Washington" for p in people)
+        with queries.start_count():
+            baker.make(models.Person, _quantity=5)
+            assert queries.count == 5
+            assert models.Person.objects.count() == 5
+
+        with queries.start_count():
+            people = baker.make(models.Person, _quantity=5, name="George Washington")
+            assert all(p.name == "George Washington" for p in people)
+            assert queries.count == 5
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
         queries = QueryCount()
@@ -174,6 +180,20 @@ class TestsBakerRepeatedCreatesSimpleModel:
             )
             assert all(p.name == "George Washington" for p in people)
             assert queries.count == 1
+
+        with queries.start_count():
+            baker.make(models.NonStandardManager, _quantity=3, _bulk_create=True)
+            assert queries.count == 1
+            assert getattr(models.NonStandardManager, "objects", None) is None
+            assert (
+                models.NonStandardManager._base_manager
+                == models.NonStandardManager.manager
+            )
+            assert (
+                models.NonStandardManager._default_manager
+                == models.NonStandardManager.manager
+            )
+            assert models.NonStandardManager.manager.count() == 3
 
     def test_make_raises_correct_exception_if_invalid_quantity(self):
         with pytest.raises(InvalidQuantityException):
