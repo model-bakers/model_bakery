@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Add new `_bulk_create` parameter to `make` for using Django manager `bulk_create` with `_quantity` [PR #129](https://github.com/model-bakers/model_bakery/pull/129)
+- Add new `_bulk_create` parameter to `make` for using Django manager `bulk_create` with `_quantity` [PR #134](https://github.com/model-bakers/model_bakery/pull/134)
 
 ### Changed
 
