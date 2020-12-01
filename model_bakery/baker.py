@@ -72,11 +72,7 @@ def make(
     if _quantity and _bulk_create:
         return baker.model._base_manager.bulk_create(
             [
-                baker.prepare(
-                    _save_kwargs=_save_kwargs,
-                    _refresh_after_create=_refresh_after_create,
-                    **attrs
-                )
+                baker.prepare(_save_kwargs=_save_kwargs, **attrs)
                 for _ in range(_quantity)
             ]
         )
