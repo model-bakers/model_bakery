@@ -54,7 +54,7 @@ def make(
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
-    _bulk_create: Optional[bool] = False,
+    _bulk_create: bool = False,
     **attrs: Any
 ):
     """Create a persisted instance from a given model its associated models.
