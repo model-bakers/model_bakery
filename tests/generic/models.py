@@ -409,3 +409,9 @@ class AbstractModel(models.Model):
 
 class SubclassOfAbstract(AbstractModel):
     height = models.IntegerField()
+
+
+class NonStandardManager(models.Model):
+    name = models.CharField(max_length=30)
+
+    manager = models.Manager()

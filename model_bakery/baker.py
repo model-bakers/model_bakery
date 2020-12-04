@@ -54,6 +54,7 @@ def make(
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
+    _bulk_create: bool = False,
     **attrs: Any
 ):
     """Create a persisted instance from a given model its associated models.
@@ -68,7 +69,14 @@ def make(
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
-    if _quantity:
+    if _quantity and _bulk_create:
+        return baker.model._base_manager.bulk_create(
+            [
+                baker.prepare(_save_kwargs=_save_kwargs, **attrs)
+                for _ in range(_quantity)
+            ]
+        )
+    elif _quantity:
         return [
             baker.make(
                 _save_kwargs=_save_kwargs,
@@ -77,6 +85,7 @@ def make(
             )
             for _ in range(_quantity)
         ]
+
     return baker.make(
         _save_kwargs=_save_kwargs, _refresh_after_create=_refresh_after_create, **attrs
     )

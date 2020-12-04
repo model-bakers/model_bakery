@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from django.conf import settings
+from django.db import connection
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase
@@ -27,6 +28,45 @@ def test_import_seq_from_baker():
         from model_bakery.baker import seq  # NoQA
     except ImportError:
         pytest.fail("{} raised".format(ImportError.__name__))
+
+
+class QueryCount:
+    """
+    Keep track of db calls.
+
+    Example:
+    ========
+
+        qc = QueryCount()
+
+        with qc.start_count():
+            MyModel.objects.get(pk=1)
+            MyModel.objects.create()
+
+        qc.count  # 2
+
+    """
+
+    def __init__(self):
+        self.count = 0
+
+    def __call__(self, execute, sql, params, many, context):
+        """
+        `django.db.connection.execute_wrapper` callback
+
+        https://docs.djangoproject.com/en/3.1/topics/db/instrumentation/
+        """
+        self.count += 1
+        execute(sql, params, many, context)
+
+    def start_count(self):
+        """
+        Reset query count to 0 and return context manager for wrapping db
+        queries.
+        """
+        self.count = 0
+
+        return connection.execute_wrapper(self)
 
 
 class TestsModelFinder:
@@ -114,11 +154,46 @@ class TestsBakerCreatesSimpleModel:
 @pytest.mark.django_db
 class TestsBakerRepeatedCreatesSimpleModel:
     def test_make_should_create_objects_respecting_quantity_parameter(self):
-        baker.make(models.Person, _quantity=5)
-        assert models.Person.objects.count() == 5
+        queries = QueryCount()
 
-        people = baker.make(models.Person, _quantity=5, name="George Washington")
-        assert all(p.name == "George Washington" for p in people)
+        with queries.start_count():
+            baker.make(models.Person, _quantity=5)
+            assert queries.count == 5
+            assert models.Person.objects.count() == 5
+
+        with queries.start_count():
+            people = baker.make(models.Person, _quantity=5, name="George Washington")
+            assert all(p.name == "George Washington" for p in people)
+            assert queries.count == 5
+
+    def test_make_quantity_respecting_bulk_create_parameter(self):
+        queries = QueryCount()
+
+        with queries.start_count():
+            baker.make(models.Person, _quantity=5, _bulk_create=True)
+            assert queries.count == 1
+            assert models.Person.objects.count() == 5
+
+        with queries.start_count():
+            people = baker.make(
+                models.Person, name="George Washington", _quantity=5, _bulk_create=True
+            )
+            assert all(p.name == "George Washington" for p in people)
+            assert queries.count == 1
+
+        with queries.start_count():
+            baker.make(models.NonStandardManager, _quantity=3, _bulk_create=True)
+            assert queries.count == 1
+            assert getattr(models.NonStandardManager, "objects", None) is None
+            assert (
+                models.NonStandardManager._base_manager
+                == models.NonStandardManager.manager
+            )
+            assert (
+                models.NonStandardManager._default_manager
+                == models.NonStandardManager.manager
+            )
+            assert models.NonStandardManager.manager.count() == 3
 
     def test_make_raises_correct_exception_if_invalid_quantity(self):
         with pytest.raises(InvalidQuantityException):
