@@ -538,8 +538,8 @@ class Baker(object):
             if callable(default):
                 default = default()
             if is_fk:
-                # Pass instance instead of pk/<to_field> value. In case a c
-                # custom to_field is set, Django should populate 
+                # Pass instance instead of pk/<to_field> value. In case a
+                # custom 'to_field' is set, Django should populate 
                 # field.to_fields with a single string.
                 key = "pk"
                 if field.to_fields and field.to_fields[0] is not None:
