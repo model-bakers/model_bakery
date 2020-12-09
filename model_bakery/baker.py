@@ -527,20 +527,14 @@ class Baker(object):
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
         model.
         """
-        is_fk = isinstance(field, ForeignKey)
-        remote_field = self._remote_field(field)
-        is_content_type_fk = is_fk and issubclass(
-            remote_field.model, contenttypes.models.ContentType
+        is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
+            self._remote_field(field).model, contenttypes.models.ContentType
         )
 
         if field.has_default():
-            default = field.default
-            if callable(default):
-                default = default()
-            if is_fk:
-                # Pass instance instead of pk value
-                default = remote_field.model.objects.get(pk=default)
-            return default
+            if callable(field.default):
+                return field.default()
+            return field.default
         elif field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
         elif getattr(field, "choices"):
