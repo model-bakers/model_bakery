@@ -541,10 +541,11 @@ class Baker(object):
                 # Pass instance instead of pk/<to_field> value. In case a
                 # custom 'to_field' is set, Django should populate 
                 # field.to_fields with a single string.
-                default_key = "pk"
+                key = "pk"
                 if field.to_fields and field.to_fields[0] is not None:
-                    default_key = field.to_fields[0]
-                default = remote_field.model.objects.get(**{default_key: default})
+                    key = field.to_fields[0]
+                instance_kwargs = {key: default}
+                default = remote_field.model.objects.get(**instance_kwargs)
             return default
         elif field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
