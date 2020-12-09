@@ -279,11 +279,8 @@ class TestFillingGenericForeignKeyField:
 @pytest.mark.django_db
 class TestFillingForeignKeyFieldWithDefaultFunctionReturningId:
     def test_filling_foreignkey_with_default_id(self):
-        dummy = baker.make(
-            models.DummyForeignKeyWithDefaultIdModel, 
-            named_thing__name="Default",
-        )
-        assert dummy.named_thing.name == models.get_default_namedthing_name()
+        dummy = baker.make(models.DummyForeignKeyWithDefaultIdModel, named_thing__name="Default")
+        assert dummy.named_thing.id == models.get_default_namedthing_id()
 
 
 @pytest.mark.django_db
