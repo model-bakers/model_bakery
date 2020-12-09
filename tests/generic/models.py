@@ -254,6 +254,23 @@ class DummyGenericRelationModel(models.Model):
     relation = GenericRelation(DummyGenericForeignKeyModel)
 
 
+class NamedThing(models.Model):
+    name = models.CharField(max_length=64)
+
+
+def get_default_namedthing_id():
+    instance, _ = NamedThing.objects.get_or_create(name="Default")
+    return instance.id
+
+
+class DummyForeignKeyWithDefaultIdModel(models.Model):
+    named_thing = models.ForeignKey(
+        "NamedThing",
+        default=get_default_namedthing_id,
+        on_delete=models.SET_DEFAULT,
+    )
+
+
 class DummyNullFieldsModel(models.Model):
     null_foreign_key = models.ForeignKey(
         "DummyBlankFieldsModel", null=True, on_delete=models.CASCADE
