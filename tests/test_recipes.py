@@ -45,7 +45,7 @@ def test_import_recipes():
     """Test imports works both for full import paths and for
     `app_name.recipe_name` strings."""
     assert baker.prepare_recipe("generic.Dog"), baker.prepare_recipe(
-        "tests.generic.dog"
+        "tests.generic.Dog"
     )
 
 
