@@ -44,7 +44,7 @@ def test_import_seq_from_recipe():
 def test_import_recipes():
     """Test imports works both for full import paths and for
     `app_name.recipe_name` strings."""
-    assert baker.prepare_recipe("generic.dog"), baker.prepare_recipe(
+    assert baker.prepare_recipe("generic.Dog"), baker.prepare_recipe(
         "tests.generic.dog"
     )
 
