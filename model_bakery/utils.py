@@ -25,7 +25,6 @@ def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
     if isinstance(import_string, str):
         path, field_name = import_string.rsplit(".", 1)
 
-        # is it a Django model in the app_name.ModelName convention?
         if apps:
             model = apps.all_models.get(path, {}).get(field_name.lower())
             if model:
