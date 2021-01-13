@@ -15,6 +15,7 @@ def test_import_from_str():
 
     assert import_from_str("tests.generic.models.User") == User
     assert import_from_str(User) == User
+    assert import_from_str("generic.User") == User
 
 
 def test_get_calling_module():

@@ -41,6 +41,14 @@ def test_import_seq_from_recipe():
         pytest.fail("{} raised".format(ImportError.__name__))
 
 
+def test_import_recipes():
+    """Test imports works both for full import paths and for
+    `app_name.recipe_name` strings."""
+    assert baker.prepare_recipe("generic.dog"), baker.prepare_recipe(
+        "tests.generic.dog"
+    )
+
+
 @pytest.mark.django_db
 class TestDefiningRecipes:
     def test_flat_model_make_recipe_with_the_correct_attributes(self):

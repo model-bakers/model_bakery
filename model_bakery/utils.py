@@ -6,6 +6,13 @@ import warnings
 from types import ModuleType
 from typing import Any, Callable, Optional, Union
 
+try:
+    from django.apps import apps
+except ModuleNotFoundError:
+    # probably we are importing this module from setup.py, before installing
+    # the requirements (and we don't need Django at this point)
+    apps = None
+
 from .timezone import tz_aware
 
 
@@ -17,6 +24,12 @@ def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
     """
     if isinstance(import_string, str):
         path, field_name = import_string.rsplit(".", 1)
+
+        if apps:
+            model = apps.all_models.get(path, {}).get(field_name.lower())
+            if model:
+                return model
+
         module = importlib.import_module(path)
         return getattr(module, field_name)
     else:

@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Add new `_bulk_create` parameter to `make` for using Django manager `bulk_create` with `_quantity` [PR #134](https://github.com/model-bakers/model_bakery/pull/134)
+- Add the functionality to import Django models using the `app_name.ModelName` convention in `import_from_str` [PR #140](https://github.com/model-bakers/model_bakery/pull/140)
+- Add the functionality to import recipes using `app_name.recipe_name`
 
 ### Changed
 

@@ -117,8 +117,12 @@ def prepare(
 
 
 def _recipe(name: str) -> Any:
-    app, recipe_name = name.rsplit(".", 1)
-    return import_from_str(".".join((app, "baker_recipes", recipe_name)))
+    app_name, recipe_name = name.rsplit(".", 1)
+    if "." in app_name:  # probably full path, not app name
+        pkg = app_name
+    else:
+        pkg = apps.get_app_config(app_name).module.__package__
+    return import_from_str(".".join((pkg, "baker_recipes", recipe_name)))
 
 
 def make_recipe(baker_recipe_name, _quantity=None, _using="", **new_attrs):
