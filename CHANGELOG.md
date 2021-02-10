@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Modify `setup.py` to not import the whole module for package data, but get it from `__about__.py`
 
 ### Removed
+- `model_bakery.timezone.now` fallback (use `django.utils.timezone.now` instead)
 
 
 ## [1.2.1](https://pypi.org/project/model-bakery/1.2.1/)

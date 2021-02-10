@@ -20,8 +20,7 @@ from uuid import UUID
 
 from django.core.files.base import ContentFile
 from django.db.models import Field, Model
-
-from .timezone import now
+from django.utils.timezone import now
 
 MAX_LENGTH = 300
 # Using sys.maxint here breaks a bunch of tests when running against a
