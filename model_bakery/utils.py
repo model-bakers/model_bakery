@@ -6,12 +6,7 @@ import warnings
 from types import ModuleType
 from typing import Any, Callable, Optional, Union
 
-try:
-    from django.apps import apps
-except ModuleNotFoundError:
-    # probably we are importing this module from setup.py, before installing
-    # the requirements (and we don't need Django at this point)
-    apps = None
+from django.apps import apps
 
 from .timezone import tz_aware
 
