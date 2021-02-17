@@ -5,11 +5,12 @@ from random import choice  # noqa
 from unittest.mock import patch
 
 import pytest
+from django.utils.timezone import now
 
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
 from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key
-from model_bakery.timezone import now, tz_aware
+from model_bakery.timezone import tz_aware
 from tests.generic.baker_recipes import SmallDogRecipe, pug
 from tests.generic.models import (
     TEST_TIME,

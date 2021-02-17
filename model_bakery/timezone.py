@@ -6,13 +6,8 @@ https://docs.djangoproject.com/en/1.4/topics/i18n/timezones/
 
 from datetime import datetime
 
-try:
-    from django.conf import settings
-    from django.utils.timezone import now, utc
-except ImportError:
-
-    def now():
-        return datetime.now()
+from django.conf import settings
+from django.utils.timezone import utc
 
 
 def smart_datetime(*args) -> datetime:
