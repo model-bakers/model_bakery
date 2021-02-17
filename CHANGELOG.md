@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - Type hinting fixed for Recipe "_model" parameter
+- Modify `setup.py` to not import the whole module for package data, but get it from `__about__.py`
 
 ### Removed
 
