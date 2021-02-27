@@ -17,7 +17,7 @@ from model_bakery.exceptions import (
     InvalidQuantityException,
     ModelNotFound,
 )
-from model_bakery.timezone import smart_datetime
+from model_bakery.timezone import tz_aware
 from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
 
@@ -52,7 +52,7 @@ class QueryCount:
 
     def __call__(self, execute, sql, params, many, context):
         """
-        `django.db.connection.execute_wrapper` callback
+        `django.db.connection.execute_wrapper` callback.
 
         https://docs.djangoproject.com/en/3.1/topics/db/instrumentation/
         """
@@ -60,10 +60,7 @@ class QueryCount:
         execute(sql, params, many, context)
 
     def start_count(self):
-        """
-        Reset query count to 0 and return context manager for wrapping db
-        queries.
-        """
+        """Reset query count to 0 and return context manager for wrapping db queries."""
         self.count = 0
 
         return connection.execute_wrapper(self)
@@ -654,7 +651,7 @@ class TestSkipDefaultsTestCase:
         assert dummy.default_int_field == 123
         assert dummy.default_float_field == 123.0
         assert dummy.default_date_field == "2012-01-01"
-        assert dummy.default_date_time_field == smart_datetime(2012, 1, 1)
+        assert dummy.default_date_time_field == tz_aware(datetime.datetime(2012, 1, 1))
         assert dummy.default_time_field == "00:00:00"
         assert dummy.default_decimal_field == Decimal("0")
         assert dummy.default_email_field == "foo@bar.org"
