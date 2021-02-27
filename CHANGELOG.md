@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Type hinting fixed for Recipe "_model" parameter
 - Modify `setup.py` to not import the whole module for package data, but get it from `__about__.py`
+- [dev] Add Dependabot config file [PR #146](https://github.com/model-bakers/model_bakery/pull/146)
 
 ### Removed
 - `model_bakery.timezone.now` fallback (use `django.utils.timezone.now` instead)
