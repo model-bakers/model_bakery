@@ -2,7 +2,7 @@
 # TESTING PURPOSE ONLY MODELS!!       #
 # DO NOT ADD THE APP TO INSTALLED_APPS#
 #######################################
-import datetime as base_datetime
+import datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
@@ -13,7 +13,7 @@ from django.core.files.storage import FileSystemStorage
 from django.utils.timezone import now
 
 from model_bakery.gis import BAKER_GIS
-from model_bakery.timezone import smart_datetime as datetime
+from model_bakery.timezone import tz_aware
 
 from .fields import (
     CustomFieldViaSettings,
@@ -47,7 +47,7 @@ OCCUPATION_CHOICES = (
     ("Education", (("teacher", "Teacher"), ("principal", "Principal"))),
 )
 
-TEST_TIME = base_datetime.datetime(2014, 7, 21, 15, 39, 58, 457698)
+TEST_TIME = datetime.datetime(2014, 7, 21, 15, 39, 58, 457698)
 
 
 class ModelWithImpostorField(models.Model):
@@ -277,7 +277,9 @@ class DummyDefaultFieldsModel(models.Model):
     default_int_field = models.IntegerField(default=123)
     default_float_field = models.FloatField(default=123.0)
     default_date_field = models.DateField(default="2012-01-01")
-    default_date_time_field = models.DateTimeField(default=datetime(2012, 1, 1))
+    default_date_time_field = models.DateTimeField(
+        default=tz_aware(datetime.datetime(2012, 1, 1))
+    )
     default_time_field = models.TimeField(default="00:00:00")
     default_decimal_field = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal("0")
