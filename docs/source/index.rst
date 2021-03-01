@@ -11,7 +11,7 @@ Model Bakery is a rename of the legacy `model_mommy's project <https://pypi.org/
 Compatibility
 =============
 
-model_bakery supports Django >= 1.11
+Model Bakery supports Django >= 2.2.
 
 Install
 =======
