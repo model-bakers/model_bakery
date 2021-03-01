@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `model_bakery.timezone.now` fallback (use `django.utils.timezone.now` instead)  [PR #141](https://github.com/model-bakers/model_bakery/pull/141)
 - `model_bakery.timezone.smart_datetime` function (directly use `model_bakery.timezone.tz_aware` instead)  [PR #147](https://github.com/model-bakers/model_bakery/pull/147)
+- Remove all signs of Django 1.11 (as we dropped it in 1.2.1) [PR #157](https://github.com/model-bakers/model_bakery/pull/157)
 
 
 ## [1.2.1](https://pypi.org/project/model-bakery/1.2.1/)
