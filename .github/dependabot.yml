@@ -4,7 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-rebase-strategy: "auto"
+    rebase-strategy: "auto"
 
 - package-ecosystem: "github-actions"
   directory: "/"
