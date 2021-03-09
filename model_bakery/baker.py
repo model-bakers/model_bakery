@@ -349,8 +349,21 @@ class Baker(object):
                     self.m2m_dict[field.name] = self.m2m_value(field)
                 else:
                     self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
+
             elif field.name not in self.model_attrs:
                 if (
+                    isinstance(field, ForeignKey)
+                    and "{0}_id".format(field.name) not in self.model_attrs
+                ):
+                    value = self.generate_value(field, commit_related)
+                    if isinstance(value, field.related_model):
+                        field_name = field.name
+                    else:
+                        field_name = "{0}_id".format(field.name)
+
+                    self.model_attrs[field_name] = value
+
+                elif (
                     not isinstance(field, ForeignKey)
                     or "{0}_id".format(field.name) not in self.model_attrs
                 ):
