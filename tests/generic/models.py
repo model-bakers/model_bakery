@@ -271,6 +271,15 @@ class DummyForeignKeyWithDefaultIdModel(models.Model):
     )
 
 
+class DummyOptionalForeignKey(models.Model):
+    named_thing = models.ForeignKey(
+        "NamedThing",
+        null=True,
+        default=None,
+        on_delete=models.SET_NULL,
+    )
+
+
 class DummyNullFieldsModel(models.Model):
     null_foreign_key = models.ForeignKey(
         "DummyBlankFieldsModel", null=True, on_delete=models.CASCADE

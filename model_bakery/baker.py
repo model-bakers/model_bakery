@@ -351,19 +351,22 @@ class Baker(object):
                     self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
 
             elif field.name not in self.model_attrs:
+                # TODO: this might be a code going into a wrong direction, drop it if
+                #  things in `model_bakery.baker.Baker.generate_value` will work out
+                # if (
+                #     isinstance(field, ForeignKey)
+                #     and "{0}_id".format(field.name) not in self.model_attrs
+                # ):
+                #     value = self.generate_value(field, commit_related)
+                #     if isinstance(value, field.related_model):
+                #         field_name = field.name
+                #     else:
+                #         field_name = "{0}_id".format(field.name)
+                #
+                #     self.model_attrs[field_name] = value
+                #
+                # elif (
                 if (
-                    isinstance(field, ForeignKey)
-                    and "{0}_id".format(field.name) not in self.model_attrs
-                ):
-                    value = self.generate_value(field, commit_related)
-                    if isinstance(value, field.related_model):
-                        field_name = field.name
-                    else:
-                        field_name = "{0}_id".format(field.name)
-
-                    self.model_attrs[field_name] = value
-
-                elif (
                     not isinstance(field, ForeignKey)
                     or "{0}_id".format(field.name) not in self.model_attrs
                 ):
@@ -556,8 +559,8 @@ class Baker(object):
         is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
             self._remote_field(field).model, contenttypes.models.ContentType
         )
-
-        if field.has_default():
+        # when a default provided, we only use it unless the field is listed in `self.rel_fields`
+        if field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
                 return field.default()
             return field.default

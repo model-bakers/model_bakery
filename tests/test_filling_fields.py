@@ -279,10 +279,24 @@ class TestFillingGenericForeignKeyField:
 @pytest.mark.django_db
 class TestFillingForeignKeyFieldWithDefaultFunctionReturningId:
     def test_filling_foreignkey_with_default_id(self):
-        dummy = baker.make(
-            models.DummyForeignKeyWithDefaultIdModel, named_thing__name="Default"
-        )
+        dummy = baker.make(models.DummyForeignKeyWithDefaultIdModel)
         assert dummy.named_thing.id == models.get_default_namedthing_id()
+        assert dummy.named_thing.name == "Default"
+
+    def test_filling_foreignkey_with_default_id_with_custom_arguments(self):
+        dummy = baker.make(
+            models.DummyForeignKeyWithDefaultIdModel, named_thing__name="Not default"
+        )
+        assert dummy.named_thing.__class__.objects.count() == 1
+        assert dummy.named_thing.id == dummy.named_thing.__class__.objects.get().id
+        assert dummy.named_thing.name == "Not default"
+
+
+@pytest.mark.django_db
+class TestFillingOptionalForeignKeyField:
+    def test_filling_optional_foreignkey_implicitly(self):
+        dummy = baker.make(models.DummyOptionalForeignKey, named_thing__name="Optional")
+        assert dummy.named_thing.name == "Optional"
 
 
 @pytest.mark.django_db
