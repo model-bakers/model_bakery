@@ -181,6 +181,10 @@ class LonelyPerson(models.Model):
     only_friend = models.OneToOneField(Person, on_delete=models.CASCADE)
 
 
+class Cake(models.Model):
+    name = models.CharField(max_length=64)
+
+
 class RelatedNamesModel(models.Model):
     name = models.CharField(max_length=256)
     one_to_one = models.OneToOneField(
@@ -188,6 +192,30 @@ class RelatedNamesModel(models.Model):
     )
     foreign_key = models.ForeignKey(
         Person, related_name="fk_related", on_delete=models.CASCADE
+    )
+
+
+def get_default_cake_id():
+    instance, _ = Cake.objects.get_or_create(name="Muffin")
+    return instance.id
+
+
+class RelatedNamesWithDefaultsModel(models.Model):
+    name = models.CharField(max_length=256, default="Bravo")
+    cake = models.ForeignKey(
+        Cake,
+        on_delete=models.CASCADE,
+        default=get_default_cake_id,
+    )
+
+
+class RelatedNamesWithEmptyDefaultsModel(models.Model):
+    name = models.CharField(max_length=256, default="Bravo")
+    cake = models.ForeignKey(
+        Cake,
+        on_delete=models.CASCADE,
+        null=True,
+        default=None,
     )
 
 
@@ -252,32 +280,6 @@ class DummyGenericForeignKeyModel(models.Model):
 
 class DummyGenericRelationModel(models.Model):
     relation = GenericRelation(DummyGenericForeignKeyModel)
-
-
-class NamedThing(models.Model):
-    name = models.CharField(max_length=64)
-
-
-def get_default_namedthing_id():
-    instance, _ = NamedThing.objects.get_or_create(name="Default")
-    return instance.id
-
-
-class DummyForeignKeyWithDefaultIdModel(models.Model):
-    named_thing = models.ForeignKey(
-        "NamedThing",
-        default=get_default_namedthing_id,
-        on_delete=models.SET_DEFAULT,
-    )
-
-
-class DummyOptionalForeignKey(models.Model):
-    named_thing = models.ForeignKey(
-        "NamedThing",
-        null=True,
-        default=None,
-        on_delete=models.SET_NULL,
-    )
 
 
 class DummyNullFieldsModel(models.Model):

@@ -279,24 +279,32 @@ class TestFillingGenericForeignKeyField:
 @pytest.mark.django_db
 class TestFillingForeignKeyFieldWithDefaultFunctionReturningId:
     def test_filling_foreignkey_with_default_id(self):
-        dummy = baker.make(models.DummyForeignKeyWithDefaultIdModel)
-        assert dummy.named_thing.id == models.get_default_namedthing_id()
-        assert dummy.named_thing.name == "Default"
+        dummy = baker.make(models.RelatedNamesWithDefaultsModel)
+        assert dummy.cake.__class__.objects.count() == 1
+        assert dummy.cake.id == models.get_default_cake_id()
+        assert dummy.cake.name == "Muffin"
 
     def test_filling_foreignkey_with_default_id_with_custom_arguments(self):
         dummy = baker.make(
-            models.DummyForeignKeyWithDefaultIdModel, named_thing__name="Not default"
+            models.RelatedNamesWithDefaultsModel, cake__name="Baumkuchen"
         )
-        assert dummy.named_thing.__class__.objects.count() == 1
-        assert dummy.named_thing.id == dummy.named_thing.__class__.objects.get().id
-        assert dummy.named_thing.name == "Not default"
+        assert dummy.cake.__class__.objects.count() == 1
+        assert dummy.cake.id == dummy.cake.__class__.objects.get().id
+        assert dummy.cake.name == "Baumkuchen"
 
 
 @pytest.mark.django_db
 class TestFillingOptionalForeignKeyField:
+    def test_not_filling_optional_foreignkey(self):
+        dummy = baker.make(models.RelatedNamesWithEmptyDefaultsModel)
+        assert dummy.cake is None
+
     def test_filling_optional_foreignkey_implicitly(self):
-        dummy = baker.make(models.DummyOptionalForeignKey, named_thing__name="Optional")
-        assert dummy.named_thing.name == "Optional"
+        dummy = baker.make(
+            models.RelatedNamesWithEmptyDefaultsModel, cake__name="Carrot cake"
+        )
+        assert dummy.cake.__class__.objects.count() == 1
+        assert dummy.cake.name == "Carrot cake"
 
 
 @pytest.mark.django_db
