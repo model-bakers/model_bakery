@@ -531,10 +531,11 @@ class Baker(object):
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
-        -- attr_mapping - mapping per attribute name
-        -- choices -- mapping from avaiable field choices
-        -- type_mapping - mapping from user defined type associated generators
-        -- default_mapping - mapping from pre-defined type associated
+        -- `field.default` - model field default value, unless explicitly overwritten during baking
+        -- `attr_mapping` - mapping per attribute name
+        -- `choices` -- mapping from available field choices
+        -- `type_mapping` - mapping from user defined type associated generators
+        -- `default_mapping` - mapping from pre-defined type associated
            generators
 
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
@@ -543,8 +544,8 @@ class Baker(object):
         is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
             self._remote_field(field).model, contenttypes.models.ContentType
         )
-
-        if field.has_default():
+        # we only use default unless the field is overwritten in `self.rel_fields`
+        if field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
                 return field.default()
             return field.default

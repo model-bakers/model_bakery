@@ -181,6 +181,10 @@ class LonelyPerson(models.Model):
     only_friend = models.OneToOneField(Person, on_delete=models.CASCADE)
 
 
+class Cake(models.Model):
+    name = models.CharField(max_length=64)
+
+
 class RelatedNamesModel(models.Model):
     name = models.CharField(max_length=256)
     one_to_one = models.OneToOneField(
@@ -188,6 +192,30 @@ class RelatedNamesModel(models.Model):
     )
     foreign_key = models.ForeignKey(
         Person, related_name="fk_related", on_delete=models.CASCADE
+    )
+
+
+def get_default_cake_id():
+    instance, _ = Cake.objects.get_or_create(name="Muffin")
+    return instance.id
+
+
+class RelatedNamesWithDefaultsModel(models.Model):
+    name = models.CharField(max_length=256, default="Bravo")
+    cake = models.ForeignKey(
+        Cake,
+        on_delete=models.CASCADE,
+        default=get_default_cake_id,
+    )
+
+
+class RelatedNamesWithEmptyDefaultsModel(models.Model):
+    name = models.CharField(max_length=256, default="Bravo")
+    cake = models.ForeignKey(
+        Cake,
+        on_delete=models.CASCADE,
+        null=True,
+        default=None,
     )
 
 
