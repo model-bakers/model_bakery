@@ -51,10 +51,10 @@ class Recipe(object):
                 if _save_related:
                     # Create a unique foreign key for each quantity if one_to_one required
                     if v.one_to_one is True:
-                        seq = []
+                        rel_gen = []
                         for i in range(_quantity):
-                            seq.append(v.recipe.make(_using=_using, **recipe_attrs))
-                        mapping[k] = itertools.cycle(seq)
+                            rel_gen.append(v.recipe.make(_using=_using, **recipe_attrs))
+                        mapping[k] = itertools.cycle(rel_gen)
                     # Otherwise create shared foreign key for each quantity
                     else:
                         mapping[k] = v.recipe.make(_using=_using, **recipe_attrs)
