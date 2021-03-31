@@ -22,6 +22,9 @@ class Recipe(object):
 
     def _mapping(self, _using, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
         _save_related = new_attrs.get("_save_related", True)
+        _quantity = new_attrs.get("_quantity")
+        if _quantity is None:
+            _quantity = 1
         rel_fields_attrs = dict((k, v) for k, v in new_attrs.items() if "__" in k)
         new_attrs = dict((k, v) for k, v in new_attrs.items() if "__" not in k)
         mapping = self.attr_mapping.copy()
@@ -46,7 +49,15 @@ class Recipe(object):
                         a[key] = rel_fields_attrs.pop(key)
                 recipe_attrs = baker.filter_rel_attrs(k, **a)
                 if _save_related:
-                    mapping[k] = v.recipe.make(_using=_using, **recipe_attrs)
+                    # Create a unique foreign key for each quantity if one_to_one required
+                    if v.one_to_one is True:
+                        seq = []
+                        for i in range(_quantity):
+                            seq.append(v.recipe.make(_using=_using, **recipe_attrs))
+                        mapping[k] = itertools.cycle(seq)
+                    # Otherwise create shared foreign key for each quantity
+                    else:
+                        mapping[k] = v.recipe.make(_using=_using, **recipe_attrs)
                 else:
                     mapping[k] = v.recipe.prepare(_using=_using, **recipe_attrs)
             elif isinstance(v, related):
@@ -89,16 +100,19 @@ def _load_recipe_from_calling_module(recipe: str) -> Recipe:
 
 
 class RecipeForeignKey(object):
-    """A `Recipe` to use for making ManyToOne related objects."""
+    """A `Recipe` to use for making ManyToOne and OneToOne related objects."""
 
-    def __init__(self, recipe: Recipe) -> None:
+    def __init__(self, recipe: Recipe, one_to_one: bool) -> None:
         if isinstance(recipe, Recipe):
             self.recipe = recipe
+            self.one_to_one = one_to_one
         else:
             raise TypeError("Not a recipe")
 
 
-def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
+def foreign_key(
+    recipe: Union[Recipe, str], one_to_one: bool = False
+) -> RecipeForeignKey:
     """Return a `RecipeForeignKey`.
 
     Return the callable, so that the associated `_model` will not be created
@@ -116,7 +130,7 @@ def foreign_key(recipe: Union[Recipe, str]) -> RecipeForeignKey:
             # Probably not in another module, so load it from calling module
             recipe = _load_recipe_from_calling_module(cast(str, recipe))
 
-    return RecipeForeignKey(cast(Recipe, recipe))
+    return RecipeForeignKey(cast(Recipe, recipe), one_to_one)
 
 
 class related(object):  # FIXME
