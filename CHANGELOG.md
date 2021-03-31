@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add the functionality to import recipes using `app_name.recipe_name` [PR #140](https://github.com/model-bakers/model_bakery/pull/140)
 - [dev] Add a unit test for `utils.seq` [PR #143](https://github.com/model-bakers/model_bakery/pull/143)
 - [dev] Run CI against `main` Django branch to cover possible upcoming changes/deprecations [PR #159](https://github.com/model-bakers/model_bakery/pull/159)
+- Add new `one_to_one` parameter to `foreign_key` to allow usage of `_quantity` for recipes based on models with OneToOne fields [PR #169](https://github.com/model-bakers/model_bakery/pull/169)
 
 ### Changed
 
