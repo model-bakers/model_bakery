@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Type hinting fixed for Recipe "_model" parameter  [PR #124](https://github.com/model-bakers/model_bakery/pull/124)
 - Fixed a bug (introduced in 1.2.1) that was breaking creation of model instances with related model fields [PR #164](https://github.com/model-bakers/model_bakery/pull/164)
+- Dependencies updates from [dependabot](https://dependabot.com/) PRs [#170](https://github.com/model-bakers/model_bakery/pull/170) - [#171](https://github.com/model-bakers/model_bakery/pull/171) - [#172](https://github.com/model-bakers/model_bakery/pull/172) - [#173](https://github.com/model-bakers/model_bakery/pull/173) - [#174](https://github.com/model-bakers/model_bakery/pull/174)
 - [dev] Modify `setup.py` to not import the whole module for package data, but get it from `__about__.py`  [PR #142](https://github.com/model-bakers/model_bakery/pull/142)
 - [dev] Add Dependabot config file [PR #146](https://github.com/model-bakers/model_bakery/pull/146)
 - [dev] Update Dependabot config file to support GH Actions and auto-rebase [PR #160](https://github.com/model-bakers/model_bakery/pull/160)
