@@ -11,6 +11,7 @@ from tests.generic.models import (
     DummyDefaultFieldsModel,
     DummyUniqueIntegerFieldModel,
     Person,
+    LonelyPerson,
     School,
 )
 
@@ -26,6 +27,8 @@ person = Recipe(
     appointment=now(),
     birth_time=now(),
 )
+
+lonely_person = Recipe(LonelyPerson, only_friend=foreign_key(person, one_to_one=True))
 
 serial_person = Recipe(
     Person,

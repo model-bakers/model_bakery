@@ -159,6 +159,31 @@ If you want to set m2m relationship you can use ``related`` as well:
         products=related(pencil, pen)
     )
 
+When creating models based on a ``foreign_key`` recipe using the ``_quantity`` argument, only one related model will be created for all new instances.
+
+.. code-block:: python
+    from model_baker.recipe import foreign_key, Recipe
+
+    person = Recipe(Person, name='Albert')
+    dog = Recipe(Dog, owner=foreign_key(person))
+
+    # All dogs share the same owner
+    dogs = dog.make_recipe(_quantity=2)
+    assert dogs[0].owner.id == dogs[1].owner.id
+
+This will cause an issue if your models use ``OneToOneField``. In that case, you can provide ``one_to_one=True`` to the recipe to make sure every instance created by ``_quantity`` has a unique id.
+
+.. code-block:: python
+    from model_baker.recipe import foreign_key, Recipe
+
+    person = Recipe(Person, name='Albert')
+    dog = Recipe(Dog, owner=foreign_key(person, one_to_one=True))
+
+    # Each dog has a unique owner
+    dogs = dog.make_recipe(_quantity=2)
+    assert dogs[0].owner.id != dogs[1].owner.id
+
+
 
 Recipes with callables
 ----------------------

@@ -407,6 +407,11 @@ class TestForeignKey:
         movie = baker.make_recipe("tests.generic.movie_with_cast")
         assert movie.cast_members.count() == 2
 
+    def test_one_to_one_relationship(self):
+        lonely_people = baker.make_recipe("tests.generic.lonely_person", _quantity=2)
+        friend_ids = set([x.only_friend.id for x in lonely_people])
+        assert len(friend_ids) == 2
+
 
 @pytest.mark.django_db
 class TestM2MField:
