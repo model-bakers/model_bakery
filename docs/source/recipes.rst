@@ -57,6 +57,7 @@ File: **test_model.py** ::
                 'shop.customer_joe'
             )
 
+
 Or if you don't want a persisted instance: ::
 
     from model_bakery import baker
