@@ -5,11 +5,12 @@ from random import choice  # noqa
 from unittest.mock import patch
 
 import pytest
+from django.utils.timezone import now
 
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
 from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key
-from model_bakery.timezone import now, tz_aware
+from model_bakery.timezone import tz_aware
 from tests.generic.baker_recipes import SmallDogRecipe, pug
 from tests.generic.models import (
     TEST_TIME,
@@ -39,6 +40,14 @@ def test_import_seq_from_recipe():
         from model_bakery.recipe import seq  # NoQA
     except ImportError:
         pytest.fail("{} raised".format(ImportError.__name__))
+
+
+def test_import_recipes():
+    """Test imports works both for full import paths and for
+    `app_name.recipe_name` strings."""
+    assert baker.prepare_recipe("generic.dog"), baker.prepare_recipe(
+        "tests.generic.dog"
+    )
 
 
 @pytest.mark.django_db
@@ -397,6 +406,11 @@ class TestForeignKey:
     def test_chained_related(self):
         movie = baker.make_recipe("tests.generic.movie_with_cast")
         assert movie.cast_members.count() == 2
+
+    def test_one_to_one_relationship(self):
+        lonely_people = baker.make_recipe("tests.generic.lonely_person", _quantity=2)
+        friend_ids = set([x.only_friend.id for x in lonely_people])
+        assert len(friend_ids) == 2
 
 
 @pytest.mark.django_db

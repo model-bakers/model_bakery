@@ -6,6 +6,8 @@ import warnings
 from types import ModuleType
 from typing import Any, Callable, Optional, Union
 
+from django.apps import apps
+
 from .timezone import tz_aware
 
 
@@ -17,6 +19,12 @@ def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
     """
     if isinstance(import_string, str):
         path, field_name = import_string.rsplit(".", 1)
+
+        if apps:
+            model = apps.all_models.get(path, {}).get(field_name.lower())
+            if model:
+                return model
+
         module = importlib.import_module(path)
         return getattr(module, field_name)
     else:

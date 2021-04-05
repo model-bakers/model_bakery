@@ -2,7 +2,7 @@
 # TESTING PURPOSE ONLY MODELS!!       #
 # DO NOT ADD THE APP TO INSTALLED_APPS#
 #######################################
-import datetime as base_datetime
+import datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
@@ -13,7 +13,7 @@ from django.core.files.storage import FileSystemStorage
 from django.utils.timezone import now
 
 from model_bakery.gis import BAKER_GIS
-from model_bakery.timezone import smart_datetime as datetime
+from model_bakery.timezone import tz_aware
 
 from .fields import (
     CustomFieldViaSettings,
@@ -47,7 +47,7 @@ OCCUPATION_CHOICES = (
     ("Education", (("teacher", "Teacher"), ("principal", "Principal"))),
 )
 
-TEST_TIME = base_datetime.datetime(2014, 7, 21, 15, 39, 58, 457698)
+TEST_TIME = datetime.datetime(2014, 7, 21, 15, 39, 58, 457698)
 
 
 class ModelWithImpostorField(models.Model):
@@ -181,6 +181,10 @@ class LonelyPerson(models.Model):
     only_friend = models.OneToOneField(Person, on_delete=models.CASCADE)
 
 
+class Cake(models.Model):
+    name = models.CharField(max_length=64)
+
+
 class RelatedNamesModel(models.Model):
     name = models.CharField(max_length=256)
     one_to_one = models.OneToOneField(
@@ -188,6 +192,30 @@ class RelatedNamesModel(models.Model):
     )
     foreign_key = models.ForeignKey(
         Person, related_name="fk_related", on_delete=models.CASCADE
+    )
+
+
+def get_default_cake_id():
+    instance, _ = Cake.objects.get_or_create(name="Muffin")
+    return instance.id
+
+
+class RelatedNamesWithDefaultsModel(models.Model):
+    name = models.CharField(max_length=256, default="Bravo")
+    cake = models.ForeignKey(
+        Cake,
+        on_delete=models.CASCADE,
+        default=get_default_cake_id,
+    )
+
+
+class RelatedNamesWithEmptyDefaultsModel(models.Model):
+    name = models.CharField(max_length=256, default="Bravo")
+    cake = models.ForeignKey(
+        Cake,
+        on_delete=models.CASCADE,
+        null=True,
+        default=None,
     )
 
 
@@ -277,7 +305,9 @@ class DummyDefaultFieldsModel(models.Model):
     default_int_field = models.IntegerField(default=123)
     default_float_field = models.FloatField(default=123.0)
     default_date_field = models.DateField(default="2012-01-01")
-    default_date_time_field = models.DateTimeField(default=datetime(2012, 1, 1))
+    default_date_time_field = models.DateTimeField(
+        default=tz_aware(datetime.datetime(2012, 1, 1))
+    )
     default_time_field = models.TimeField(default="00:00:00")
     default_decimal_field = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal("0")
@@ -409,3 +439,9 @@ class AbstractModel(models.Model):
 
 class SubclassOfAbstract(AbstractModel):
     height = models.IntegerField()
+
+
+class NonStandardManager(models.Model):
+    name = models.CharField(max_length=30)
+
+    manager = models.Manager()

@@ -54,6 +54,7 @@ def make(
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
+    _bulk_create: bool = False,
     **attrs: Any
 ):
     """Create a persisted instance from a given model its associated models.
@@ -68,7 +69,14 @@ def make(
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
-    if _quantity:
+    if _quantity and _bulk_create:
+        return baker.model._base_manager.bulk_create(
+            [
+                baker.prepare(_save_kwargs=_save_kwargs, **attrs)
+                for _ in range(_quantity)
+            ]
+        )
+    elif _quantity:
         return [
             baker.make(
                 _save_kwargs=_save_kwargs,
@@ -77,6 +85,7 @@ def make(
             )
             for _ in range(_quantity)
         ]
+
     return baker.make(
         _save_kwargs=_save_kwargs, _refresh_after_create=_refresh_after_create, **attrs
     )
@@ -108,8 +117,12 @@ def prepare(
 
 
 def _recipe(name: str) -> Any:
-    app, recipe_name = name.rsplit(".", 1)
-    return import_from_str(".".join((app, "baker_recipes", recipe_name)))
+    app_name, recipe_name = name.rsplit(".", 1)
+    if "." in app_name:  # probably full path, not app name
+        pkg = app_name
+    else:
+        pkg = apps.get_app_config(app_name).module.__package__
+    return import_from_str(".".join((pkg, "baker_recipes", recipe_name)))
 
 
 def make_recipe(baker_recipe_name, _quantity=None, _using="", **new_attrs):
@@ -518,10 +531,11 @@ class Baker(object):
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
-        -- attr_mapping - mapping per attribute name
-        -- choices -- mapping from avaiable field choices
-        -- type_mapping - mapping from user defined type associated generators
-        -- default_mapping - mapping from pre-defined type associated
+        -- `field.default` - model field default value, unless explicitly overwritten during baking
+        -- `attr_mapping` - mapping per attribute name
+        -- `choices` -- mapping from available field choices
+        -- `type_mapping` - mapping from user defined type associated generators
+        -- `default_mapping` - mapping from pre-defined type associated
            generators
 
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
@@ -530,8 +544,8 @@ class Baker(object):
         is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
             self._remote_field(field).model, contenttypes.models.ContentType
         )
-
-        if field.has_default():
+        # we only use default unless the field is overwritten in `self.rel_fields`
+        if field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
                 return field.default()
             return field.default

@@ -2,14 +2,16 @@
 from datetime import timedelta
 from decimal import Decimal
 
+from django.utils.timezone import now
+
 from model_bakery.recipe import Recipe, foreign_key, related, seq
-from model_bakery.timezone import now
 from tests.generic.models import (
     TEST_TIME,
     Dog,
     DummyDefaultFieldsModel,
     DummyUniqueIntegerFieldModel,
     Person,
+    LonelyPerson,
     School,
 )
 
@@ -25,6 +27,8 @@ person = Recipe(
     appointment=now(),
     birth_time=now(),
 )
+
+lonely_person = Recipe(LonelyPerson, only_friend=foreign_key(person, one_to_one=True))
 
 serial_person = Recipe(
     Person,
