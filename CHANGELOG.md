@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `model_bakery.timezone.smart_datetime` function (directly use `model_bakery.timezone.tz_aware` instead)  [PR #147](https://github.com/model-bakers/model_bakery/pull/147)
 - Remove all signs of Django 1.11 (as we dropped it in 1.2.1) [PR #157](https://github.com/model-bakers/model_bakery/pull/157)
 - Drop unsupported Django 3.0 from CI (https://www.djangoproject.com/download/#unsupported-versions) [PR #176](https://github.com/model-bakers/model_bakery/pull/176)
+- [dev] Add explanations to imports in `generators.py` to match with current supported Django versions [PR #179](https://github.com/model-bakers/model_bakery/pull/179
 
 
 ## [1.2.1](https://pypi.org/project/model-bakery/1.2.1/)

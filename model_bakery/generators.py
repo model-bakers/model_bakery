@@ -36,6 +36,8 @@ from . import random_gen
 from .utils import import_from_str
 
 try:
+    # Proper support starts with Django 3.0
+    #  (as it uses `django/db/backends/base/operations.py` for matching ranges)
     from django.db.models import AutoField, BigAutoField, SmallAutoField
 except ImportError:
     AutoField = None
@@ -43,31 +45,38 @@ except ImportError:
     SmallAutoField = None
 
 try:
+    # added in Django 3.1
     from django.db.models import PositiveBigIntegerField
 except ImportError:
     PositiveBigIntegerField = None
 
 try:
+    # Replaced `django.contrib.postgres.fields.JSONField` in Django 3.1
     from django.db.models import JSONField
 except ImportError:
     JSONField = None
 
 try:
+    # PostgreSQL-specific field (only available when psycopg2 is installed)
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
     ArrayField = None
 
 try:
+    # Deprecated since Django 3.1
+    # PostgreSQL-specific field (only available when psycopg2 is installed)
     from django.contrib.postgres.fields import JSONField as PostgresJSONField
 except ImportError:
     PostgresJSONField = None
 
 try:
+    # PostgreSQL-specific field (only available when psycopg2 is installed)
     from django.contrib.postgres.fields import HStoreField
 except ImportError:
     HStoreField = None
 
 try:
+    # PostgreSQL-specific fields (only available when psycopg2 is installed)
     from django.contrib.postgres.fields.citext import (
         CICharField,
         CIEmailField,
@@ -79,22 +88,23 @@ except ImportError:
     CITextField = None
 
 try:
-    from django.contrib.postgres.fields.ranges import DecimalRangeField
-except ImportError:
-    DecimalRangeField = None
-try:
+    # PostgreSQL-specific fields (only available when psycopg2 is installed)
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
         DateRangeField,
         DateTimeRangeField,
+        DecimalRangeField,
         IntegerRangeField,
     )
 except ImportError:
-    IntegerRangeField = None
     BigIntegerRangeField = None
     DateRangeField = None
     DateTimeRangeField = None
+    DecimalRangeField = None
+    IntegerRangeField = None
+
 try:
+    # Deprecated since Django 2.2
     from django.contrib.postgres.fields.ranges import FloatRangeField
 except ImportError:
     FloatRangeField = None
