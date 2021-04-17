@@ -453,10 +453,6 @@ class TestCIStringFieldsFilling:
         assert isinstance(ci_text_field, CITextField)
         assert isinstance(person.ci_text, str)
 
-    @pytest.mark.skipif(
-        not DecimalRangeField,
-        reason="Django version does not support DecimalRangeField",
-    )
     def test_filling_decimal_range_field(self, person):
         from psycopg2._range import NumericRange
 
@@ -489,7 +485,7 @@ class TestCIStringFieldsFilling:
 
     @pytest.mark.skipif(
         FloatRangeField is None,
-        reason="Django version does not support FloatRangeField",
+        reason="FloatRangeField is deprecated since Django 2.2",
     )
     def test_filling_float_range_field(self, person):
         from psycopg2._range import NumericRange

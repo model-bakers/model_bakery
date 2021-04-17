@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- [dev] Add explanations to imports in `generators.py` to match with current supported Django versions [PR #179](https://github.com/model-bakers/model_bakery/pull/179)
 
 ### Changed
 
