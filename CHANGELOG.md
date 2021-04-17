@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+
+## [1.3.0](https://pypi.org/project/model-bakery/1.3.0/)
+
+### Added
 - Add Django 3.2 LTS support [PR #176](https://github.com/model-bakers/model_bakery/pull/176)
 - Add new `_bulk_create` parameter to `make` for using Django manager `bulk_create` with `_quantity` [PR #134](https://github.com/model-bakers/model_bakery/pull/134)
 - Add the functionality to import Django models using the `app_name.ModelName` convention in `import_from_str` [PR #140](https://github.com/model-bakers/model_bakery/pull/140)
