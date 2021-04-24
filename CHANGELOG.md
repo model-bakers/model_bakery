@@ -8,12 +8,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.3.1](https://pypi.org/project/model-bakery/1.3.1/)
+
+### Added
 - [dev] Add explanations to imports in `generators.py` to match with current supported Django versions [PR #179](https://github.com/model-bakers/model_bakery/pull/179)
 
 ### Changed
-- Fix `requirements.txt` to cover Django 3.2 (everything from 2.2 till 4.0)
-
-### Removed
+- Fix `requirements.txt` to cover Django 3.2 (everything from 2.2 till 4.0) [PR #182](https://github.com/model-bakers/model_bakery/pull/182)
 
 
 ## [1.3.0](https://pypi.org/project/model-bakery/1.3.0/)
