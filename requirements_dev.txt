@@ -1,7 +1,7 @@
 -r requirements.txt
 
 black==21.5b2
-flake8==3.9.1
+flake8==3.9.2
 isort==5.8.0
 mypy==0.812
 pillow==8.2.0
