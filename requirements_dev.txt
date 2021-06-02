@@ -9,6 +9,6 @@ pip-tools==6.1.0
 pre-commit==2.12.1
 psycopg2-binary==2.8.6
 pycodestyle==2.7.0
-pydocstyle==6.0.0
+pydocstyle==6.1.1
 pytest==6.2.3
 pytest-django==4.2.0
