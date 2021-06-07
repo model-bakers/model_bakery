@@ -10,8 +10,8 @@ from tests.generic.models import (
     Dog,
     DummyDefaultFieldsModel,
     DummyUniqueIntegerFieldModel,
-    Person,
     LonelyPerson,
+    Person,
     School,
 )
 
