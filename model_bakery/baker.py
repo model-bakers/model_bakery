@@ -157,7 +157,7 @@ class ModelFinder(object):
         """
         try:
             if "." in name:
-                app_label, model_name = name.split(".")
+                *staff, app_label, model_name = name.split(".")
                 model = apps.get_model(app_label, model_name)
             else:
                 model = self.get_model_by_name(name)
