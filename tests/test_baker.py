@@ -95,6 +95,33 @@ class TestsModelFinder:
             baker.Baker("NonExistingModel")
 
 
+class TestRecipeFinder:
+    def test_from_app_module(self):
+        obj = baker.prepare_recipe("generic.person")
+        assert isinstance(obj, models.Person)
+        assert obj.name == "John Doe"
+
+    def test_full_path_from_app_module(self):
+        obj = baker.prepare_recipe("tests.generic.person")
+        assert isinstance(obj, models.Person)
+        assert obj.name == "John Doe"
+
+    def test_from_non_app_module(self):
+        obj = baker.prepare_recipe("uninstalled.person")
+        assert isinstance(obj, models.Person)
+        assert obj.name == "Uninstalled"
+
+    def test_full_path_from_non_app_module(self):
+        obj = baker.prepare_recipe("tests.uninstalled.person")
+        assert isinstance(obj, models.Person)
+        assert obj.name == "Uninstalled"
+
+    def test_raise_on_non_module_path(self):
+        # Error trying to parse "app_name" + "recipe_name" from provided string
+        with pytest.raises(ValueError):
+            baker.prepare_recipe("person")
+
+
 @pytest.mark.django_db
 class TestsBakerCreatesSimpleModel:
     def test_consider_real_django_fields_only(self):

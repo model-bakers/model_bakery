@@ -118,10 +118,10 @@ def prepare(
 
 def _recipe(name: str) -> Any:
     app_name, recipe_name = name.rsplit(".", 1)
-    if "." in app_name:  # probably full path, not app name
-        pkg = app_name
-    else:
+    try:
         pkg = apps.get_app_config(app_name).module.__package__
+    except LookupError:
+        pkg = app_name
     return import_from_str(".".join((pkg, "baker_recipes", recipe_name)))
 
 
