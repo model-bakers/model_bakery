@@ -11,9 +11,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Fixed a bug (introduced in 1.2.1) that was breaking imports of recipes from non-installed-app modules [PR #201](https://github.com/model-bakers/model_bakery/pull/201)
-
 ### Removed
+
+## [1.3.2](https://pypi.org/project/model-bakery/1.3.2/)
+
+### Changed
+- Fixed a bug (introduced in [1.2.1](https://pypi.org/project/model-bakery/1.2.1/)) that was breaking imports of recipes from non-installed-app modules [PR #201](https://github.com/model-bakers/model_bakery/pull/201)
+- Dependencies updates
 
 ## [1.3.1](https://pypi.org/project/model-bakery/1.3.1/)
 
