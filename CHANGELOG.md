@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix recipes declared with reverse relationship using `foreign_key` and `one_to_one=True`
 
 ### Removed
 
@@ -26,7 +27,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fix `requirements.txt` to cover Django 3.2 (everything from 2.2 till 4.0) [PR #182](https://github.com/model-bakers/model_bakery/pull/182)
-
 
 ## [1.3.0](https://pypi.org/project/model-bakery/1.3.0/)
 
