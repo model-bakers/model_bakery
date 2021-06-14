@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 from django.conf import settings
-from django.db import connection
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase
@@ -20,6 +19,7 @@ from model_bakery.exceptions import (
 from model_bakery.timezone import tz_aware
 from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
+from tests.utils import QueryCount
 
 
 def test_import_seq_from_baker():
@@ -28,42 +28,6 @@ def test_import_seq_from_baker():
         from model_bakery.baker import seq  # NoQA
     except ImportError:
         pytest.fail("{} raised".format(ImportError.__name__))
-
-
-class QueryCount:
-    """
-    Keep track of db calls.
-
-    Example:
-    ========
-
-        qc = QueryCount()
-
-        with qc.start_count():
-            MyModel.objects.get(pk=1)
-            MyModel.objects.create()
-
-        qc.count  # 2
-
-    """
-
-    def __init__(self):
-        self.count = 0
-
-    def __call__(self, execute, sql, params, many, context):
-        """
-        `django.db.connection.execute_wrapper` callback.
-
-        https://docs.djangoproject.com/en/3.1/topics/db/instrumentation/
-        """
-        self.count += 1
-        execute(sql, params, many, context)
-
-    def start_count(self):
-        """Reset query count to 0 and return context manager for wrapping db queries."""
-        self.count = 0
-
-        return connection.execute_wrapper(self)
 
 
 class TestsModelFinder:
