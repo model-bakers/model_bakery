@@ -37,7 +37,7 @@ serial_person = Recipe(
     name=seq("joe"),
 )
 
-profile = Recipe(AnotherProfile, email='johndoe@example.com')
+profile = Recipe(AnotherProfile, email="johndoe@example.com")
 
 user_with_profile = Recipe(User, another_profile=foreign_key(profile, one_to_one=True))
 

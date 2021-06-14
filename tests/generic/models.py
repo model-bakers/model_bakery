@@ -65,7 +65,9 @@ class User(models.Model):
 
 
 class AnotherProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='another_profile')
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="another_profile"
+    )
     email = models.EmailField()
 
 
