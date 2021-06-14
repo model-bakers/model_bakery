@@ -70,12 +70,7 @@ def make(
         raise InvalidQuantityException
 
     if _quantity and _bulk_create:
-        return baker.model._base_manager.bulk_create(
-            [
-                baker.prepare(_save_kwargs=_save_kwargs, **attrs)
-                for _ in range(_quantity)
-            ]
-        )
+        return bulk_create(baker, _quantity, _save_kwargs=_save_kwargs, **attrs)
     elif _quantity:
         return [
             baker.make(
@@ -619,3 +614,36 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
             clean_dict[k] = v
 
     return clean_dict
+
+
+def bulk_create(baker, quantity, **kwargs):
+    """
+    Bulk create entries and all related FKs as well.
+
+    Important: there's no way to avoid save calls since Django does
+    not return the created objects after a bulk_insert call.
+    """
+
+    def _save_related_objs(model, objects):
+        fk_fields = [
+            f
+            for f in model._meta.fields
+            if isinstance(f, OneToOneField) or isinstance(f, ForeignKey)
+        ]
+
+        for fk in fk_fields:
+            fk_objects = []
+            for obj in objects:
+                fk_obj = getattr(obj, fk.name, None)
+                if fk_obj and not fk_obj.pk:
+                    fk_objects.append(fk_obj)
+
+            if fk_objects:
+                _save_related_objs(fk.related_model, fk_objects)
+                for i, fk_obj in enumerate(fk_objects):
+                    fk_obj.save()
+                    setattr(objects[i], fk.name, fk_obj)
+
+    entries = [baker.prepare(**kwargs) for _ in range(quantity)]
+    _save_related_objs(baker.model, entries)
+    return baker.model._base_manager.bulk_create(entries)

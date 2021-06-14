@@ -365,6 +365,49 @@ class TestBakerCreatesAssociatedModels:
         assert isinstance(lonely_person.only_friend, models.Person)
         assert models.Person.objects.all().count() == 1
 
+    def test_create_multiple_one_to_one(self):
+        baker.make(models.LonelyPerson, _quantity=5)
+        assert models.LonelyPerson.objects.all().count() == 5
+        assert models.Person.objects.all().count() == 5
+
+    def test_bulk_create_multiple_one_to_one(self):
+        queries = QueryCount()
+
+        with queries.start_count():
+            baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
+            assert queries.count == 6
+
+        assert models.LonelyPerson.objects.all().count() == 5
+        assert models.Person.objects.all().count() == 5
+
+    def test_chaining_bulk_create_reduces_query_count(self):
+        queries = QueryCount()
+
+        qtd = 5
+        with queries.start_count():
+            baker.make(models.Person, _quantity=qtd, _bulk_create=True)
+            person_iter = models.Person.objects.all().iterator()
+            baker.make(
+                models.LonelyPerson,
+                only_friend=person_iter,
+                _quantity=5,
+                _bulk_create=True,
+            )
+            assert queries.count == 3  # 2 bulk create and 1 select on Person
+
+        assert models.LonelyPerson.objects.all().count() == 5
+        assert models.Person.objects.all().count() == 5
+
+    def test_bulk_create_multiple_fk(self):
+        queries = QueryCount()
+
+        with queries.start_count():
+            baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
+            assert queries.count == 6
+
+        assert models.PaymentBill.objects.all().count() == 5
+        assert models.User.objects.all().count() == 5
+
     def test_create_many_to_many_if_flagged(self):
         store = baker.make(models.Store, make_m2m=True)
         assert store.employees.count() == 5
