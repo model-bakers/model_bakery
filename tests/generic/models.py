@@ -64,6 +64,11 @@ class User(models.Model):
     )
 
 
+class AnotherProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='another_profile')
+    email = models.EmailField()
+
+
 class PaymentBill(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.FloatField()

@@ -412,6 +412,11 @@ class TestForeignKey:
         friend_ids = set([x.only_friend.id for x in lonely_people])
         assert len(friend_ids) == 2
 
+    def test_reverse_one_to_one_relationship(self):
+        users = baker.make_recipe("tests.generic.user_with_profile", _quantity=2)
+        profile_ids = {u.another_profile.id for u in users}
+        assert len(profile_ids) == 2
+
 
 @pytest.mark.django_db
 class TestM2MField:

@@ -13,6 +13,8 @@ from tests.generic.models import (
     LonelyPerson,
     Person,
     School,
+    User,
+    AnotherProfile,
 )
 
 person = Recipe(
@@ -34,6 +36,10 @@ serial_person = Recipe(
     Person,
     name=seq("joe"),
 )
+
+profile = Recipe(AnotherProfile, email='johndoe@example.com')
+
+user_with_profile = Recipe(User, another_profile=foreign_key(profile, one_to_one=True))
 
 serial_numbers = Recipe(
     DummyDefaultFieldsModel,

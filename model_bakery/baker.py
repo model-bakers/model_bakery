@@ -367,6 +367,10 @@ class Baker(object):
                         "{0} iterator is empty.".format(field.name)
                     )
 
+        for k, v in self.model_attrs.items():
+            if is_iterator(v):
+                self.model_attrs[k] = next(v)
+
         instance = self.instance(
             self.model_attrs,
             _commit=commit,
