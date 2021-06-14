@@ -216,7 +216,7 @@ It also works with ``prepare``:
     customers = baker.prepare('shop.Customer', _quantity=3)
     assert len(customers) == 3
 
-The ``make`` method also accepts a parameter ``_bulk_create`` to use Django's `bulk_create https://docs.djangoproject.com/en/3.0/ref/models/querysets/#bulk-create`_ method instead of calling ``obj.save()`` for each created instance.
+The ``make`` method also accepts a parameter ``_bulk_create`` to use Django's `bulk_create <https://docs.djangoproject.com/en/3.0/ref/models/querysets/#bulk-create>`_ method instead of calling ``obj.save()`` for each created instance.
 
 **Disclaimer**: Django's ``bulk_create`` does not updates the created object primary key as explained in their docs. Because of that, there's no way for model-bakery to avoid calling ``save`` method for all the foreign keys.
 
