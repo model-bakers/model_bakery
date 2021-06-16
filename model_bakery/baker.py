@@ -616,7 +616,7 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     return clean_dict
 
 
-def bulk_create(baker, quantity, **kwargs):
+def bulk_create(baker, quantity, **kwargs) -> None:
     """
     Bulk create entries and all related FKs as well.
 
@@ -624,7 +624,7 @@ def bulk_create(baker, quantity, **kwargs):
     not return the created objects after a bulk_insert call.
     """
 
-    def _save_related_objs(model, objects):
+    def _save_related_objs(model, objects) -> None:
         fk_fields = [
             f
             for f in model._meta.fields
