@@ -334,6 +334,8 @@ You can also provide an optional ``increment_by`` argument which will modify inc
     >>> customer.name
     'Custom num: 7'
 
+Be aware that ``seq`` may query the database to determine when to reset. Therefore, a ``SimpleTestCase`` test method (which disallows database access) can call ``prepare_recipe`` on a Recipe with a ``seq`` once, but not not more than once within a test, even though the record itself is never saved to the database.
+
 Overriding recipe definitions
 -----------------------------
 
