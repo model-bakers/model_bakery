@@ -319,7 +319,11 @@ class Baker(object):
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
     def get_fields(self) -> Any:
-        return self.model._meta.fields + self.model._meta.many_to_many
+        return (
+            self.model._meta.fields
+            + self.model._meta.many_to_many
+            + tuple(self.model._meta.private_fields)
+        )
 
     def get_related(
         self,

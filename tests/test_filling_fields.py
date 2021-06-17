@@ -275,6 +275,20 @@ class TestFillingGenericForeignKeyField:
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
 
+    def test_iteratively_filling_generic_foreign_key_field(self):
+        """
+        Ensures private_fields are included in Baker.get_fields(), otherwise
+        calling next() when a GFK is in iterator_attrs would be bypassed.
+        """
+        objects = baker.make(models.Profile, _quantity=2)
+        dummies = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=iter(objects),
+            _quantity=2,
+        )
+        assert dummies[0].content_object == objects[0]
+        assert dummies[1].content_object == objects[1]
+
 
 @pytest.mark.django_db
 class TestFillingForeignKeyFieldWithDefaultFunctionReturningId:
