@@ -286,8 +286,16 @@ class TestFillingGenericForeignKeyField:
             content_object=iter(objects),
             _quantity=2,
         )
+
+        expected_content_type = ContentType.objects.get_for_model(models.Profile)
+
         assert dummies[0].content_object == objects[0]
+        assert dummies[0].content_type == expected_content_type
+        assert dummies[0].object_id == objects[0].pk
+
         assert dummies[1].content_object == objects[1]
+        assert dummies[1].content_type == expected_content_type
+        assert dummies[1].object_id == objects[1].pk
 
 
 @pytest.mark.django_db
