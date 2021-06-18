@@ -72,8 +72,8 @@ Or if you don't want a persisted instance: ::
     use ``make_recipe``/``prepare_recipe`` by adding the tests module to the string you've passed as an argument.
     For example: ``baker.make_recipe("shop.tests.customer_joe")``
 
-    So, short summary, you can place your ``barker_recipes.py`` **anywhere** you want to and to use it having in mind
-    you'll only have to simulate an import but ofuscating the ``barker_recipes`` module from the import string.
+    So, short summary, you can place your ``baker_recipes.py`` **anywhere** you want to and to use it having in mind
+    you'll only have to simulate an import but obfuscating the ``baker_recipes`` module from the import string.
 
 
 .. note::
