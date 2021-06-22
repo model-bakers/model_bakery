@@ -1,5 +1,16 @@
 from os.path import dirname, join
-from typing import Any, Callable, Dict, Iterator, List, Optional, Type, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from django.apps import apps
 from django.conf import settings
@@ -46,8 +57,11 @@ def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
 
+SpecificModelType = TypeVar("SpecificModelType", bound=Model)
+
+
 def make(
-    _model: Union[str, Type[ModelBase]],
+    _model: Union[str, Type[SpecificModelType]],
     _quantity: Optional[int] = None,
     make_m2m: bool = False,
     _save_kwargs: Optional[Dict] = None,
@@ -56,7 +70,7 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     **attrs: Any
-):
+) -> Union[SpecificModelType, List[SpecificModelType]]:
     """Create a persisted instance from a given model its associated models.
 
     It fill the fields with random values or you can specify which
@@ -87,12 +101,12 @@ def make(
 
 
 def prepare(
-    _model: Union[str, Type[ModelBase]],
+    _model: Union[str, Type[SpecificModelType]],
     _quantity=None,
     _save_related=False,
     _using="",
     **attrs
-) -> Model:
+) -> Union[SpecificModelType, List[SpecificModelType]]:
     """Create but do not persist an instance from a given model.
 
     It fill the fields with random values or you can specify which
@@ -616,7 +630,7 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     return clean_dict
 
 
-def bulk_create(baker, quantity, **kwargs) -> None:
+def bulk_create(baker, quantity, **kwargs) -> List[Model]:
     """
     Bulk create entries and all related FKs as well.
 
