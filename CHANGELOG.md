@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fix typos in Recipes documentation page [PR #212](https://github.com/model-bakers/model_bakery/pull/212)
+- Add `venv` to ignored folders of `flake8` and `pydocstyle` [PR#214](https://github.com/model-bakers/model_bakery/pull/214)
 
 ### Removed
 
