@@ -314,7 +314,7 @@ class Baker(object):
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
     def get_fields(self) -> Any:
-        return self.model._meta.fields + self.model._meta.many_to_many
+        return set(self.model._meta.get_fields()) - set(self.get_related())
 
     def get_related(
         self,

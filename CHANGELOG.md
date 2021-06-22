@@ -9,8 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - `_bulk_create` flag is not populating related objects as well [PR #206](https://github.com/model-bakers/model_bakery/pull/206)
+- Add support for iterators on GFK fields when using _quantity param [PR #207](https://github.com/model-bakers/model_bakery/pull/207)
 
 ### Changed
+- Fix typos in Recipes documentation page [PR #212](https://github.com/model-bakers/model_bakery/pull/212)
+- Add `venv` to ignored folders of `flake8` and `pydocstyle` [PR#214](https://github.com/model-bakers/model_bakery/pull/214)
+- Run `flake8` after code modifications when linting [PR#214](https://github.com/model-bakers/model_bakery/pull/214)
 
 ### Removed
 

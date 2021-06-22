@@ -11,8 +11,8 @@ release:
 
 lint:
 	@black .
-	@flake8 .
 	@isort .
+	@flake8 .
 	@pydocstyle .
 
 .PHONY: test release
