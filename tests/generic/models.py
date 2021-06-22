@@ -62,6 +62,7 @@ class User(models.Model):
     profile = models.ForeignKey(
         Profile, blank=True, null=True, on_delete=models.CASCADE
     )
+    username = models.CharField(max_length=32)
 
 
 class PaymentBill(models.Model):
