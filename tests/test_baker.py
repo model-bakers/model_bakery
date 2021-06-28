@@ -19,7 +19,6 @@ from model_bakery.exceptions import (
 from model_bakery.timezone import tz_aware
 from tests.generic import models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
-from tests.utils import QueryCount
 
 
 def test_import_seq_from_baker():
@@ -140,38 +139,29 @@ class TestsBakerCreatesSimpleModel:
 
 
 @pytest.mark.django_db
-class TestsBakerRepeatedCreatesSimpleModel:
+class TestsBakerRepeatedCreatesSimpleModel(TestCase):
     def test_make_should_create_objects_respecting_quantity_parameter(self):
-        queries = QueryCount()
-
-        with queries.start_count():
+        with self.assertNumQueries(5):
             baker.make(models.Person, _quantity=5)
-            assert queries.count == 5
-            assert models.Person.objects.count() == 5
+        assert models.Person.objects.count() == 5
 
-        with queries.start_count():
+        with self.assertNumQueries(5):
             people = baker.make(models.Person, _quantity=5, name="George Washington")
             assert all(p.name == "George Washington" for p in people)
-            assert queries.count == 5
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
-        queries = QueryCount()
-
-        with queries.start_count():
+        with self.assertNumQueries(1):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
-            assert queries.count == 1
-            assert models.Person.objects.count() == 5
+        assert models.Person.objects.count() == 5
 
-        with queries.start_count():
+        with self.assertNumQueries(1):
             people = baker.make(
                 models.Person, name="George Washington", _quantity=5, _bulk_create=True
             )
             assert all(p.name == "George Washington" for p in people)
-            assert queries.count == 1
 
-        with queries.start_count():
+        with self.assertNumQueries(1):
             baker.make(models.NonStandardManager, _quantity=3, _bulk_create=True)
-            assert queries.count == 1
             assert getattr(models.NonStandardManager, "objects", None) is None
             assert (
                 models.NonStandardManager._base_manager
@@ -181,7 +171,7 @@ class TestsBakerRepeatedCreatesSimpleModel:
                 models.NonStandardManager._default_manager
                 == models.NonStandardManager.manager
             )
-            assert models.NonStandardManager.manager.count() == 3
+        assert models.NonStandardManager.manager.count() == 3
 
     def test_make_raises_correct_exception_if_invalid_quantity(self):
         with pytest.raises(InvalidQuantityException):
@@ -290,7 +280,7 @@ class TestBakerPrepareSavingRelatedInstances:
 
 
 @pytest.mark.django_db
-class TestBakerCreatesAssociatedModels:
+class TestBakerCreatesAssociatedModels(TestCase):
     def test_dependent_models_with_ForeignKey(self):
         dog = baker.make(models.Dog)
         assert isinstance(dog.owner, models.Person)
@@ -371,20 +361,15 @@ class TestBakerCreatesAssociatedModels:
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_one_to_one(self):
-        queries = QueryCount()
-
-        with queries.start_count():
+        with self.assertNumQueries(6):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
-            assert queries.count == 6
 
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
     def test_chaining_bulk_create_reduces_query_count(self):
-        queries = QueryCount()
-
         qtd = 5
-        with queries.start_count():
+        with self.assertNumQueries(3):
             baker.make(models.Person, _quantity=qtd, _bulk_create=True)
             person_iter = models.Person.objects.all().iterator()
             baker.make(
@@ -393,17 +378,14 @@ class TestBakerCreatesAssociatedModels:
                 _quantity=5,
                 _bulk_create=True,
             )
-            assert queries.count == 3  # 2 bulk create and 1 select on Person
+            # 2 bulk create and 1 select on Person
 
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_fk(self):
-        queries = QueryCount()
-
-        with queries.start_count():
+        with self.assertNumQueries(6):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
-            assert queries.count == 6
 
         assert models.PaymentBill.objects.all().count() == 5
         assert models.User.objects.all().count() == 5
