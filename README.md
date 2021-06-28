@@ -71,6 +71,7 @@ Detailed info [here](https://github.com/model-bakers/model_bakery/blob/main/CONT
   - [Ana Paula Gomes](https://github.com/anapaulagomes/)
   - [Bernardo Fontes](https://github.com/berinhard/)
   - [Rustem Saiargaliev](https://github.com/amureki/)
+  - [Tim Klein](https://github.com/timjklein36)
 
 ## Creator
 
