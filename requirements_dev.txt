@@ -2,7 +2,7 @@
 
 black==21.6b0
 flake8==3.9.2
-isort==5.8.0
+isort==5.9.1
 mypy==0.812
 pillow==8.2.0
 pip-tools==6.1.0
