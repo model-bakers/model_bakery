@@ -11,4 +11,4 @@ psycopg2-binary==2.8.6
 pycodestyle==2.7.0
 pydocstyle==6.1.1
 pytest==6.2.4
-pytest-django==4.3.0
+pytest-django==4.4.0
