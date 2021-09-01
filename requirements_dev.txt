@@ -10,5 +10,5 @@ pre-commit==2.13.0
 psycopg2-binary==2.9.1
 pycodestyle==2.7.0
 pydocstyle==6.1.1
-pytest==6.2.4
+pytest==6.2.5
 pytest-django==4.4.0
