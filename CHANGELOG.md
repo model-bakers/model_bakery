@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - `_bulk_create` flag is not populating related objects as well [PR #206](https://github.com/model-bakers/model_bakery/pull/206)
 - Add support for iterators on GFK fields when using _quantity param [PR #207](https://github.com/model-bakers/model_bakery/pull/207)
+- Support for Python 3.10
+- Support for Django 4.0
 
 ### Changed
 - Fix typos in Recipes documentation page [PR #212](https://github.com/model-bakers/model_bakery/pull/212)
