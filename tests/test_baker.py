@@ -420,6 +420,10 @@ class TestBakerCreatesAssociatedModels(TestCase):
         students = baker.prepare(models.Person, _quantity=3)
         classrooms = baker.make(models.Classroom, _quantity=3, students=iter(students))
 
+        assert students[0].pk is not None
+        assert students[1].pk is not None
+        assert students[2].pk is not None
+
         assert classrooms[0].students.count() == 1
         assert classrooms[0].students.first() == students[0]
         assert classrooms[1].students.count() == 1
