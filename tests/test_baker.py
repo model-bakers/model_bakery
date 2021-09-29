@@ -405,6 +405,43 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert store.customers.count() == 3
         assert models.Person.objects.count() == 6
 
+    def test_create_many_to_many_with_iter(self):
+        students = baker.make(models.Person, _quantity=3)
+        classrooms = baker.make(models.Classroom, _quantity=3, students=iter(students))
+
+        assert classrooms[0].students.count() == 1
+        assert classrooms[0].students.first() == students[0]
+        assert classrooms[1].students.count() == 1
+        assert classrooms[1].students.first() == students[1]
+        assert classrooms[2].students.count() == 1
+        assert classrooms[2].students.first() == students[2]
+
+    def test_create_many_to_many_with_unsaved_iter(self):
+        students = baker.prepare(models.Person, _quantity=3)
+        classrooms = baker.make(models.Classroom, _quantity=3, students=iter(students))
+
+        assert classrooms[0].students.count() == 1
+        assert classrooms[0].students.first() == students[0]
+        assert classrooms[1].students.count() == 1
+        assert classrooms[1].students.first() == students[1]
+        assert classrooms[2].students.count() == 1
+        assert classrooms[2].students.first() == students[2]
+
+    def test_create_many_to_many_with_through_and_iter(self):
+        students = baker.make(models.Person, _quantity=3)
+        schools = baker.make(
+            models.School,
+            _quantity=3,
+            students=iter(students),
+        )
+
+        assert schools[0].students.count() == 1
+        assert schools[0].students.first() == students[0]
+        assert schools[1].students.count() == 1
+        assert schools[1].students.first() == students[1]
+        assert schools[2].students.count() == 1
+        assert schools[2].students.first() == students[2]
+
     def test_create_many_to_many_with_set_default_quantity(self):
         store = baker.make(models.Store, make_m2m=True)
         assert store.employees.count() == baker.MAX_MANY_QUANTITY

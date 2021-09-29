@@ -357,7 +357,12 @@ class Baker(object):
                 if field.name not in self.model_attrs:
                     self.m2m_dict[field.name] = self.m2m_value(field)
                 else:
-                    self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
+                    if field.name in self.iterator_attrs:
+                        self.model_attrs[field.name] = [
+                            next(self.iterator_attrs[field.name])
+                        ]
+                    else:
+                        self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
             elif field.name not in self.model_attrs:
                 if (
                     not isinstance(field, ForeignKey)
@@ -503,14 +508,18 @@ class Baker(object):
         return False
 
     def _handle_one_to_many(self, instance: Model, attrs: Dict[str, Any]):
-        for k, v in attrs.items():
-            manager = getattr(instance, k)
+        for key, values in attrs.items():
+            manager = getattr(instance, key)
+
+            for value in values:
+                if not value.pk:
+                    value.save()
 
             try:
-                manager.set(v, bulk=False, clear=True)
+                manager.set(values, bulk=False, clear=True)
             except TypeError:
                 # for many-to-many relationships the bulk keyword argument doesn't exist
-                manager.set(v, clear=True)
+                manager.set(values, clear=True)
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
