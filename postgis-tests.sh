@@ -1,23 +1,101 @@
+#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+set -euo pipefail
+
+###
+# TODO: Expand documentation
+###
+
+function help {
+    # Print this file's contents, but only the lines that start
+    # with `###` (documentation lines, above).
+    sed -rn 's/^### ?//;T;p' "$0"
+}
+
+function HAS {
+    # Check if the system has a certain program ($1) installed.
+    # Output is silenced, but the function returns the result of
+    # the `command` statement.
+    command -v $1 > /dev/null 2>&1
+    return $?
+}
+
+# Script variables
+PROJECT_ROOT="$(dirname $(readlink -f "$0"))" # Same level as this file
+
+# Dependency variables (e.g. PYTHON3_CLI=python3)
+PYTHON=${PYTHON_CLI:-python}
+
+DEPS="$PYTHON"
+
+# Arg defaults
 # Set a different port than postgres' default (in case the user is already running postgres locally)
-export PGPORT=4111
-export PGUSER=postgres
-export PGPASSWORD=postgres
-export TEST_DB=postgis
+export PGPORT=${PGPORT:-4111}
+export PGUSER=${PGUSER:-postgres}
+export PGPASSWORD=${PGPASSWORD:-postgres}
+export TEST_DB=${TEST_DB:-postgis}
 
-# Run the postgis container
-docker run --rm --name modelbakery -e POSTGRES_HOST_AUTH_METHOD=trust -p ${PGPORT}:5432 -d postgis/postgis:11-3.0
+# Argument parsing using "getopt"
+OPTIONS=h
+LONGOPTS=help
 
-# Wait a few seconds so the DB container can start up
-echo "Waiting for DB container..."
-sleep 4s
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+PARSE_EXIT=$?
 
-# Enable all of the extensions needed on the template1 database
-docker exec modelbakery /bin/bash -c "psql template1 -c \"CREATE EXTENSION IF NOT EXISTS citext;\" -U postgres"
-docker exec modelbakery /bin/bash -c "psql template1 -c \"CREATE EXTENSION IF NOT EXISTS hstore;\" -U postgres"
-docker exec modelbakery /bin/bash -c "psql template1 -c \"CREATE EXTENSION IF NOT EXISTS postgis;\" -U postgres"
+if [[ $PARSE_EXIT -ne 0 ]]; then
+    exit $PARSE_EXIT
+fi
+
+eval set -- "$PARSED"
+
+while true; do
+    case "$1" in
+        -h|--help)
+            help
+            shift
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Error. Exiting."
+            exit 3
+            ;;
+    esac
+done
+
+# Grab the remaining positional argument(s) (not needed here)
+# if [[ $# -ne 0 ]]; then
+#     POSITIONAL_1=$1
+#     POSITIONAL_1=$2
+# else
+#     echo "Missing positional args?"
+#     exit 1
+# fi
+
+echo "Checking dependencies [$(echo ${DEPS} | sed 's/ /, /g')]..."
+for dep in $DEPS; do
+    MISSING_DEP=false
+
+    if ! HAS $dep; then
+        echo "You do not have '${dep}' installed, or it is not available on your PATH!"
+        echo "If '${dep}' is not what it is called on your system, set the ${dep^^}_CLI environment variable."
+        MISSING_DEP=true
+    fi
+
+    if [[ $MISSING_DEP = true ]]; then
+        echo "Missing dependencies."
+        exit 1
+    fi
+done
+
+# Run the postgres container with all extensions installed
+$PROJECT_ROOT/postgres-docker --port $PGPORT
 
 # Run the tests
-python -m pytest
+$PYTHON -m pytest
 
 # Spin down the postgis container
-docker stop modelbakery
+$PROJECT_ROOT/postgres-docker --kill

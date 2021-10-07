@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# -*- coding: utf-8 -*-
+set -euo pipefail
+
+###
+# TODO: Expand documentation
+###
+
+function help {
+    # Print this file's contents, but only the lines that start
+    # with `###` (documentation lines, above).
+    sed -rn 's/^### ?//;T;p' "$0"
+}
+
+function HAS {
+    # Check if the system has a certain program ($1) installed.
+    # Output is silenced, but the function returns the result of
+    # the `command` statement.
+    command -v $1 > /dev/null 2>&1
+    return $?
+}
+
+# Script variables
+PROJECT_ROOT="$(dirname $(readlink -f "$0"))" # Same level as this file
+
+# Dependency variables (e.g. PYTHON3_CLI=python3)
+DOCKER=${DOCKER_CLI:-docker}
+
+DEPS="$DOCKER"
+
+# Arg defaults
+KILL=false
+CONTAINER_NAME=model-bakery-postgres
+PORT=${PGPORT:-5432}
+
+# Argument parsing using "getopt"
+OPTIONS=h,k,p
+LONGOPTS=help,kill,port
+
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+PARSE_EXIT=$?
+
+if [[ $PARSE_EXIT -ne 0 ]]; then
+    exit $PARSE_EXIT
+fi
+
+eval set -- "$PARSED"
+
+while true; do
+    case "$1" in
+        -p|--port)
+            PGPORT=$2
+            shift
+            ;;
+        -k|--kill)
+            KILL=true
+            shift
+            ;;
+        -h|--help)
+            help
+            shift
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Error. Exiting."
+            exit 3
+            ;;
+    esac
+done
+
+# Grab the remaining positional argument(s) (not needed here)
+# if [[ $# -ne 0 ]]; then
+#     POSITIONAL_1=$1
+#     POSITIONAL_1=$2
+# else
+#     echo "Missing positional args?"
+#     exit 1
+# fi
+
+echo "Checking dependencies [$(echo ${DEPS} | sed 's/ /, /g')]..."
+for dep in $DEPS; do
+    MISSING_DEP=false
+
+    if ! HAS $dep; then
+        echo "You do not have '${dep}' installed, or it is not available on your PATH!"
+        echo "If '${dep}' is not what it is called on your system, set the ${dep^^}_CLI environment variable."
+        MISSING_DEP=true
+    fi
+
+    if [[ $MISSING_DEP = true ]]; then
+        echo "Missing dependencies."
+        exit 1
+    fi
+done
+
+# Check if already running
+if $DOCKER container inspect $CONTAINER_NAME > /dev/null 2>&1; then
+    RUNNING_ALREADY=true
+else
+    RUNNING_ALREADY=false
+fi
+
+# If stop desired, stop container
+if [[ $KILL = true ]]; then
+    if [[ $RUNNING_ALREADY = true ]]; then
+        echo "Stopping '${CONTAINER_NAME}'..."
+        $DOCKER stop $CONTAINER_NAME
+        exit 0
+    else
+        echo "Container '${CONTAINER_NAME}' is not currently running."
+        exit 1
+    fi
+fi
+
+# If running already, do nothing but check port
+if [[ $RUNNING_ALREADY = true ]]; then
+    RUNNING_PORT=$($DOCKER container inspect $CONTAINER_NAME | grep -m 1 -Po "(?<=HostPort\": \")\d+")
+
+    if [[ $RUNNING_PORT -ne $PORT ]]; then
+        echo "Container '${CONTAINER_NAME}' is already running, but on the wrong port!"
+        echo "Conainer is using port ${RUNNING_PORT} and the specified port is ${PORT}."
+        exit 1
+    else
+        echo "Container '${CONTAINER_NAME}' is already running."
+        exit 0
+    fi
+fi
+
+# Start postgres container
+echo "Starting '${CONTAINER_NAME}'..."
+
+$DOCKER run --rm --name ${CONTAINER_NAME} -e POSTGRES_HOST_AUTH_METHOD=trust -p ${PORT}:5432 -d postgis/postgis:11-3.0
+
+# Wait a few seconds so the DB container can start up
+echo "Waiting for DB container..."
+sleep 4s
+
+# Enable all of the extensions needed on the template1 database
+$DOCKER exec $CONTAINER_NAME /bin/bash -c "psql template1 -c \"CREATE EXTENSION IF NOT EXISTS citext;\" -U postgres"
+$DOCKER exec $CONTAINER_NAME /bin/bash -c "psql template1 -c \"CREATE EXTENSION IF NOT EXISTS hstore;\" -U postgres"
+$DOCKER exec $CONTAINER_NAME /bin/bash -c "psql template1 -c \"CREATE EXTENSION IF NOT EXISTS postgis;\" -U postgres"
