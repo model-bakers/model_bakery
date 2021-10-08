@@ -3,7 +3,24 @@
 set -euo pipefail
 
 ###
-# TODO: Expand documentation
+### Run test suite against PostgreSQL DB with Postgis installed.
+###
+### This script will attempt to spin up a PostgreSQL Docker container against
+### which the tests will be run. If you are already running PostgreSQL locally,
+### then instead of using this script, simply run:
+###
+###     # TEST_DB=postgis python -m pytest
+###
+### This script uses the `python` on the current `$PATH`, but can be overridden
+### by setting the `PYTHON_CLI` environment variable.
+###
+### Usage:
+###
+###     ./postgis-tests.sh [-h|--help]
+###
+### Options:
+###
+###     -h, --help          print (this) help and exit
 ###
 
 function help {
@@ -29,8 +46,7 @@ PYTHON=${PYTHON_CLI:-python}
 DEPS="$PYTHON"
 
 # Arg defaults
-# Set a different port than postgres' default (in case the user is already running postgres locally)
-export PGPORT=${PGPORT:-4111}
+export PGPORT=${PGPORT:-5432}
 export PGUSER=${PGUSER:-postgres}
 export PGPASSWORD=${PGPASSWORD:-postgres}
 export TEST_DB=${TEST_DB:-postgis}

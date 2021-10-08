@@ -3,7 +3,24 @@
 set -euo pipefail
 
 ###
-# TODO: Expand documentation
+### Start a PostgreSQL docker container with the proper extensions installed
+### for the full test suite.
+###
+### To kill an already running container, run the same command again with the
+### `--kill` flag.
+###
+### Usage:
+###
+###     ./postgres-docker [-h|--help] [-p|--port PORT] [-k|--kill]
+###
+### Options:
+###
+###     -h, --help          print (this) help and exit
+###
+###     -p, --port PORT     specify the host port to which PostgreSQL will be bound
+###                         (defaults to 5432)
+###
+###     -k, --kill          given the container is already running, kill it
 ###
 
 function help {
