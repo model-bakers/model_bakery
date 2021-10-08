@@ -154,7 +154,7 @@ $DOCKER run --rm --name ${CONTAINER_NAME} -e POSTGRES_HOST_AUTH_METHOD=trust -p 
 
 # Wait a few seconds so the DB container can start up
 echo "Waiting for DB container..."
-sleep 4s
+sleep 5s
 
 # Enable all of the extensions needed on the template1 database
 $DOCKER exec $CONTAINER_NAME /bin/bash -c "psql template1 -c \"CREATE EXTENSION IF NOT EXISTS citext;\" -U postgres"

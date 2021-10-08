@@ -6,10 +6,11 @@ set -euo pipefail
 ### Run test suite against PostgreSQL DB with Postgis installed.
 ###
 ### This script will attempt to spin up a PostgreSQL Docker container against
-### which the tests will be run. If you are already running PostgreSQL locally,
-### then instead of using this script, simply run:
+### which the tests will be run. It will spin it down once the tests are finished,
+### so if you are already running PostgreSQL locally, instead of using this
+### script, simply run:
 ###
-###     # TEST_DB=postgis python -m pytest
+###     # TEST_DB=postgis PGUSER=postgres python -m pytest
 ###
 ### This script uses the `python` on the current `$PATH`, but can be overridden
 ### by setting the `PYTHON_CLI` environment variable.
