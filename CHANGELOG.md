@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.3.3](https://pypi.org/project/model-bakery/1.3.3/)
+
+### Added
 - `_bulk_create` flag is not populating related objects as well [PR #206](https://github.com/model-bakers/model_bakery/pull/206)
 - Add support for iterators on GFK fields when using _quantity param [PR #207](https://github.com/model-bakers/model_bakery/pull/207)
 - Add support for iterators on many-to-many fields [PR#237](https://github.com/model-bakers/model_bakery/pull/237)
@@ -17,8 +25,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `venv` to ignored folders of `flake8` and `pydocstyle` [PR#214](https://github.com/model-bakers/model_bakery/pull/214)
 - Run `flake8` after code modifications when linting [PR#214](https://github.com/model-bakers/model_bakery/pull/214)
 - Add typing for `baker.make` and `baker.prepare` [PR#213](https://github.com/model-bakers/model_bakery/pull/213)
-
-### Removed
 
 ## [1.3.2](https://pypi.org/project/model-bakery/1.3.2/)
 
