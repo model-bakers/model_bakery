@@ -10,6 +10,8 @@ from django.apps import apps
 
 from .timezone import tz_aware
 
+__all__ = ["import_from_str", "get_calling_module", "seq"]
+
 
 def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
     """Import an object defined as import if it is an string.
@@ -69,11 +71,9 @@ def seq(value, increment_by=1, start=None, suffix=None):
     Returns:
         object: generated values for sequential data
     """
-    if type(value) in [datetime.datetime, datetime.date, datetime.time]:
-        if start:
-            msg = "start parameter is ignored when using seq with date, time or datetime objects"
-            warnings.warn(msg)
+    _validate_sequence_parameters(value, increment_by, start, suffix)
 
+    if type(value) in [datetime.datetime, datetime.date, datetime.time]:
         if type(value) is datetime.date:
             date = datetime.datetime.combine(value, datetime.datetime.now().time())
         elif type(value) is datetime.time:
@@ -93,15 +93,29 @@ def seq(value, increment_by=1, start=None, suffix=None):
             else:
                 yield series_date
     else:
-        if suffix and not isinstance(suffix, str):
-            raise TypeError("Sequences suffix can only be a string")
-
         for n in itertools.count(start or increment_by, increment_by):
-            if suffix and not isinstance(value, str):
-                raise TypeError(
-                    "Sequences with suffix can only be used with text values"
-                )
-            elif suffix:
+            if suffix:
                 yield value + str(n) + suffix
             else:
                 yield value + type(value)(n)
+
+
+def _validate_sequence_parameters(value, increment_by, start, suffix) -> None:
+    if suffix:
+        if not isinstance(suffix, str):
+            raise TypeError("Sequences suffix can only be a string")
+
+        if not isinstance(value, str):
+            raise TypeError("Sequences with suffix can only be used with text values")
+
+    if type(value) in [datetime.datetime, datetime.date, datetime.time]:
+        if not isinstance(increment_by, datetime.timedelta):
+            raise TypeError(
+                "Sequences with values datetime.datetime, datetime.date and datetime.time, "
+                "incremente_by must be a datetime.timedelta."
+            )
+
+        if start:
+            warnings.warn(
+                "start parameter is ignored when using seq with date, time or datetime objects"
+            )
