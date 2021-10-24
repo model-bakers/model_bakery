@@ -17,7 +17,10 @@ from tests.generic.models import (
     Dog,
     DummyBlankFieldsModel,
     DummyNumbersModel,
+    LonelyPerson,
     Person,
+    Profile,
+    User,
 )
 
 recipe_attrs = {
@@ -32,6 +35,8 @@ recipe_attrs = {
     "birth_time": now(),
 }
 person_recipe = Recipe(Person, **recipe_attrs)
+user_recipe = Recipe(User)
+lonely_person_recipe = Recipe(LonelyPerson)
 
 
 def test_import_seq_from_recipe():
@@ -449,6 +454,26 @@ class TestSequences:
         assert person.email == "fred2@example.com"
         person = fred_person.make()
         assert person.email == "fred3@example.com"
+
+    def test_increment_for_fks(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        baker.make(Profile, _quantity=3)
+        seq_user = user_recipe.extend(username="name", profile_id=seq(1))
+        user = seq_user.make()
+        assert user.profile_id == 2
+        user = seq_user.make()
+        assert user.profile_id == 3
+
+    def test_increment_for_one_to_one(self):
+        from model_bakery.recipe import seq  # NoQA
+
+        baker.make(Person, _quantity=3)
+        seq_lonely_person = lonely_person_recipe.extend(only_friend_id=seq(1))
+        person = seq_lonely_person.make()
+        assert person.only_friend_id == 2
+        user = seq_lonely_person.make()
+        assert user.only_friend_id == 3
 
     def test_increment_for_strings_with_bad_suffix(self):
         from model_bakery.recipe import seq  # NoQA
