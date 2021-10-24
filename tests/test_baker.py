@@ -7,7 +7,7 @@ import pytest
 from django.conf import settings
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from model_bakery import baker, random_gen
 from model_bakery.baker import MAX_MANY_QUANTITY
@@ -786,7 +786,7 @@ class TestBakerSupportsMultiDatabase(TestCase):
         assert qs.count() == 1
         assert profile in qs
 
-    def test_related_fk_database_speficied_via_using_kwarg(self):
+    def test_related_fk_database_specified_via_using_kwarg(self):
         dog = baker.make(models.Dog, _using=settings.EXTRA_DB)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
         assert dog_qs.count() == 1
@@ -796,7 +796,17 @@ class TestBakerSupportsMultiDatabase(TestCase):
         assert person_qs.count() == 1
         assert dog.owner in person_qs
 
-    def test_related_fk_database_speficied_via_using_kwarg_combined_with_quantity(self):
+    def test_allow_user_to_specify_database_via_using_combined_with_bulk_create(
+        self,
+    ):
+        baker.make(
+            models.Profile, _using=settings.EXTRA_DB, _quantity=10, _bulk_create=True
+        )
+        qs = models.Profile.objects.using(settings.EXTRA_DB).all()
+
+        assert qs.count() == 10
+
+    def test_related_fk_database_specified_via_using_kwarg_combined_with_quantity(self):
         dogs = baker.make(models.Dog, _using=settings.EXTRA_DB, _quantity=5)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
         person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
@@ -806,6 +816,38 @@ class TestBakerSupportsMultiDatabase(TestCase):
         for dog in dogs:
             assert dog in dog_qs
             assert dog.owner in person_qs
+
+    def test_related_fk_database_specified_via_using_kwarg_combined_with_and_bulk_create(
+        self,
+    ):
+        # A custom router must be used when using bulk create and saving
+        # related objects in a multi-database setting.
+        class AllowRelationRouter:
+            """Custom router that allows saving of relations."""
+
+            def allow_relation(self, obj1, obj2, **hints):
+                """Allow all relations."""
+                return True
+
+        with override_settings(DATABASE_ROUTERS=[AllowRelationRouter()]):
+            baker.make(
+                models.PaymentBill,
+                _quantity=5,
+                _bulk_create=True,
+                _using=settings.EXTRA_DB,
+            )
+
+        assert models.PaymentBill.objects.all().using(settings.EXTRA_DB).count() == 5
+        assert models.User.objects.all().using(settings.EXTRA_DB).count() == 5
+
+        # Default router will not be able to save the related objects
+        with pytest.raises(ValueError):
+            baker.make(
+                models.PaymentBill,
+                _quantity=5,
+                _bulk_create=True,
+                _using=settings.EXTRA_DB,
+            )
 
     def test_allow_recipe_to_specify_database_via_using(self):
         dog = baker.make_recipe("generic.homeless_dog", _using=settings.EXTRA_DB)
@@ -836,13 +878,13 @@ class TestBakerSupportsMultiDatabase(TestCase):
             assert dog in dog_qs
             assert dog.owner in person_qs
 
-    def test_related_m2m_database_speficied_via_using_kwarg(self):
+    def test_related_m2m_database_specified_via_using_kwarg(self):
         baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
         assert dog_qs.count() == MAX_MANY_QUANTITY + 1
         assert not models.Dog.objects.exists()
 
-    def test_related_m2m_database_speficied_via_using_kwarg_and_quantity(self):
+    def test_related_m2m_database_specified_via_using_kwarg_and_quantity(self):
         qtd = 3
         baker.make(models.Dog, _using=settings.EXTRA_DB, make_m2m=True, _quantity=qtd)
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
