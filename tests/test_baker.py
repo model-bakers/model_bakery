@@ -817,7 +817,7 @@ class TestBakerSupportsMultiDatabase(TestCase):
             assert dog in dog_qs
             assert dog.owner in person_qs
 
-    def test_related_fk_database_specified_via_using_kwarg_combined_with_and_bulk_create(
+    def test_related_fk_database_specified_via_using_kwarg_combined_with_bulk_create(
         self,
     ):
         # A custom router must be used when using bulk create and saving
