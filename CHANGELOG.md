@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fix a simple typo in `bulk_create` disclaimer in docs
+- Allow relation `_id` fields to use sequences [PR #253](https://github.com/model-bakers/model_bakery/pull/253/)
 
 ### Removed
 
