@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Added postgis version to test settings
 
 ### Changed
 - Fix a simple typo in `bulk_create` disclaimer in docs

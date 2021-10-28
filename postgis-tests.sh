@@ -5,6 +5,7 @@ export PGPASSWORD=postgres
 export TEST_DB=postgis
 
 # Run the postgis container
+# note postgis version is also explicitly set in django test settings
 docker run --rm --name modelbakery -e POSTGRES_HOST_AUTH_METHOD=trust -p ${PGPORT}:5432 -d postgis/postgis:11-3.0
 
 # Wait a few seconds so the DB container can start up
