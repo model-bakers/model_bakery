@@ -228,7 +228,7 @@ class ModelWithOverridedSave(Dog):
 
 class Classroom(models.Model):
     students = models.ManyToManyField(Person, null=True)
-    active = models.NullBooleanField()
+    active = models.BooleanField(null=True)
 
 
 class Store(models.Model):

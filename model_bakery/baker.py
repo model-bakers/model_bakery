@@ -90,7 +90,7 @@ def make(
             baker.make(
                 _save_kwargs=_save_kwargs,
                 _refresh_after_create=_refresh_after_create,
-                **attrs
+                **attrs,
             )
             for _ in range(_quantity)
         ]
@@ -646,6 +646,9 @@ def bulk_create(baker, quantity, **kwargs) -> List[Model]:
     Important: there's no way to avoid save calls since Django does
     not return the created objects after a bulk_insert call.
     """
+    _save_kwargs = {}
+    if baker._using:
+        _save_kwargs = {"using": baker._using}
 
     def _save_related_objs(model, objects) -> None:
         fk_fields = [
@@ -664,9 +667,22 @@ def bulk_create(baker, quantity, **kwargs) -> List[Model]:
             if fk_objects:
                 _save_related_objs(fk.related_model, fk_objects)
                 for i, fk_obj in enumerate(fk_objects):
-                    fk_obj.save()
+                    fk_obj.save(**_save_kwargs)
                     setattr(objects[i], fk.name, fk_obj)
 
-    entries = [baker.prepare(**kwargs) for _ in range(quantity)]
+    entries = [
+        baker.prepare(
+            **kwargs,
+        )
+        for _ in range(quantity)
+    ]
     _save_related_objs(baker.model, entries)
-    return baker.model._base_manager.bulk_create(entries)
+
+    if baker._using:
+        # Try to use the desired DB and let Django fail if spanning
+        # relationships without the proper router setup
+        manager = baker.model._base_manager.using(baker._using)
+    else:
+        manager = baker.model._base_manager
+
+    return manager.bulk_create(entries)
