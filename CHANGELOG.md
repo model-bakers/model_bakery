@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Add support for Python 3.10 [PR #244](https://github.com/model-bakers/model_bakery/pull/244)
 
 ### Changed
 - Validate `increment_by` parameter of `seq` helper when `value` is an instance of `datetime` [PR #247](https://github.com/model-bakers/model_bakery/pull/247)
-- [dev] Fix some `seq` tests.
+- Fix a simple typo in `bulk_create` disclaimer in docs
 
 ### Removed
 
