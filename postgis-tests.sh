@@ -4,6 +4,7 @@ set -euo pipefail
 
 ###
 ### Run test suite against PostgreSQL DB with Postgis installed.
+### Note postgis version is also explicitly set in django test settings
 ###
 ### This script will attempt to spin up a PostgreSQL Docker container against
 ### which the tests will be run. It will spin it down once the tests are finished,
