@@ -8,10 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Add support for Python 3.10 [PR #244](https://github.com/model-bakers/model_bakery/pull/244)
 
 ### Changed
+- Validate `increment_by` parameter of `seq` helper when `value` is an instance of `datetime` [PR #247](https://github.com/model-bakers/model_bakery/pull/247)
 - Fix a simple typo in `bulk_create` disclaimer in docs
 - Fix bulk_create not working with multi-database setup [PR #252](https://github.com/model-bakers/model_bakery/pull/252)
+- Conditionally support NullBooleanField, it's under deprecation and will be removed in Django 4.0 [PR #25](https://github.com/model-bakers/model_bakery/pull/250)
+- Fix Django max version pin in requirements file [PR #251](https://github.com/model-bakers/model_bakery/pull/251)
 
 ### Removed
 

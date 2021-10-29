@@ -76,11 +76,10 @@ class TestSeq:
         assert next(sequence) == "cookie113@example.com"
 
     def test_string_invalid_suffix(self):
-        sequence = seq("cookie", suffix=42)
-
         with pytest.raises(TypeError) as exc:
-            next(sequence)
-            assert str(exc.value) == "Sequences suffix can only be a string"
+            next(seq("cookie", suffix=42))
+
+        assert str(exc.value) == "Sequences suffix can only be a string"
 
     def test_int(self):
         sequence = seq(1)
@@ -119,13 +118,12 @@ class TestSeq:
         assert next(sequence) == pytest.approx(6.63)
 
     def test_numbers_with_suffix(self):
-        sequence = seq(1, suffix="iamnotanumber")
         with pytest.raises(TypeError) as exc:
-            next(sequence)
-            assert (
-                str(exc.value)
-                == "Sequences with suffix can only be used with text values"
-            )
+            next(seq(1, suffix="iamnotanumber"))
+
+        assert (
+            str(exc.value) == "Sequences with suffix can only be used with text values"
+        )
 
     def test_date(self):
         sequence = seq(
@@ -162,3 +160,20 @@ class TestSeq:
         assert next(sequence) == datetime.datetime(
             2021, 2, 12, 00, 39, 58, 457698
         ).replace(tzinfo=tzinfo)
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            datetime.datetime(2021, 2, 11, 15, 39, 58, 457698),
+            datetime.date(2021, 2, 11),
+            datetime.time(15, 39, 58, 457698),
+        ],
+    )
+    def test_should_raise_exception_for_datetime_instances(self, value):
+        with pytest.raises(TypeError) as exc:
+            next(seq(value))
+
+        assert str(exc.value) == (
+            "Sequences with values datetime.datetime, datetime.date and datetime.time, "
+            "incremente_by must be a datetime.timedelta."
+        )
