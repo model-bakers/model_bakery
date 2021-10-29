@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add support for Python 3.10 [PR #244](https://github.com/model-bakers/model_bakery/pull/244)
 
 ### Changed
+- Validate `increment_by` parameter of `seq` helper when `value` is an instance of `datetime` [PR #247](https://github.com/model-bakers/model_bakery/pull/247)
 - Fix a simple typo in `bulk_create` disclaimer in docs
 - Fix Django max version pin in requirements file [PR #251](https://github.com/model-bakers/model_bakery/pull/251)
 
