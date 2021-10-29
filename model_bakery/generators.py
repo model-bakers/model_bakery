@@ -20,7 +20,6 @@ from django.db.models import (
     IntegerField,
     IPAddressField,
     ManyToManyField,
-    NullBooleanField,
     OneToOneField,
     PositiveIntegerField,
     PositiveSmallIntegerField,
@@ -88,6 +87,13 @@ except ImportError:
     CITextField = None
 
 try:
+    # Deprecated since Django 3.1
+    from django.db.models import NullBooleanField
+except ImportError:
+    NullBooleanField = None
+
+
+try:
     # PostgreSQL-specific fields (only available when psycopg2 is installed)
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
@@ -124,7 +130,6 @@ default_mapping = {
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
     BooleanField: random_gen.gen_boolean,
-    NullBooleanField: random_gen.gen_boolean,
     IntegerField: _make_integer_gen_by_range(IntegerField),
     BigIntegerField: _make_integer_gen_by_range(BigIntegerField),
     SmallIntegerField: _make_integer_gen_by_range(SmallIntegerField),
@@ -185,6 +190,8 @@ if DateRangeField:
     default_mapping[DateRangeField] = random_gen.gen_date_range
 if DateTimeRangeField:
     default_mapping[DateTimeRangeField] = random_gen.gen_datetime_range
+if NullBooleanField:
+    default_mapping[NullBooleanField] = random_gen.gen_boolean
 
 
 # Add GIS fields
