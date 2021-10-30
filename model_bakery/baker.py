@@ -363,10 +363,20 @@ class Baker(object):
                         ]
                     else:
                         self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
+            # is an _id relation that has a sequence defined
+            elif (
+                (isinstance(field, OneToOneField) or isinstance(field, ForeignKey))
+                and hasattr(field, "attname")
+                and field.attname in self.iterator_attrs
+            ):
+                self.model_attrs[field.attname] = next(
+                    self.iterator_attrs[field.attname]
+                )
             elif field.name not in self.model_attrs:
                 if (
                     not isinstance(field, ForeignKey)
-                    or "{0}_id".format(field.name) not in self.model_attrs
+                    or hasattr(field, "attname")
+                    and field.attname not in self.model_attrs
                 ):
                     self.model_attrs[field.name] = self.generate_value(
                         field, commit_related
@@ -475,6 +485,14 @@ class Baker(object):
 
         if isinstance(field, FileField) and not self.create_files:
             return True
+
+        # Don't Skip related _id fields defined in the iterator attributes
+        if (
+            (isinstance(field, OneToOneField) or isinstance(field, ForeignKey))
+            and hasattr(field, "attname")
+            and field.attname in self.iterator_attrs
+        ):
+            return False
 
         # Skip links to parent so parent is not created twice.
         if isinstance(field, OneToOneField) and self._remote_field(field).parent_link:
