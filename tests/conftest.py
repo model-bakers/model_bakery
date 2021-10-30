@@ -15,6 +15,7 @@ def pytest_configure():
     ]
 
     using_postgres_flag = False
+    postgis_version = ()
     if test_db == "sqlite":
         db_engine = "django.db.backends.sqlite3"
         db_name = ":memory:"
@@ -34,6 +35,7 @@ def pytest_configure():
             "django.contrib.postgres",
             "django.contrib.gis",
         ] + installed_apps
+        postgis_version = (11, 3, 0)
     else:
         raise NotImplementedError("Tests for % are not supported", test_db)
 
@@ -66,6 +68,9 @@ def pytest_configure():
         MIDDLEWARE=(),
         USE_TZ=os.environ.get("USE_TZ", False),
         USING_POSTGRES=using_postgres_flag,
+        # Set the version explicitly otherwise Django does extra queries
+        # to get the version via SQL when using POSTGIS
+        POSTGIS_VERSION=postgis_version,
     )
 
     from model_bakery import baker
