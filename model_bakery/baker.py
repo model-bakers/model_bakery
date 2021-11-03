@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from os.path import dirname, join
 from typing import (
     Any,
@@ -326,7 +324,7 @@ class Baker(Generic[_M]):
         make_m2m: bool = False,
         create_files: bool = False,
         _using: str = "",
-    ) -> Baker[_NewM]:
+    ) -> "Baker[_NewM]":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
         return cast(Type[Baker[_NewM]], baker_class)(
