@@ -109,7 +109,7 @@ def make(
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
-    baker = Baker.create(
+    baker: Baker = Baker.create(
         _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
     )
     if _valid_quantity(_quantity):
@@ -203,13 +203,13 @@ def prepare_recipe(
     )
 
 
-class ModelFinder(Generic[_M]):
+class ModelFinder:
     """Encapsulates all the logic for finding a model to Baker."""
 
     _unique_models: Optional[Dict[str, Type[Model]]] = None
     _ambiguous_models: Optional[List[str]] = None
 
-    def get_model(self, name: str) -> Type[_M]:
+    def get_model(self, name: str) -> Type[Model]:
         """Get a model.
 
         Args:
@@ -222,7 +222,7 @@ class ModelFinder(Generic[_M]):
         try:
             if "." in name:
                 app_label, model_name = name.split(".")
-                model = cast(Type[_M], apps.get_model(app_label, model_name))
+                model = apps.get_model(app_label, model_name)
             else:
                 model = self.get_model_by_name(name)
         except LookupError:
@@ -233,7 +233,7 @@ class ModelFinder(Generic[_M]):
 
         return model
 
-    def get_model_by_name(self, name: str) -> Optional[Type[_M]]:
+    def get_model_by_name(self, name: str) -> Optional[Type[Model]]:
         """Get a model by name.
 
         If a model with that name exists in more than one app, raises
@@ -315,7 +315,7 @@ class Baker(Generic[_M]):
 
     # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
-    finder: ModelFinder[_M] = ModelFinder()
+    finder = ModelFinder()
 
     @classmethod
     def create(
@@ -348,7 +348,7 @@ class Baker(Generic[_M]):
         self._using = _using
 
         if isinstance(_model, str):
-            self.model = self.finder.get_model(_model)
+            self.model = cast(Type[_M], self.finder.get_model(_model))
         else:
             self.model = cast(Type[_M], _model)
 
@@ -492,7 +492,7 @@ class Baker(Generic[_M]):
                 # within its get_queryset() method (e.g. annotations)
                 # is run.
                 manager = getattr(self.model, _from_manager)
-                instance: _M = manager.get(pk=instance.pk)
+                instance = cast(_M, manager.get(pk=instance.pk))
 
         return instance
 
