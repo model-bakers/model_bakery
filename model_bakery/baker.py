@@ -58,13 +58,13 @@ def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
 
-_M = TypeVar("_M", bound=Model)
-_NewM = TypeVar("_NewM", bound=Model)
+M = TypeVar("M", bound=Model)
+NewM = TypeVar("NewM", bound=Model)
 
 
 @overload
 def make(
-    _model: Union[str, Type[_M]],
+    _model: Union[str, Type[M]],
     _quantity: None = None,
     make_m2m: bool = False,
     _save_kwargs: Optional[Dict] = None,
@@ -73,13 +73,13 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     **attrs: Any,
-) -> _M:
+) -> M:
     ...
 
 
 @overload
 def make(
-    _model: Union[str, Type[_M]],
+    _model: Union[str, Type[M]],
     _quantity: int,
     make_m2m: bool = False,
     _save_kwargs: Optional[Dict] = None,
@@ -88,7 +88,7 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     **attrs: Any,
-) -> List[_M]:
+) -> List[M]:
     ...
 
 
@@ -134,28 +134,28 @@ def make(
 
 @overload
 def prepare(
-    _model: Union[str, Type[_M]],
+    _model: Union[str, Type[M]],
     _quantity: None = None,
     _save_related: bool = False,
     _using: str = "",
     **attrs,
-) -> _M:
+) -> M:
     ...
 
 
 @overload
 def prepare(
-    _model: Union[str, Type[_M]],
+    _model: Union[str, Type[M]],
     _quantity: int,
     _save_related: bool = False,
     _using: str = "",
     **attrs,
-) -> List[_M]:
+) -> List[M]:
     ...
 
 
 def prepare(
-    _model: Union[str, Type[_M]],
+    _model: Union[str, Type[M]],
     _quantity: Optional[int] = None,
     _save_related: bool = False,
     _using: str = "",
@@ -309,7 +309,7 @@ def _custom_baker_class() -> Optional[Type]:
         )
 
 
-class Baker(Generic[_M]):
+class Baker(Generic[M]):
     attr_mapping: Dict[str, Any] = {}
     type_mapping: Dict = {}
 
@@ -320,20 +320,20 @@ class Baker(Generic[_M]):
     @classmethod
     def create(
         cls,
-        _model: Union[str, Type[_NewM]],
+        _model: Union[str, Type[NewM]],
         make_m2m: bool = False,
         create_files: bool = False,
         _using: str = "",
-    ) -> "Baker[_NewM]":
+    ) -> "Baker[NewM]":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
-        return cast(Type[Baker[_NewM]], baker_class)(
+        return cast(Type[Baker[NewM]], baker_class)(
             _model, make_m2m, create_files, _using=_using
         )
 
     def __init__(
         self,
-        _model: Union[str, Type[_M]],
+        _model: Union[str, Type[M]],
         make_m2m: bool = False,
         create_files: bool = False,
         _using: str = "",
@@ -348,9 +348,9 @@ class Baker(Generic[_M]):
         self._using = _using
 
         if isinstance(_model, str):
-            self.model = cast(Type[_M], self.finder.get_model(_model))
+            self.model = cast(Type[M], self.finder.get_model(_model))
         else:
-            self.model = cast(Type[_M], _model)
+            self.model = cast(Type[M], _model)
 
         self.init_type_mapping()
 
@@ -380,7 +380,7 @@ class Baker(Generic[_M]):
         params.update(attrs)
         return self._make(**params)
 
-    def prepare(self, _save_related=False, **attrs: Any) -> _M:
+    def prepare(self, _save_related=False, **attrs: Any) -> M:
         """Create, but do not persist, an instance of the associated model."""
         return self._make(commit=False, commit_related=_save_related, **attrs)
 
@@ -400,7 +400,7 @@ class Baker(Generic[_M]):
         _refresh_after_create=False,
         _from_manager=None,
         **attrs: Any,
-    ) -> _M:
+    ) -> M:
         _save_kwargs = _save_kwargs or {}
         if self._using:
             _save_kwargs["using"] = self._using
@@ -472,7 +472,7 @@ class Baker(Generic[_M]):
 
     def instance(
         self, attrs: Dict[str, Any], _commit, _save_kwargs, _from_manager
-    ) -> _M:
+    ) -> M:
         one_to_many_keys = {}
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
@@ -492,7 +492,7 @@ class Baker(Generic[_M]):
                 # within its get_queryset() method (e.g. annotations)
                 # is run.
                 manager = getattr(self.model, _from_manager)
-                instance = cast(_M, manager.get(pk=instance.pk))
+                instance = cast(M, manager.get(pk=instance.pk))
 
         return instance
 
@@ -714,7 +714,7 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     return clean_dict
 
 
-def bulk_create(baker: Baker[_M], quantity: int, **kwargs) -> List[_M]:
+def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     """
     Bulk create entries and all related FKs as well.
 
