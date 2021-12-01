@@ -7,7 +7,7 @@ mypy==0.910
 pillow==8.4.0
 pip-tools==6.4.0
 pre-commit==2.15.0
-psycopg2-binary==2.9.1
+psycopg2-binary==2.9.2
 pycodestyle==2.8.0
 pydocstyle==6.1.1
 pytest==6.2.5
