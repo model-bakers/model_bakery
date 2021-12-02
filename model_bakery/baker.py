@@ -529,10 +529,6 @@ class Baker(object):
         for key, values in attrs.items():
             manager = getattr(instance, key)
 
-            for value in values:
-                if not value.pk:
-                    value.save()
-
             try:
                 manager.set(values, bulk=False, clear=True)
             except TypeError:
