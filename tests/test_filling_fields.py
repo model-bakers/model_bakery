@@ -330,6 +330,18 @@ class TestFillingOptionalForeignKeyField:
 
 
 @pytest.mark.django_db
+def test_filling_foreignkeys_on_through_table_with_dunder_syntax():
+    aspect_ratio = baker.make(models.AspectRatio, name="16:9")
+    dummy = baker.make(
+        models.PlayerContent,
+        content__aspect_ratio=aspect_ratio,
+        player__aspect_ratio=aspect_ratio,
+    )
+    assert dummy.content.aspect_ratio.name == "16:9"
+    assert dummy.player.aspect_ratio.name == "16:9"
+
+
+@pytest.mark.django_db
 class TestsFillingFileField:
     def test_filling_file_field(self):
         dummy = baker.make(models.DummyFileFieldModel, _create_files=True)
