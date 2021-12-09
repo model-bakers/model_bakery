@@ -220,22 +220,18 @@ class RelatedNamesWithEmptyDefaultsModel(models.Model):
     )
 
 
-class AspectRatio(models.Model):
+class Player(models.Model):
+    name = models.CharField(max_length=128)
+    playlist = models.ManyToManyField("Content", through="PlayerContent")
+
+
+class Content(models.Model):
     name = models.CharField(max_length=128)
 
 
 class PlayerContent(models.Model):
-    player = models.ForeignKey("Player", on_delete=models.CASCADE)
-    content = models.ForeignKey("Content", on_delete=models.CASCADE)
-
-
-class Content(models.Model):
-    aspect_ratio = models.ForeignKey(AspectRatio, on_delete=models.CASCADE)
-
-
-class Player(models.Model):
-    aspect_ratio = models.ForeignKey(AspectRatio, on_delete=models.CASCADE)
-    playlist = models.ManyToManyField(Content, through=PlayerContent)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    content = models.ForeignKey(Content, on_delete=models.CASCADE)
 
 
 class ModelWithOverridedSave(Dog):
