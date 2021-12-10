@@ -332,9 +332,7 @@ class TestFillingOptionalForeignKeyField:
 @pytest.mark.django_db
 def test_filling_foreignkeys_on_through_table_with_dunder_syntax():
     dummy = baker.make(
-        models.PlayerContent,
-        content__name="Indiana Jones",
-        player__name="TV"
+        models.PlayerContent, content__name="Indiana Jones", player__name="TV"
     )
     assert dummy.content.name == "Indiana Jones"
     assert dummy.player.name == "TV"
