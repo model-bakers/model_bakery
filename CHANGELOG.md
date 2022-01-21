@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Add py.typed export per PEP 561 (https://github.com/model-bakers/model_bakery/pull/158)
+
 ### Changed
 
 ### Removed
