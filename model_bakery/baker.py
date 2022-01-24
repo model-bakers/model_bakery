@@ -530,10 +530,10 @@ class Baker(object):
             manager = getattr(instance, key)
 
             try:
-                manager.set(values, bulk=False, clear=True)
+                manager.set(list(values), bulk=False, clear=True)
             except TypeError:
                 # for many-to-many relationships the bulk keyword argument doesn't exist
-                manager.set(values, clear=True)
+                manager.set(list(values), clear=True)
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
