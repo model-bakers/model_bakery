@@ -8,18 +8,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.4.0](https://pypi.org/project/model-bakery/1.4.0/)
+
+### Added
 - Added postgis version to test settings
 - Add support for Python 3.10 [PR #244](https://github.com/model-bakers/model_bakery/pull/244)
+- Support for Django 4.0 [PR #236](https://github.com/model-bakers/model_bakery/pull/236)
 
 ### Changed
 - Validate `increment_by` parameter of `seq` helper when `value` is an instance of `datetime` [PR #247](https://github.com/model-bakers/model_bakery/pull/247)
-- Fix a simple typo in `bulk_create` disclaimer in docs
-- Allow relation `_id` fields to use sequences [PR #253](https://github.com/model-bakers/model_bakery/pull/253/)
+- Fix a simple typo in `bulk_create` disclaimer in docs [PR #245](https://github.com/model-bakers/model_bakery/pull/245)
+- Allow relation `_id` fields to use sequences [PR #253](https://github.com/model-bakers/model_bakery/pull/253)
 - Fix bulk_create not working with multi-database setup [PR #252](https://github.com/model-bakers/model_bakery/pull/252)
-- Conditionally support NullBooleanField, it's under deprecation and will be removed in Django 4.0 [PR #25](https://github.com/model-bakers/model_bakery/pull/250)
+- Conditionally support NullBooleanField, it's under deprecation and will be removed in Django 4.0 [PR #250](https://github.com/model-bakers/model_bakery/pull/250)
 - Fix Django max version pin in requirements file [PR #251](https://github.com/model-bakers/model_bakery/pull/251)
+- Improve type hinting to return the correct type depending on `_quantity` usage [PR #261](https://github.com/model-bakers/model_bakery/pull/261)
 
 ### Removed
+- Drop official Django 3.1 support. Django 2.2 is still supported, and 3.1 will likely keep working, but it’s not tested [PR #236](https://github.com/model-bakers/model_bakery/pull/236)
 
 ## [1.3.3](https://pypi.org/project/model-bakery/1.3.3/)
 
