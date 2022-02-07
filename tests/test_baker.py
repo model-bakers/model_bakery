@@ -594,7 +594,6 @@ class TestHandlingContentTypeField:
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
 
 
-@pytest.mark.django_db
 class TestHandlingContentTypeFieldNoQueries:
     def test_create_model_with_contenttype_field(self):
         dummy = baker.prepare(models.DummyGenericForeignKeyModel)
