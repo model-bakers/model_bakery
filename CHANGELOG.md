@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fixed random generation of ContentType values when there is no database access [#290](https://github.com/model-bakers/model_bakery/pull/290)
 
 ### Removed
 
