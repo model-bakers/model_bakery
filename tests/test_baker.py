@@ -596,7 +596,11 @@ class TestHandlingContentTypeField:
 
 class TestHandlingContentTypeFieldNoQueries:
     def test_create_model_with_contenttype_field(self):
-        dummy = baker.prepare(models.DummyGenericForeignKeyModel)
+        with pytest.warns(
+            UserWarning,
+            match="Database access disabled, returning ContentType raw instance",
+        ):
+            dummy = baker.prepare(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
 
 
