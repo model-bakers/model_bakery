@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
@@ -592,6 +593,7 @@ class TestHandlingContentTypeField:
     def test_create_model_with_contenttype_field(self):
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
+        assert isinstance(dummy.content_type, ContentType)
 
 
 class TestHandlingContentTypeFieldNoQueries:
@@ -602,6 +604,7 @@ class TestHandlingContentTypeFieldNoQueries:
         ):
             dummy = baker.prepare(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
+        assert isinstance(dummy.content_type, ContentType)
 
 
 @pytest.mark.django_db
