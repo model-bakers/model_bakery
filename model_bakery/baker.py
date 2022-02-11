@@ -44,6 +44,7 @@ from .exceptions import (
 )
 from .utils import seq  # NoQA: enable seq to be imported from baker
 from .utils import import_from_str
+from ._types import M, NewM
 
 recipes = None
 
@@ -56,10 +57,6 @@ MAX_MANY_QUANTITY = 5
 
 def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
-
-
-M = TypeVar("M", bound=Model)
-NewM = TypeVar("NewM", bound=Model)
 
 
 @overload
