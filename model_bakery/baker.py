@@ -8,7 +8,6 @@ from typing import (
     List,
     Optional,
     Type,
-    TypeVar,
     Union,
     cast,
     overload,
