@@ -34,6 +34,7 @@ from django.db.models.fields.related import (
 from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
 
 from . import generators, random_gen
+from ._types import M, NewM
 from .exceptions import (
     AmbiguousModelName,
     CustomBakerNotFound,
@@ -44,7 +45,6 @@ from .exceptions import (
 )
 from .utils import seq  # NoQA: enable seq to be imported from baker
 from .utils import import_from_str
-from ._types import M, NewM
 
 recipes = None
 

@@ -15,13 +15,12 @@ from typing import (
 from django.db.models import Model
 
 from . import baker
+from ._types import M
 from .exceptions import RecipeNotFound
 from .utils import (  # NoQA: Enable seq to be imported from recipes
     get_calling_module,
     seq,
 )
-from ._types import M
-
 
 finder = baker.ModelFinder()
 
