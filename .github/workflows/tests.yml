@@ -35,7 +35,7 @@ jobs:
           psql template1 -c "CREATE EXTENSION postgis;" -U postgres -h localhost -p 5432
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
