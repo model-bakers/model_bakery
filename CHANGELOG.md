@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Extend type hints in `model_bakery.recipe` module, make `Recipe` class generic [PR #292](https://github.com/model-bakers/model_bakery/pull/292)
 - Explicitly add _fill_optional parameters to baker.make and baker.prepare to aid IDE autocomplete function. [PR #264](https://github.com/model-bakers/model_bakery/pull/264)
 - Fixed errors with reverse M2M relationships [PR #299](https://github.com/model-bakers/model_bakery/pull/299)
+- Fixed errors with reverse M2O relationships [PR #300](https://github.com/model-bakers/model_bakery/pull/300)
 
 ### Removed
 
