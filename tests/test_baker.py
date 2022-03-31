@@ -125,7 +125,7 @@ class TestsBakerCreatesSimpleModel:
         instance = baker.make(models.SubclassOfAbstract)
         assert isinstance(instance, models.SubclassOfAbstract)
         assert isinstance(instance, models.AbstractModel)
-        assert isinstance(instance.name, type(u""))
+        assert isinstance(instance.name, type(""))
         assert len(instance.name) == 30
         assert isinstance(instance.height, int)
 

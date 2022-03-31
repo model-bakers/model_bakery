@@ -8,7 +8,6 @@ from typing import (
     List,
     Optional,
     Type,
-    TypeVar,
     Union,
     cast,
     overload,
@@ -34,6 +33,7 @@ from django.db.models.fields.related import (
 from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
 
 from . import generators, random_gen
+from ._types import M, NewM
 from .exceptions import (
     AmbiguousModelName,
     CustomBakerNotFound,
@@ -56,10 +56,6 @@ MAX_MANY_QUANTITY = 5
 
 def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
-
-
-M = TypeVar("M", bound=Model)
-NewM = TypeVar("NewM", bound=Model)
 
 
 @overload
