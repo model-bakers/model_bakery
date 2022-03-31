@@ -458,7 +458,7 @@ class NonStandardManager(models.Model):
 
 
 # The followin models were added after issue 291
-# Since they doesn't hold much meaning, they are only numbered ones
+# Since they don't hold much meaning, they are only numbered ones
 class Issue291Model1(models.Model):
     pass
 
