@@ -231,6 +231,16 @@ class Classroom(models.Model):
     active = models.BooleanField(null=True)
 
 
+class ClassroomM2MRelated(models.Model):
+    """
+    This model was created in order to reproduce the scenario described
+    at issue 248 that is: a model with a M2M field (Classroom) being also used
+    as a M2M field from another model (ClassroomM2MRelated)
+    """
+
+    related_classrooms = models.ManyToManyField(Classroom)
+
+
 class Store(models.Model):
     customers = models.ManyToManyField(Person, related_name="favorite_stores")
     employees = models.ManyToManyField(Person, related_name="employers")
