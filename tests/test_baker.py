@@ -569,6 +569,22 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert not person.pk
         assert 0 == models.RelatedNamesModel.objects.count()
 
+    def test_ensure_reverse_fk_for_many_to_one_is_working(self):
+        """This is a regression test to make sure issue 291 is fixed"""
+        fk1, fk2 = baker.prepare(
+            models.Issue291Model3, fk_model_2=None, name="custom name", _quantity=2
+        )
+        obj = baker.make(
+            models.Issue291Model2,
+            m2m_model_1=[baker.make(models.Issue291Model1)],
+            bazs=[fk1, fk2],
+        )
+
+        assert obj.bazs.count() == 2
+        related_1, related_2 = obj.bazs.all()
+        assert related_1.name == "custom name"
+        assert related_2.name == "custom name"
+
 
 @pytest.mark.django_db
 class TestHandlingUnsupportedModels:

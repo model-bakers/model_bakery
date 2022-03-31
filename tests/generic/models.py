@@ -455,3 +455,20 @@ class NonStandardManager(models.Model):
     name = models.CharField(max_length=30)
 
     manager = models.Manager()
+
+
+# The followin models were added after issue 291
+# Since they don't hold much meaning, they are only numbered ones
+class Issue291Model1(models.Model):
+    pass
+
+
+class Issue291Model2(models.Model):
+    m2m_model_1 = models.ManyToManyField(Issue291Model1)
+
+
+class Issue291Model3(models.Model):
+    fk_model_2 = models.ForeignKey(
+        Issue291Model2, related_name="bazs", on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=32)
