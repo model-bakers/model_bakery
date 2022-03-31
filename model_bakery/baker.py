@@ -83,6 +83,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _fill_optional: Union[List[str], bool] = False,
     **attrs: Any,
 ) -> List[M]:
     ...
@@ -97,6 +98,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _fill_optional: Union[List[str], bool] = False,
     **attrs: Any,
 ):
     """Create a persisted instance from a given model its associated models.
@@ -105,6 +107,7 @@ def make(
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
+    attrs.update({"_fill_optional": _fill_optional})
     baker: Baker = Baker.create(
         _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
     )
@@ -145,6 +148,7 @@ def prepare(
     _quantity: int,
     _save_related: bool = False,
     _using: str = "",
+    _fill_optional: Union[List[str], bool] = False,
     **attrs,
 ) -> List[M]:
     ...
@@ -155,6 +159,7 @@ def prepare(
     _quantity: Optional[int] = None,
     _save_related: bool = False,
     _using: str = "",
+    _fill_optional: Union[List[str], bool] = False,
     **attrs,
 ):
     """Create but do not persist an instance from a given model.
@@ -162,6 +167,7 @@ def prepare(
     It fill the fields with random values or you can specify which
     fields you want to define its values by yourself.
     """
+    attrs.update({"_fill_optional": _fill_optional})
     baker = Baker.create(_model, _using=_using)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
@@ -363,6 +369,7 @@ class Baker(Generic[M]):
         _save_kwargs: Optional[Dict[str, Any]] = None,
         _refresh_after_create: bool = False,
         _from_manager=None,
+        _fill_optional: Union[List[str], bool] = False,
         **attrs: Any,
     ):
         """Create and persist an instance of the model associated with Baker instance."""
@@ -372,13 +379,25 @@ class Baker(Generic[M]):
             "_save_kwargs": _save_kwargs,
             "_refresh_after_create": _refresh_after_create,
             "_from_manager": _from_manager,
+            "_fill_optional": _fill_optional,
         }
         params.update(attrs)
         return self._make(**params)
 
-    def prepare(self, _save_related=False, **attrs: Any) -> M:
+    def prepare(
+        self,
+        _save_related=False,
+        _fill_optional: Union[List[str], bool] = False,
+        **attrs: Any
+    ) -> M:
         """Create, but do not persist, an instance of the associated model."""
-        return self._make(commit=False, commit_related=_save_related, **attrs)
+        params = {
+            "commit": False,
+            "commit_related": _save_related,
+            "_fill_optional": _fill_optional,
+        }
+        params.update(attrs)
+        return self._make(**params)
 
     def get_fields(self) -> Any:
         return set(self.model._meta.get_fields()) - set(self.get_related())

@@ -635,11 +635,32 @@ class TestSkipBlanksTestCase:
         assert dummy.blank_char_field == ""
         assert dummy.blank_text_field == ""
 
+    def test_skip_blank_with_argument(self):
+        dummy = baker.make(models.DummyBlankFieldsModel, _fill_optional=False)
+        assert dummy.blank_char_field == ""
+        assert dummy.blank_text_field == ""
+
+    def test_skip_blank_when_preparing(self):
+        dummy = baker.prepare(models.DummyBlankFieldsModel)
+        assert dummy.blank_char_field == ""
+        assert dummy.blank_text_field == ""
+
+    def test_skip_blank_when_preparing_with_argument(self):
+        dummy = baker.prepare(models.DummyBlankFieldsModel, _fill_optional=False)
+        assert dummy.blank_char_field == ""
+        assert dummy.blank_text_field == ""
+
 
 @pytest.mark.django_db
 class TestFillBlanksTestCase:
     def test_fill_field_optional(self):
         dummy = baker.make(
+            models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
+        )
+        assert len(dummy.blank_char_field) == 50
+
+    def test_fill_field_optinal_when_preparing(self):
+        dummy = baker.prepare(
             models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
         )
         assert len(dummy.blank_char_field) == 50
@@ -667,6 +688,11 @@ class TestFillBlanksTestCase:
 
     def test_fill_all_optional(self):
         dummy = baker.make(models.DummyBlankFieldsModel, _fill_optional=True)
+        assert len(dummy.blank_char_field) == 50
+        assert len(dummy.blank_text_field) == 300
+
+    def test_fill_all_optional_when_preparing(self):
+        dummy = baker.prepare(models.DummyBlankFieldsModel, _fill_optional=True)
         assert len(dummy.blank_char_field) == 50
         assert len(dummy.blank_text_field) == 300
 
