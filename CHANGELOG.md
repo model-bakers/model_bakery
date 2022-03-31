@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Extend type hints in `model_bakery.recipe` module, make `Recipe` class generic [PR #292](https://github.com/model-bakers/model_bakery/pull/292)
+- Explicitly add _fill_optional parameters to baker.make and baker.prepare to aid IDE autocomplete function. [PR #264](https://github.com/model-bakers/model_bakery/pull/264)
 
 ### Removed
 
@@ -24,7 +25,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support for Django 4.0 [PR #236](https://github.com/model-bakers/model_bakery/pull/236)
 
 ### Changed
-- Explicitly add _fill_optional parameters to baker.make and baker.prepare to aid IDE autocomplete function. [PR #264](https://github.com/model-bakers/model_bakery/pull/264)
 - Validate `increment_by` parameter of `seq` helper when `value` is an instance of `datetime` [PR #247](https://github.com/model-bakers/model_bakery/pull/247)
 - Fix a simple typo in `bulk_create` disclaimer in docs [PR #245](https://github.com/model-bakers/model_bakery/pull/245)
 - Allow relation `_id` fields to use sequences [PR #253](https://github.com/model-bakers/model_bakery/pull/253)
