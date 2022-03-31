@@ -388,7 +388,7 @@ class Baker(Generic[M]):
         self,
         _save_related=False,
         _fill_optional: Union[List[str], bool] = False,
-        **attrs: Any
+        **attrs: Any,
     ) -> M:
         """Create, but do not persist, an instance of the associated model."""
         params = {
