@@ -457,7 +457,7 @@ class NonStandardManager(models.Model):
     manager = models.Manager()
 
 
-### The followin models were added after issue 291
+# The followin models were added after issue 291
 # Since they doesn't hold much meaning, they are only numbered ones
 class Issue291Model1(models.Model):
     pass
@@ -468,5 +468,7 @@ class Issue291Model2(models.Model):
 
 
 class Issue291Model3(models.Model):
-    fk_model_2 = models.ForeignKey(Issue291Model2, related_name="bazs", on_delete=models.CASCADE)
+    fk_model_2 = models.ForeignKey(
+        Issue291Model2, related_name="bazs", on_delete=models.CASCADE
+    )
     name = models.CharField(max_length=32)

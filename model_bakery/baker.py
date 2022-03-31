@@ -609,11 +609,13 @@ class Baker(Generic[M]):
                 # Django will handle any operation to persist nested non-persisted FK because
                 # save don't do so and, thus, raise constraint errors. That's why save() only gets
                 # called if the object doesn't have a pk and also doesn't hold fk pointers
-                fks = any([
-                    fk
-                    for fk in value._meta.fields
-                    if isinstance(fk, ForeignKey) or isinstance(fk, OneToOneField)
-                ])
+                fks = any(
+                    [
+                        fk
+                        for fk in value._meta.fields
+                        if isinstance(fk, ForeignKey) or isinstance(fk, OneToOneField)
+                    ]
+                )
                 if not value.pk and not fks:
                     value.save()
 

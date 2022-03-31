@@ -571,7 +571,9 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     def test_ensure_reverse_fk_for_many_to_one_is_working(self):
         """This is a regression test to make sure issue 291 is fixed"""
-        fk1, fk2 = baker.prepare(models.Issue291Model3, fk_model_2=None, name="custom name", _quantity=2)
+        fk1, fk2 = baker.prepare(
+            models.Issue291Model3, fk_model_2=None, name="custom name", _quantity=2
+        )
         obj = baker.make(
             models.Issue291Model2,
             m2m_model_1=[baker.make(models.Issue291Model1)],
