@@ -331,7 +331,6 @@ if has_pil:
         fs = FileSystemStorage(location=gettempdir())
         image_field = models.ImageField(upload_to="%Y/%m/%d", storage=fs)
 
-
 else:
     # doesn't matter, won't be using
     class DummyImageFieldModel(models.Model):
