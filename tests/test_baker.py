@@ -594,6 +594,7 @@ class TestHandlingUnsupportedModels:
             assert False, "Should have raised a TypeError"
         except TypeError as e:
             assert "not supported" in repr(e)
+            assert "field unsupported_field" in repr(e)
 
 
 @pytest.mark.django_db
