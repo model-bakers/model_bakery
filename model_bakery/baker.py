@@ -672,7 +672,9 @@ class Baker(Generic[M]):
         elif field.__class__ in self.type_mapping:
             generator = self.type_mapping[field.__class__]
         else:
-            raise TypeError("%s is not supported by baker." % field.__class__)
+            raise TypeError(
+                f"field {field.name} type {field.__class__} is not supported by baker."
+            )
 
         # attributes like max_length, decimal_places are taken into account when
         # generating the value.
