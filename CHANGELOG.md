@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Add py.typed export per [PEP 561](https://www.python.org/dev/peps/pep-0561/) [PR #158](https://github.com/model-bakers/model_bakery/pull/158)
+
 ### Changed
 - Extend type hints in `model_bakery.recipe` module, make `Recipe` class generic [PR #292](https://github.com/model-bakers/model_bakery/pull/292)
 
