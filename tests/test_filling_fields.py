@@ -277,8 +277,10 @@ class TestFillingGenericForeignKeyField:
 
     def test_iteratively_filling_generic_foreign_key_field(self):
         """
-        Ensures private_fields are included in Baker.get_fields(), otherwise
-        calling next() when a GFK is in iterator_attrs would be bypassed.
+        Ensures private_fields are included in ``Baker.get_fields()``.
+
+        Otherwise, calling ``next()`` when a GFK is in ``iterator_attrs``
+        would be bypassed.
         """
         objects = baker.make(models.Profile, _quantity=2)
         dummies = baker.make(

@@ -231,6 +231,16 @@ class Classroom(models.Model):
     active = models.BooleanField(null=True)
 
 
+class ClassroomM2MRelated(models.Model):
+    """
+    This model was created in order to reproduce the scenario described
+    at issue 248 that is: a model with a M2M field (Classroom) being also used
+    as a M2M field from another model (ClassroomM2MRelated)
+    """
+
+    related_classrooms = models.ManyToManyField(Classroom)
+
+
 class Store(models.Model):
     customers = models.ManyToManyField(Person, related_name="favorite_stores")
     employees = models.ManyToManyField(Person, related_name="employers")
@@ -445,3 +455,20 @@ class NonStandardManager(models.Model):
     name = models.CharField(max_length=30)
 
     manager = models.Manager()
+
+
+# The followin models were added after issue 291
+# Since they don't hold much meaning, they are only numbered ones
+class Issue291Model1(models.Model):
+    pass
+
+
+class Issue291Model2(models.Model):
+    m2m_model_1 = models.ManyToManyField(Issue291Model1)
+
+
+class Issue291Model3(models.Model):
+    fk_model_2 = models.ForeignKey(
+        Issue291Model2, related_name="bazs", on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=32)

@@ -16,6 +16,7 @@ setuptools.setup(
     license=about["__license__"],
     packages=["model_bakery"],
     include_package_data=True,  # declarations in MANIFEST.in
+    package_data={"model_bakery": ["py.typed"]},
     install_requires=open(join(here, "requirements.txt")).readlines(),
     description="Smart object creation facility for Django.",
     long_description=open(join(dirname(__file__), "README.md")).read(),

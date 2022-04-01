@@ -126,7 +126,7 @@ class TestsBakerCreatesSimpleModel:
         instance = baker.make(models.SubclassOfAbstract)
         assert isinstance(instance, models.SubclassOfAbstract)
         assert isinstance(instance, models.AbstractModel)
-        assert isinstance(instance.name, type(u""))
+        assert isinstance(instance.name, type(""))
         assert len(instance.name) == 30
         assert isinstance(instance.height, int)
 
@@ -570,6 +570,22 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert not person.pk
         assert 0 == models.RelatedNamesModel.objects.count()
 
+    def test_ensure_reverse_fk_for_many_to_one_is_working(self):
+        """This is a regression test to make sure issue 291 is fixed."""
+        fk1, fk2 = baker.prepare(
+            models.Issue291Model3, fk_model_2=None, name="custom name", _quantity=2
+        )
+        obj = baker.make(
+            models.Issue291Model2,
+            m2m_model_1=[baker.make(models.Issue291Model1)],
+            bazs=[fk1, fk2],
+        )
+
+        assert obj.bazs.count() == 2
+        related_1, related_2 = obj.bazs.all()
+        assert related_1.name == "custom name"
+        assert related_2.name == "custom name"
+
 
 @pytest.mark.django_db
 class TestHandlingUnsupportedModels:
@@ -579,6 +595,7 @@ class TestHandlingUnsupportedModels:
             assert False, "Should have raised a TypeError"
         except TypeError as e:
             assert "not supported" in repr(e)
+            assert "field unsupported_field" in repr(e)
 
 
 @pytest.mark.django_db
@@ -641,11 +658,32 @@ class TestSkipBlanksTestCase:
         assert dummy.blank_char_field == ""
         assert dummy.blank_text_field == ""
 
+    def test_skip_blank_with_argument(self):
+        dummy = baker.make(models.DummyBlankFieldsModel, _fill_optional=False)
+        assert dummy.blank_char_field == ""
+        assert dummy.blank_text_field == ""
+
+    def test_skip_blank_when_preparing(self):
+        dummy = baker.prepare(models.DummyBlankFieldsModel)
+        assert dummy.blank_char_field == ""
+        assert dummy.blank_text_field == ""
+
+    def test_skip_blank_when_preparing_with_argument(self):
+        dummy = baker.prepare(models.DummyBlankFieldsModel, _fill_optional=False)
+        assert dummy.blank_char_field == ""
+        assert dummy.blank_text_field == ""
+
 
 @pytest.mark.django_db
 class TestFillBlanksTestCase:
     def test_fill_field_optional(self):
         dummy = baker.make(
+            models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
+        )
+        assert len(dummy.blank_char_field) == 50
+
+    def test_fill_field_optinal_when_preparing(self):
+        dummy = baker.prepare(
             models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
         )
         assert len(dummy.blank_char_field) == 50
@@ -673,6 +711,11 @@ class TestFillBlanksTestCase:
 
     def test_fill_all_optional(self):
         dummy = baker.make(models.DummyBlankFieldsModel, _fill_optional=True)
+        assert len(dummy.blank_char_field) == 50
+        assert len(dummy.blank_text_field) == 300
+
+    def test_fill_all_optional_when_preparing(self):
+        dummy = baker.prepare(models.DummyBlankFieldsModel, _fill_optional=True)
         assert len(dummy.blank_char_field) == 50
         assert len(dummy.blank_text_field) == 300
 

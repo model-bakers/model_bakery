@@ -8,7 +8,6 @@ from typing import (
     List,
     Optional,
     Type,
-    TypeVar,
     Union,
     cast,
     overload,
@@ -31,9 +30,14 @@ from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
-from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
+from django.db.models.fields.reverse_related import (
+    ManyToManyRel,
+    ManyToOneRel,
+    OneToOneRel,
+)
 
 from . import generators, random_gen
+from ._types import M, NewM
 from .exceptions import (
     AmbiguousModelName,
     CustomBakerNotFound,
@@ -56,10 +60,6 @@ MAX_MANY_QUANTITY = 5
 
 def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
-
-
-M = TypeVar("M", bound=Model)
-NewM = TypeVar("NewM", bound=Model)
 
 
 @overload
@@ -87,6 +87,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _fill_optional: Union[List[str], bool] = False,
     **attrs: Any,
 ) -> List[M]:
     ...
@@ -101,6 +102,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _fill_optional: Union[List[str], bool] = False,
     **attrs: Any,
 ):
     """Create a persisted instance from a given model its associated models.
@@ -109,6 +111,7 @@ def make(
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
+    attrs.update({"_fill_optional": _fill_optional})
     baker: Baker = Baker.create(
         _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
     )
@@ -149,6 +152,7 @@ def prepare(
     _quantity: int,
     _save_related: bool = False,
     _using: str = "",
+    _fill_optional: Union[List[str], bool] = False,
     **attrs,
 ) -> List[M]:
     ...
@@ -159,6 +163,7 @@ def prepare(
     _quantity: Optional[int] = None,
     _save_related: bool = False,
     _using: str = "",
+    _fill_optional: Union[List[str], bool] = False,
     **attrs,
 ):
     """Create but do not persist an instance from a given model.
@@ -166,6 +171,7 @@ def prepare(
     It fill the fields with random values or you can specify which
     fields you want to define its values by yourself.
     """
+    attrs.update({"_fill_optional": _fill_optional})
     baker = Baker.create(_model, _using=_using)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
@@ -367,6 +373,7 @@ class Baker(Generic[M]):
         _save_kwargs: Optional[Dict[str, Any]] = None,
         _refresh_after_create: bool = False,
         _from_manager=None,
+        _fill_optional: Union[List[str], bool] = False,
         **attrs: Any,
     ):
         """Create and persist an instance of the model associated with Baker instance."""
@@ -376,21 +383,33 @@ class Baker(Generic[M]):
             "_save_kwargs": _save_kwargs,
             "_refresh_after_create": _refresh_after_create,
             "_from_manager": _from_manager,
+            "_fill_optional": _fill_optional,
         }
         params.update(attrs)
         return self._make(**params)
 
-    def prepare(self, _save_related=False, **attrs: Any) -> M:
+    def prepare(
+        self,
+        _save_related=False,
+        _fill_optional: Union[List[str], bool] = False,
+        **attrs: Any,
+    ) -> M:
         """Create, but do not persist, an instance of the associated model."""
-        return self._make(commit=False, commit_related=_save_related, **attrs)
+        params = {
+            "commit": False,
+            "commit_related": _save_related,
+            "_fill_optional": _fill_optional,
+        }
+        params.update(attrs)
+        return self._make(**params)
 
     def get_fields(self) -> Any:
         return set(self.model._meta.get_fields()) - set(self.get_related())
 
     def get_related(
         self,
-    ) -> List[Union[ManyToOneRel, OneToOneRel]]:
-        return [r for r in self.model._meta.related_objects if not r.many_to_many]
+    ) -> List[Union[ManyToOneRel, OneToOneRel, ManyToManyRel]]:
+        return [r for r in self.model._meta.related_objects]
 
     def _make(
         self,
@@ -587,7 +606,18 @@ class Baker(Generic[M]):
             manager = getattr(instance, key)
 
             for value in values:
-                if not value.pk:
+                # Django will handle any operation to persist nested non-persisted FK because
+                # save doesn't do so and, thus, raises constraint errors. That's why save()
+                # only gets called if the object doesn't have a pk and also doesn't hold fk
+                # pointers.
+                fks = any(
+                    [
+                        fk
+                        for fk in value._meta.fields
+                        if isinstance(fk, ForeignKey) or isinstance(fk, OneToOneField)
+                    ]
+                )
+                if not value.pk and not fks:
                     value.save()
 
             try:
@@ -653,7 +683,9 @@ class Baker(Generic[M]):
         elif field.__class__ in self.type_mapping:
             generator = self.type_mapping[field.__class__]
         else:
-            raise TypeError("%s is not supported by baker." % field.__class__)
+            raise TypeError(
+                f"field {field.name} type {field.__class__} is not supported by baker."
+            )
 
         # attributes like max_length, decimal_places are taken into account when
         # generating the value.
