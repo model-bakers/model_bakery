@@ -615,6 +615,11 @@ class TestHandlingContentTypeField:
 
 class TestHandlingContentTypeFieldNoQueries:
     def test_create_model_with_contenttype_field(self):
+        # Clear ContentType's internal cache so that it *will* try to connect to
+        # the database in order to fetch the corresponding ContentType model for
+        # a randomly chosen model.
+        ContentType.objects.clear_cache()
+
         with pytest.warns(
             UserWarning,
             match="Database access disabled, returning ContentType raw instance",
