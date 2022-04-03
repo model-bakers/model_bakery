@@ -206,7 +206,11 @@ def gen_content_type():
 
     try:
         return ContentType.objects.get_for_model(choice(apps.get_models()))
-    except AssertionError:
+    except (AssertionError, RuntimeError):
+        # AssertionError is raised by Django's test framework when db access is not available:
+        # https://github.com/django/django/blob/stable/4.0.x/django/test/testcases.py#L150
+        # RuntimeError is raised by pytest-django when db access is not available:
+        # https://github.com/pytest-dev/pytest-django/blob/v4.5.2/pytest_django/plugin.py#L709
         warnings.warn("Database access disabled, returning ContentType raw instance")
         return ContentType()
 

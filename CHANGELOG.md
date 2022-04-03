@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed errors with reverse M2M relationships [PR #299](https://github.com/model-bakers/model_bakery/pull/299)
 - Fixed errors with reverse M2O relationships [PR #300](https://github.com/model-bakers/model_bakery/pull/300)
 - Improve exception message for unknown field types [PR #301](https://github.com/model-bakers/model_bakery/pull/301)
+- Fixed random generation of ContentType values when there is no database access [#290](https://github.com/model-bakers/model_bakery/pull/290)
 
 ### Removed
 
