@@ -150,6 +150,57 @@ By default, Model Bakery uses random values to populate the model's fields. But 
                 age=42
             )
 
+You can use callable to explicitly set values as: ::
+
+    import random
+
+    from django.test import TestCase
+
+    from model_bakery import baker
+
+    class CustomerTestModel(TestCase):
+        def get_random_name(self):
+            return random.choice(["Suraj Magdum", "Avadhut More", "Rohit Chile"])
+
+        def setUp(self):
+            self.customer = baker.make(
+                'shop.Customer',
+                age=21,
+                name = self.get_random_name
+            )
+
+You can also use iterable to explicitly set values as: ::
+
+    from django.test import TestCase
+
+    from model_bakery import baker
+
+    class CustomerTestModel(TestCase):
+        def setUp(self):
+            names = ("Onkar Awale", "Pruthviraj Patil", "Shubham Ojha")
+            
+            self.customer = baker.make(
+                'shop.Customer',
+                age=21,
+                name = itertools.cycle(names)
+            )
+
+Sometimes, you have a field with an unique value and using ``make`` can cause random errors. Also, passing an attribute value just to avoid uniqueness validation problems can be tedious. To solve this you can define a sequence with ``seq`` ::
+
+    from django.test import TestCase
+
+    from model_bakery import baker
+
+    from model_bakery.recipe import seq
+
+    class CustomerTestModel(TestCase):
+        def setUp(self):
+            self.customer = baker.make(
+                'shop.Customer',
+                age=21,
+                name = seq('Joe')
+            )
+
 Related objects fields are also reachable by their name or related names in a very similar way as Django does with `field lookups <https://docs.djangoproject.com/en/dev/ref/models/querysets/#field-lookups>`_: ::
 
     from django.test import TestCase
