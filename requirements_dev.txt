@@ -6,7 +6,7 @@ isort==5.10.1
 mypy==0.942
 pillow==9.1.0
 pip-tools==6.4.0
-pre-commit==2.16.0
+pre-commit==2.18.1
 psycopg2-binary==2.9.3
 pycodestyle==2.8.0
 pydocstyle==6.1.1
