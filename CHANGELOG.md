@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Python 3.11 support [PR #327](https://github.com/model-bakers/model_bakery/pull/327)
+- Django 4.1 support [PR #327](https://github.com/model-bakers/model_bakery/pull/327)
 
 ### Changed
 
