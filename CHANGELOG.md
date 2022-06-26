@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Django 4.1 support [PR #327](https://github.com/model-bakers/model_bakery/pull/327)
 
 ### Changed
+- [dev] Replace changelog reminder action with a custom solution that can ignore Dependabot PRs [PR #328](https://github.com/model-bakers/model_bakery/pull/328)
 
 ### Removed
 - Drop Python 3.6 support [PR #325](https://github.com/model-bakers/model_bakery/pull/325)
