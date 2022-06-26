@@ -12,4 +12,4 @@ pycodestyle==2.8.0
 pydocstyle==6.1.1
 pytest==7.1.2
 pytest-django==4.5.2
-click==8.1.2
+click==8.1.3
