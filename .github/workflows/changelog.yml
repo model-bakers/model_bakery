@@ -1,14 +1,16 @@
-on: pull_request
-
 name: Changelog Reminder
+
+on: pull_request
 
 jobs:
   remind:
     runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.pull_request.body, '[skip changelog]') &&
+      (github.actor != 'dependabot[bot]')
     steps:
-    - uses: actions/checkout@main
-    - uses: peterjgrainger/action-changelog-reminder@v1.3.0
-      with:
-        changelog_regex: 'CHANGELOG.md'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ github.event.pull_request.commits }} + 1
+      - name: Check that CHANGELOG is updated
+        run: git diff origin/${{ github.base_ref }} --name-only | grep CHANGELOG.md
