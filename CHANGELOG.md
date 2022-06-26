@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+### Changed
+### Removed
+
+## [1.6.0](https://pypi.org/project/model-bakery/1.6.0/)
+
+### Added
 - Python 3.11 support [PR #327](https://github.com/model-bakers/model_bakery/pull/327)
 - Django 4.1 support [PR #327](https://github.com/model-bakers/model_bakery/pull/327)
 - Added documentation for callables, iterables, sequences [PR #309](https://github.com/model-bakers/model_bakery/pull/309)
