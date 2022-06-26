@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Python 3.11 support [PR #327](https://github.com/model-bakers/model_bakery/pull/327)
 - Django 4.1 support [PR #327](https://github.com/model-bakers/model_bakery/pull/327)
+- Added documentation for callables, iterables, sequences [PR #309](https://github.com/model-bakers/model_bakery/pull/309)
 
 ### Changed
 - [dev] Replace changelog reminder action with a custom solution that can ignore Dependabot PRs [PR #328](https://github.com/model-bakers/model_bakery/pull/328)
