@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
-- Drop Python 3.6 support [PR #323](https://github.com/model-bakers/model_bakery/pull/323)
+- Drop Python 3.6 support [PR #325](https://github.com/model-bakers/model_bakery/pull/325)
+- Drop Django 2.2 support [PR #326](https://github.com/model-bakers/model_bakery/pull/326)
 
 ## [1.5.0](https://pypi.org/project/model-bakery/1.5.0/)
 
