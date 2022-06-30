@@ -131,7 +131,7 @@ class Recipe(Generic[M]):
         if _bulk_create is not None:
             defaults["_bulk_create"] = _bulk_create
         if _save_kwargs is not None:
-            defaults["_save_kwargs"] = _save_kwargs
+            defaults["_save_kwargs"] = _save_kwargs  # type: ignore[assignment]
 
         defaults.update(attrs)
         return baker.make(self._model, _using=_using, **self._mapping(_using, defaults))
@@ -163,9 +163,10 @@ class Recipe(Generic[M]):
         _using: str = "",
         **attrs: Any,
     ) -> Union[M, List[M]]:
-        defaults = {"_save_related": _save_related}
-        if _quantity is not None:
-            defaults["_quantity"] = _quantity
+        defaults = {
+            "_quantity": _quantity,
+            "_save_related": _save_related,
+        }
         defaults.update(attrs)
         return baker.prepare(
             self._model, _using=_using, **self._mapping(_using, defaults)
