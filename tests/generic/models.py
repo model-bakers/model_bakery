@@ -226,6 +226,12 @@ class ModelWithOverridedSave(Dog):
         return super(ModelWithOverridedSave, self).save(*args, **kwargs)
 
 
+class ModelWithSaveKwargs(Dog):
+    def save(self, *args, **kwargs):
+        self.breed = kwargs.pop("breed")
+        return super(ModelWithSaveKwargs, self).save(*args, **kwargs)
+
+
 class Classroom(models.Model):
     students = models.ManyToManyField(Person, null=True)
     active = models.BooleanField(null=True)

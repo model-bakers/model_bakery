@@ -332,6 +332,10 @@ class TestExecutingRecipes:
         )
         assert owner == dog.owner
 
+    def test_pass_save_kwargs_in_recipe_definition(self):
+        dog = baker.make_recipe("tests.generic.with_save_kwargs")
+        assert dog.breed == "updated_breed"
+
     def test_ip_fields_with_start(self):
         first, second = baker.make_recipe("tests.generic.ip_fields", _quantity=2)
 
