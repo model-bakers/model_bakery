@@ -8,7 +8,7 @@ pillow==9.2.0
 pip-tools==6.8.0
 pre-commit==2.19.0
 psycopg2-binary==2.9.3
-pycodestyle==2.8.0
+pycodestyle==2.9.0
 pydocstyle==6.1.1
 pytest==7.1.2
 pytest-django==4.5.2
