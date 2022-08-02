@@ -223,7 +223,13 @@ class RelatedNamesWithEmptyDefaultsModel(models.Model):
 class ModelWithOverridedSave(Dog):
     def save(self, *args, **kwargs):
         self.owner = kwargs.pop("owner")
-        return super(ModelWithOverridedSave, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
+
+
+class ModelWithSaveKwargs(Dog):
+    def save(self, *args, **kwargs):
+        self.breed = kwargs.pop("breed")
+        return super().save(*args, **kwargs)
 
 
 class Classroom(models.Model):

@@ -111,22 +111,28 @@ class Recipe(Generic[M]):
     def make(
         self,
         _quantity: Optional[int] = None,
-        make_m2m: bool = False,
-        _refresh_after_create: bool = False,
-        _create_files: bool = False,
+        make_m2m: Optional[bool] = None,
+        _refresh_after_create: Optional[bool] = None,
+        _create_files: Optional[bool] = None,
         _using: str = "",
-        _bulk_create: bool = False,
+        _bulk_create: Optional[bool] = None,
         _save_kwargs: Optional[Dict[str, Any]] = None,
         **attrs: Any,
     ) -> Union[M, List[M]]:
-        defaults = {
-            "_quantity": _quantity,
-            "make_m2m": make_m2m,
-            "_refresh_after_create": _refresh_after_create,
-            "_create_files": _create_files,
-            "_bulk_create": _bulk_create,
-            "_save_kwargs": _save_kwargs,
-        }
+        defaults = {}
+        if _quantity is not None:
+            defaults["_quantity"] = _quantity
+        if make_m2m is not None:
+            defaults["make_m2m"] = make_m2m
+        if _refresh_after_create is not None:
+            defaults["_refresh_after_create"] = _refresh_after_create
+        if _create_files is not None:
+            defaults["_create_files"] = _create_files
+        if _bulk_create is not None:
+            defaults["_bulk_create"] = _bulk_create
+        if _save_kwargs is not None:
+            defaults["_save_kwargs"] = _save_kwargs  # type: ignore[assignment]
+
         defaults.update(attrs)
         return baker.make(self._model, _using=_using, **self._mapping(_using, defaults))
 

@@ -113,6 +113,10 @@ movie_with_cast = Recipe(
 
 overrided_save = Recipe("generic.ModelWithOverridedSave")
 
+with_save_kwargs = Recipe(
+    "generic.ModelWithSaveKwargs", _save_kwargs={"breed": "updated_breed"}
+)
+
 ip_fields = Recipe(
     "generic.DummyGenericIPAddressFieldModel",
     ipv4_field=seq("127.0.0.", increment_by=2),

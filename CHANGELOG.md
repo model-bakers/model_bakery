@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
 ### Changed
+- Fixed a bug with overwritten `_save_kwargs` and other custom arguments [PR #330](https://github.com/model-bakers/model_bakery/pull/330)
+
 ### Removed
 
 ## [1.6.0](https://pypi.org/project/model-bakery/1.6.0/)
