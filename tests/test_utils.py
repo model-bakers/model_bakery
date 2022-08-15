@@ -3,7 +3,6 @@ from decimal import Decimal
 from inspect import getmodule
 
 import pytest
-from django.utils.timezone import utc
 
 from model_bakery.utils import get_calling_module, import_from_str, seq
 from tests.generic.models import User
@@ -145,7 +144,7 @@ class TestSeq:
     @pytest.mark.parametrize("use_tz", [False, True])
     def test_datetime(self, settings, use_tz):
         settings.USE_TZ = use_tz
-        tzinfo = utc if use_tz else None
+        tzinfo = datetime.timezone.utc if use_tz else None
 
         sequence = seq(
             datetime.datetime(2021, 2, 11, 15, 39, 58, 457698),
