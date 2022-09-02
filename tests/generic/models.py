@@ -463,7 +463,7 @@ class NonStandardManager(models.Model):
     manager = models.Manager()
 
 
-# The followin models were added after issue 291
+# The following models were added after issue 291
 # Since they don't hold much meaning, they are only numbered ones
 class Issue291Model1(models.Model):
     pass
