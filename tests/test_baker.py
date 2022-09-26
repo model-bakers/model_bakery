@@ -244,11 +244,17 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
 
 @pytest.mark.django_db
 class TestBakerPrepareSavingRelatedInstances:
-    def test_default_behaviour_for_and_fk(self):
+    def test_default_behaviour_for_m2m_and_fk(self):
         dog = baker.prepare(models.Dog)
 
         assert dog.pk is None
         assert dog.owner.pk is None
+
+        # reverse FK access in Django 4.1 raises ValueError instead of DoesNotExist
+        #  https://docs.djangoproject.com/en/4.1/releases/4.1/#reverse-foreign-key-changes-for-unsaved-model-instances
+        with pytest.raises(models.Dog.DoesNotExist):
+            assert dog.owner.dog_set.get()
+
         with pytest.raises(ValueError):
             assert dog.friends_with
 
