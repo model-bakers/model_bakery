@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Remove warning for future Django deprecation [PR #339](https://github.com/model-bakers/model_bakery/pull/339)
 
 ### Removed
+
+## [1.7.1](https://pypi.org/project/model-bakery/1.7.1/)
+
+### Changed
+- Remove warning for future Django deprecation [PR #339](https://github.com/model-bakers/model_bakery/pull/339)
 
 ## [1.7.0](https://pypi.org/project/model-bakery/1.7.0/)
 
