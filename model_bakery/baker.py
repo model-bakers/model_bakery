@@ -30,11 +30,7 @@ from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
-from django.db.models.fields.reverse_related import (
-    ManyToManyRel,
-    ManyToOneRel,
-    OneToOneRel,
-)
+from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
 
 from . import generators, random_gen
 from ._types import M, NewM
@@ -404,12 +400,11 @@ class Baker(Generic[M]):
         return self._make(**params)
 
     def get_fields(self) -> List[Any]:
-        return [f for f in self.model._meta.get_fields() if f not in self.get_related()]
-
-    def get_related(
-        self,
-    ) -> List[Union[ManyToOneRel, OneToOneRel, ManyToManyRel]]:
-        return [r for r in self.model._meta.related_objects]
+        return [
+            f
+            for f in self.model._meta.get_fields()
+            if f not in self.model._meta.related_objects
+        ]
 
     def _make(
         self,
@@ -474,7 +469,7 @@ class Baker(Generic[M]):
             _save_kwargs=_save_kwargs,
         )
         if commit:
-            for related in self.get_related():
+            for related in self.model._meta.related_objects:
                 self.create_by_related_name(instance, related)
 
         if _refresh_after_create:
