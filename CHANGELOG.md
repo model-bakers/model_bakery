@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Improve `Baker.get_fields()` to substract lists instead of extra set cast [PR #352](https://github.com/model-bakers/model_bakery/pull/352)
 
 ### Removed
 
