@@ -82,7 +82,8 @@ def seq(value, increment_by=1, start=None, suffix=None):
             date = value
 
         # convert to epoch time
-        start = (date - datetime.datetime(1970, 1, 1)).total_seconds()
+        epoch_datetime = datetime.datetime(1970, 1, 1, tzinfo=date.tzinfo)
+        start = (date - epoch_datetime).total_seconds()
         increment_by = increment_by.total_seconds()
         for n in itertools.count(increment_by, increment_by):
             series_date = tz_aware(datetime.datetime.utcfromtimestamp(start + n))
