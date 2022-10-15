@@ -787,4 +787,21 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     else:
         manager = baker.model._base_manager
 
-    return manager.bulk_create(entries)
+    created_entries = manager.bulk_create(entries)
+    # set many-to-many relations from kwargs
+    for entry in created_entries:
+        for field in baker.model._meta.many_to_many:
+            if field.name in kwargs:
+                through_model = getattr(entry, field.name).through
+                through_model.objects.bulk_create(
+                    [
+                        through_model(
+                            **{
+                                field.remote_field.name: entry,
+                                field.related_model._meta.model_name: obj,
+                            }
+                        )
+                        for obj in kwargs[field.name]
+                    ]
+                )
+    return created_entries

@@ -1032,3 +1032,15 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
             _from_manager="objects",
         )
         assert movie.title == movie.name
+
+
+class TestCreateM2MWhenBulkCreate(TestCase):
+    @pytest.mark.django_db
+    def test_create(self):
+        with self.assertNumQueries(22):
+            person = baker.make(models.Person)
+            baker.make(
+                models.Classroom, students=[person], _quantity=20, _bulk_create=True
+            )
+        c1, c2 = models.Classroom.objects.all()[:2]
+        assert list(c1.students.all()) == list(c2.students.all()) == [person]
