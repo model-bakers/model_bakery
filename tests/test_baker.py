@@ -1037,7 +1037,7 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
 class TestCreateM2MWhenBulkCreate(TestCase):
     @pytest.mark.django_db
     def test_create(self):
-        with self.assertNumQueries(22):
+        with self.assertNumQueries(24):
             person = baker.make(models.Person)
             baker.make(
                 models.Classroom, students=[person], _quantity=20, _bulk_create=True

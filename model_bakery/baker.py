@@ -787,7 +787,11 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     else:
         manager = baker.model._base_manager
 
+    existing_entries = list(manager.values_list("pk", flat=True))
     created_entries = manager.bulk_create(entries)
+    # bulk_create in Django < 4.0 does not return ids of created objects
+    created_entries = manager.exclude(pk__in=existing_entries)
+
     # set many-to-many relations from kwargs
     for entry in created_entries:
         for field in baker.model._meta.many_to_many:
