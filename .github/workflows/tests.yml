@@ -29,10 +29,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install PostgreSQL dependencies
+      - name: Set up PostgreSQL
         run: |
           sudo apt-get update
           sudo apt-get install -y gdal-bin
+          psql template1 -c "CREATE EXTENSION citext;" -U postgres -h localhost -p 5432
+          psql template1 -c "CREATE EXTENSION hstore;" -U postgres -h localhost -p 5432
+          psql template1 -c "CREATE EXTENSION postgis;" -U postgres -h localhost -p 5432
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
