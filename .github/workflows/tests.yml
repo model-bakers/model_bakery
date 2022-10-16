@@ -11,19 +11,22 @@ jobs:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
 
+    services:
+      postgis:
+        image: postgis/postgis
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-dev"]
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Setup PostgreSQL with PostGIS
-        uses: huaxk/postgis-action@v1
-        with:
-          postgresql version: '11'
-          postgresql db: 'postgres'
-          postgresql user: 'postgres'
 
       - name: Install PostgreSQL dependencies
         run: |
