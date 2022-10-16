@@ -151,17 +151,17 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             assert all(p.name == "George Washington" for p in people)
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(3):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
         assert models.Person.objects.count() == 5
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(3):
             people = baker.make(
                 models.Person, name="George Washington", _quantity=5, _bulk_create=True
             )
             assert all(p.name == "George Washington" for p in people)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(3):
             baker.make(models.NonStandardManager, _quantity=3, _bulk_create=True)
             assert getattr(models.NonStandardManager, "objects", None) is None
             assert (
@@ -362,7 +362,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_one_to_one(self):
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(8):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
         assert models.LonelyPerson.objects.all().count() == 5
@@ -370,22 +370,22 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     def test_chaining_bulk_create_reduces_query_count(self):
         qtd = 5
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(7):
             baker.make(models.Person, _quantity=qtd, _bulk_create=True)
             person_iter = models.Person.objects.all().iterator()
             baker.make(
                 models.LonelyPerson,
                 only_friend=person_iter,
-                _quantity=5,
+                _quantity=qtd,
                 _bulk_create=True,
             )
             # 2 bulk create and 1 select on Person
 
-        assert models.LonelyPerson.objects.all().count() == 5
-        assert models.Person.objects.all().count() == 5
+        assert models.LonelyPerson.objects.all().count() == qtd
+        assert models.Person.objects.all().count() == qtd
 
     def test_bulk_create_multiple_fk(self):
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(8):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
         assert models.PaymentBill.objects.all().count() == 5
@@ -396,7 +396,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert store.employees.count() == 5
         assert store.customers.count() == 5
 
-    def test_regresstion_many_to_many_field_is_accepted_as_kwargs(self):
+    def test_regression_many_to_many_field_is_accepted_as_kwargs(self):
         employees = baker.make(models.Person, _quantity=3)
         customers = baker.make(models.Person, _quantity=3)
 
