@@ -48,7 +48,7 @@ DEPS="$DOCKER"
 # Arg defaults
 KILL=false
 CONTAINER_NAME=model-bakery-postgres
-PORT=${POSTGRES_PORT:-5432}
+PORT=${PGPORT:-5432}
 
 # Argument parsing using "getopt"
 OPTIONS=h,k,p
@@ -66,7 +66,7 @@ eval set -- "$PARSED"
 while true; do
     case "$1" in
         -p|--port)
-            POSTGRES_PORT=$2
+            PGPORT=$2
             shift
             ;;
         -k|--kill)

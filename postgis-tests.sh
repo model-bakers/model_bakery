@@ -11,7 +11,7 @@ set -euo pipefail
 ### so if you are already running PostgreSQL locally, instead of using this
 ### script, simply run:
 ###
-###     # TEST_DB=postgis POSTGRES_USER=postgres python -m pytest
+###     # TEST_DB=postgis PGUSER=postgres python -m pytest
 ###
 ### This script uses the `python` on the current `$PATH`, but can be overridden
 ### by setting the `PYTHON_CLI` environment variable.
@@ -48,9 +48,9 @@ PYTHON=${PYTHON_CLI:-python}
 DEPS="$PYTHON"
 
 # Arg defaults
-export POSTGRES_PORT=${POSTGRES_PORT:-5432}
-export POSTGRES_USER=${POSTGRES_USER:-postgres}
-export POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+export PGPORT=${PGPORT:-5432}
+export PGUSER=${PGUSER:-postgres}
+export PGPASSWORD=${PGPASSWORD:-postgres}
 export TEST_DB=${TEST_DB:-postgis}
 
 # Argument parsing using "getopt"
@@ -110,7 +110,7 @@ for dep in $DEPS; do
 done
 
 # Run the postgres container with all extensions installed
-$PROJECT_ROOT/postgres-docker --port POSTGRES_PORT
+$PROJECT_ROOT/postgres-docker --port $PGPORT
 
 # Run the tests
 $PYTHON -m pytest
