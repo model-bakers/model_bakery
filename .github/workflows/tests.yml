@@ -11,6 +11,19 @@ jobs:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
 
+    services:
+      postgis:
+        image: postgis/postgis
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    env:
+      PGPASSWORD: postgres
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11-dev"]
@@ -18,18 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup PostgreSQL with PostGIS
-        uses: huaxk/postgis-action@v1
-        with:
-          postgresql version: '11'
-          postgresql db: 'postgres'
-          postgresql user: 'postgres'
-
-      - name: Install PostgreSQL dependencies
+      - name: Set up PostgreSQL
         run: |
           sudo apt-get update
           sudo apt-get install -y gdal-bin
-          psql -c "CREATE ROLE runner SUPERUSER LOGIN CREATEDB;" -U postgres -h localhost -p 5432
           psql template1 -c "CREATE EXTENSION citext;" -U postgres -h localhost -p 5432
           psql template1 -c "CREATE EXTENSION hstore;" -U postgres -h localhost -p 5432
           psql template1 -c "CREATE EXTENSION postgis;" -U postgres -h localhost -p 5432
