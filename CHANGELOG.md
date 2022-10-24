@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Fixed a bug with `seq` being passed a tz-aware start value [PR #353](https://github.com/model-bakers/model_bakery/pull/353)
 - [dev] Use official postgis docker image in CI [PR #355](https://github.com/model-bakers/model_bakery/pull/355)
+- Create m2m when using `_bulk_create=True` [PR #354](https://github.com/model-bakers/model_bakery/pull/354)
 
 ### Removed
 

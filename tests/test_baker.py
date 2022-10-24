@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Manager
@@ -151,17 +152,18 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             assert all(p.name == "George Washington" for p in people)
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
-        with self.assertNumQueries(1):
+        query_count = 2 if DJANGO_VERSION >= (4, 0) else 3
+        with self.assertNumQueries(query_count):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
         assert models.Person.objects.count() == 5
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(query_count):
             people = baker.make(
                 models.Person, name="George Washington", _quantity=5, _bulk_create=True
             )
             assert all(p.name == "George Washington" for p in people)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(query_count):
             baker.make(models.NonStandardManager, _quantity=3, _bulk_create=True)
             assert getattr(models.NonStandardManager, "objects", None) is None
             assert (
@@ -362,16 +364,17 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_one_to_one(self):
-        with self.assertNumQueries(6):
+        query_count = 7 if DJANGO_VERSION >= (4, 0) else 8
+        with self.assertNumQueries(query_count):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
     def test_chaining_bulk_create_reduces_query_count(self):
-        qtd = 5
-        with self.assertNumQueries(3):
-            baker.make(models.Person, _quantity=qtd, _bulk_create=True)
+        query_count = 5 if DJANGO_VERSION >= (4, 0) else 7
+        with self.assertNumQueries(query_count):
+            baker.make(models.Person, _quantity=5, _bulk_create=True)
             person_iter = models.Person.objects.all().iterator()
             baker.make(
                 models.LonelyPerson,
@@ -385,7 +388,8 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_fk(self):
-        with self.assertNumQueries(6):
+        query_count = 7 if DJANGO_VERSION >= (4, 0) else 8
+        with self.assertNumQueries(query_count):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
         assert models.PaymentBill.objects.all().count() == 5
@@ -396,7 +400,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert store.employees.count() == 5
         assert store.customers.count() == 5
 
-    def test_regresstion_many_to_many_field_is_accepted_as_kwargs(self):
+    def test_regression_many_to_many_field_is_accepted_as_kwargs(self):
         employees = baker.make(models.Person, _quantity=3)
         customers = baker.make(models.Person, _quantity=3)
 
@@ -1032,3 +1036,16 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
             _from_manager="objects",
         )
         assert movie.title == movie.name
+
+
+class TestCreateM2MWhenBulkCreate(TestCase):
+    @pytest.mark.django_db
+    def test_create(self):
+        query_count = 13 if DJANGO_VERSION >= (4, 0) else 14
+        with self.assertNumQueries(query_count):
+            person = baker.make(models.Person)
+            baker.make(
+                models.Classroom, students=[person], _quantity=10, _bulk_create=True
+            )
+        c1, c2 = models.Classroom.objects.all()[:2]
+        assert list(c1.students.all()) == list(c2.students.all()) == [person]

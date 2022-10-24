@@ -4,7 +4,7 @@ on: pull_request
 
 jobs:
   remind:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: |
       !contains(github.event.pull_request.body, '[skip changelog]') &&
       (github.actor != 'dependabot[bot]')
