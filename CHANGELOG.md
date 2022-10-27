@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- [dev] Switch to Python 3.11 release in CI [#357](https://github.com/model-bakers/model_bakery/pull/357)
 
 ### Removed
 
