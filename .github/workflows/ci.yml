@@ -48,7 +48,19 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade tox tox-gh-actions
+          python -m pip install --upgrade tox tox-py
 
       - name: Run tox targets for ${{ matrix.python-version }}
-        run: python -m tox
+        run: tox --py current
+
+  linters:
+    name: Linters
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install tox
+      - run: tox -e flake8,isort,pydocstyle,black,mypy
