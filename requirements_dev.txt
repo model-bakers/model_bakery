@@ -4,7 +4,7 @@ black==22.10.0
 flake8==5.0.4
 isort==5.10.1
 mypy==0.982
-pillow==9.2.0
+pillow==9.3.0
 pip-tools==6.9.0
 pre-commit==2.20.0
 psycopg2-binary==2.9.5
