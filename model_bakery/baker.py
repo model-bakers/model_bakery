@@ -178,8 +178,8 @@ def prepare(
             baker.prepare(_save_related=_save_related, **attrs)
             for i in range(_quantity)
         ]
-    else:
-        return baker.prepare(_save_related=_save_related, **attrs)
+
+    return baker.prepare(_save_related=_save_related, **attrs)
 
 
 def _recipe(name: str) -> Any:
@@ -298,7 +298,7 @@ def _custom_baker_class() -> Optional[Type]:
     try:
         baker_class = import_from_str(custom_class_string)
 
-        for required_function_name in ["make", "prepare"]:
+        for required_function_name in ("make", "prepare"):
             if not hasattr(baker_class, required_function_name):
                 raise InvalidCustomBaker(
                     'Custom Baker classes must have a "%s" function'
@@ -437,7 +437,7 @@ class Baker(Generic[M]):
                         self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
             # is an _id relation that has a sequence defined
             elif (
-                (isinstance(field, OneToOneField) or isinstance(field, ForeignKey))
+                isinstance(field, (OneToOneField, ForeignKey))
                 and hasattr(field, "attname")
                 and field.attname in self.iterator_attrs
             ):
@@ -560,7 +560,7 @@ class Baker(Generic[M]):
 
         # Don't Skip related _id fields defined in the iterator attributes
         if (
-            (isinstance(field, OneToOneField) or isinstance(field, ForeignKey))
+            isinstance(field, (OneToOneField, ForeignKey))
             and hasattr(field, "attname")
             and field.attname in self.iterator_attrs
         ):
@@ -610,7 +610,7 @@ class Baker(Generic[M]):
                     [
                         fk
                         for fk in value._meta.fields
-                        if isinstance(fk, ForeignKey) or isinstance(fk, OneToOneField)
+                        if isinstance(fk, (ForeignKey, OneToOneField))
                     ]
                 )
                 if not value.pk and not fks:
@@ -755,9 +755,7 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
 
     def _save_related_objs(model, objects) -> None:
         fk_fields = [
-            f
-            for f in model._meta.fields
-            if isinstance(f, OneToOneField) or isinstance(f, ForeignKey)
+            f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
         ]
 
         for fk in fk_fields:

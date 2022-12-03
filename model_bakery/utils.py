@@ -29,8 +29,8 @@ def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
 
         module = importlib.import_module(path)
         return getattr(module, field_name)
-    else:
-        return import_string
+
+    return import_string
 
 
 def get_calling_module(levels_back: int) -> Optional[ModuleType]:
@@ -73,7 +73,7 @@ def seq(value, increment_by=1, start=None, suffix=None):
     """
     _validate_sequence_parameters(value, increment_by, start, suffix)
 
-    if type(value) in [datetime.datetime, datetime.date, datetime.time]:
+    if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
         if type(value) is datetime.date:
             date = datetime.datetime.combine(value, datetime.datetime.now().time())
         elif type(value) is datetime.time:
@@ -109,7 +109,7 @@ def _validate_sequence_parameters(value, increment_by, start, suffix) -> None:
         if not isinstance(value, str):
             raise TypeError("Sequences with suffix can only be used with text values")
 
-    if type(value) in [datetime.datetime, datetime.date, datetime.time]:
+    if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
         if not isinstance(increment_by, datetime.timedelta):
             raise TypeError(
                 "Sequences with values datetime.datetime, datetime.date and datetime.time, "
