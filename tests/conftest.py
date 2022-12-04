@@ -37,7 +37,7 @@ def pytest_configure():
         ] + installed_apps
         postgis_version = (11, 3, 0)
     else:
-        raise NotImplementedError("Tests for % are not supported", test_db)
+        raise NotImplementedError(f"Tests for {test_db} are not supported")
 
     EXTRA_DB = "extra"
     settings.configure(

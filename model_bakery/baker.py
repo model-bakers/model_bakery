@@ -232,7 +232,7 @@ class ModelFinder:
             model = None
 
         if not model:
-            raise ModelNotFound("Could not find model '%s'." % name.title())
+            raise ModelNotFound(f"Could not find model '{name.title()}'.")
 
         return model
 
@@ -249,8 +249,8 @@ class ModelFinder:
 
         if name in cast(List, self._ambiguous_models):
             raise AmbiguousModelName(
-                "%s is a model in more than one app. "
-                'Use the form "app.model".' % name.title()
+                f"{name.title()} is a model in more than one app. "
+                'Use the form "app.model".'
             )
 
         return cast(Dict, self._unique_models).get(name)
@@ -301,14 +301,13 @@ def _custom_baker_class() -> Optional[Type]:
         for required_function_name in ("make", "prepare"):
             if not hasattr(baker_class, required_function_name):
                 raise InvalidCustomBaker(
-                    'Custom Baker classes must have a "%s" function'
-                    % required_function_name
+                    f'Custom Baker classes must have a "{required_function_name}" function'
                 )
 
         return baker_class
     except ImportError:
         raise CustomBakerNotFound(
-            "Could not find custom baker class '%s'" % custom_class_string
+            f"Could not find custom baker class '{custom_class_string}'"
         )
 
 
@@ -534,9 +533,10 @@ class Baker(Generic[M]):
             }
             if wrong_fields:
                 raise AttributeError(
-                    "_fill_optional field(s) %s are not related to model %s"
-                    % (list(wrong_fields), self.model.__name__)
+                    f"_fill_optional field(s) {list(wrong_fields)} are not "
+                    f"related to model {self.model.__name__}"
                 )
+
         self.iterator_attrs = {k: v for k, v in attrs.items() if is_iterator(v)}
         self.model_attrs = {k: v for k, v in attrs.items() if not is_rel_field(k)}
         self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
@@ -718,9 +718,7 @@ def get_required_values(
 
             else:
                 raise ValueError(
-                    "Required value '%s' is of wrong type. \
-                                  Don't make baker sad."
-                    % str(item)
+                    f"Required value '{item}' is of wrong type. Don't make baker sad."
                 )
 
     return rt

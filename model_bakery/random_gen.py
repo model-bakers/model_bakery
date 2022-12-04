@@ -83,14 +83,14 @@ def gen_float() -> float:
 
 
 def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
-    def num_as_str(x: int):
+    def num_as_str(x: int) -> str:
         return "".join([str(randint(0, 9)) for _ in range(x)])
 
     if decimal_places:
         return Decimal(
-            "%s.%s"
-            % (num_as_str(max_digits - decimal_places - 1), num_as_str(decimal_places))
+            f"{num_as_str(max_digits - decimal_places - 1)}.{num_as_str(decimal_places)}"
         )
+
     return Decimal(num_as_str(max_digits))
 
 
@@ -137,11 +137,11 @@ def gen_null_boolean():
 
 
 def gen_url() -> str:
-    return str("http://www.%s.com/" % gen_string(30))
+    return f"http://www.{gen_string(30)}.com/"
 
 
 def gen_email() -> str:
-    return "%s@example.com" % gen_string(10)
+    return f"{gen_string(10)}@example.com"
 
 
 def gen_ipv6() -> str:
@@ -268,68 +268,53 @@ gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 # GIS generators
 
 
-def gen_coord():
+def gen_coord() -> float:
     return uniform(0, 1)
 
 
-def gen_coords():
+def gen_coords() -> str:
     return f"{gen_coord()} {gen_coord()}"
 
 
-def gen_point():
-    return "POINT ({})".format(
-        gen_coords(),
-    )
+def gen_point() -> str:
+    return f"POINT ({gen_coords()})"
 
 
-def _gen_line_string_without_prefix():
-    return "({}, {})".format(
-        gen_coords(),
-        gen_coords(),
-    )
+def _gen_line_string_without_prefix() -> str:
+    return f"({gen_coords()}, {gen_coords()})"
 
 
-def gen_line_string():
+def gen_line_string() -> str:
     return f"LINESTRING {_gen_line_string_without_prefix()}"
 
 
-def _gen_polygon_without_prefix():
+def _gen_polygon_without_prefix() -> str:
     start = gen_coords()
     return f"(({start}, {gen_coords()}, {gen_coords()}, {start}))"
 
 
-def gen_polygon():
-    return "POLYGON {}".format(
-        _gen_polygon_without_prefix(),
-    )
+def gen_polygon() -> str:
+    return f"POLYGON {_gen_polygon_without_prefix()}"
 
 
-def gen_multi_point():
-    return "MULTIPOINT (({}))".format(
-        gen_coords(),
-    )
+def gen_multi_point() -> str:
+    return f"MULTIPOINT (({gen_coords()}))"
 
 
-def gen_multi_line_string():
-    return "MULTILINESTRING ({})".format(
-        _gen_line_string_without_prefix(),
-    )
+def gen_multi_line_string() -> str:
+    return f"MULTILINESTRING ({_gen_line_string_without_prefix()})"
 
 
-def gen_multi_polygon():
-    return "MULTIPOLYGON ({})".format(
-        _gen_polygon_without_prefix(),
-    )
+def gen_multi_polygon() -> str:
+    return f"MULTIPOLYGON ({_gen_polygon_without_prefix()})"
 
 
 def gen_geometry():
     return gen_point()
 
 
-def gen_geometry_collection():
-    return "GEOMETRYCOLLECTION ({})".format(
-        gen_point(),
-    )
+def gen_geometry_collection() -> str:
+    return f"GEOMETRYCOLLECTION ({gen_point()})"
 
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
