@@ -39,8 +39,8 @@ class Recipe(Generic[M]):
         _quantity = new_attrs.get("_quantity")
         if _quantity is None:
             _quantity = 1
-        rel_fields_attrs = dict((k, v) for k, v in new_attrs.items() if "__" in k)
-        new_attrs = dict((k, v) for k, v in new_attrs.items() if "__" not in k)
+        rel_fields_attrs = {k: v for k, v in new_attrs.items() if "__" in k}
+        new_attrs = {k: v for k, v in new_attrs.items() if "__" not in k}
         mapping = self.attr_mapping.copy()
         for k, v in self.attr_mapping.items():
             # do not generate values if field value is provided

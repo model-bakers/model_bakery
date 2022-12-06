@@ -28,7 +28,7 @@ def test_import_seq_from_baker():
     try:
         from model_bakery.baker import seq  # NoQA
     except ImportError:
-        pytest.fail("{} raised".format(ImportError.__name__))
+        pytest.fail(f"{ImportError.__name__} raised")
 
 
 class TestsModelFinder:
@@ -127,7 +127,7 @@ class TestsBakerCreatesSimpleModel:
         instance = baker.make(models.SubclassOfAbstract)
         assert isinstance(instance, models.SubclassOfAbstract)
         assert isinstance(instance, models.AbstractModel)
-        assert isinstance(instance.name, type(""))
+        assert isinstance(instance.name, str)
         assert len(instance.name) == 30
         assert isinstance(instance.height, int)
 

@@ -459,9 +459,7 @@ class Baker(Generic[M]):
                 try:
                     self.model_attrs[field.name] = next(self.iterator_attrs[field.name])
                 except StopIteration:
-                    raise RecipeIteratorEmpty(
-                        "{0} iterator is empty.".format(field.name)
-                    )
+                    raise RecipeIteratorEmpty(f"{field.name} iterator is empty.")
 
         instance = self.instance(
             self.model_attrs,
@@ -531,17 +529,17 @@ class Baker(Generic[M]):
         # error for non existing fields
         if isinstance(self.fill_in_optional, (tuple, list, set)):
             # parents and relations
-            wrong_fields = set(self.fill_in_optional) - set(
+            wrong_fields = set(self.fill_in_optional) - {
                 f.name for f in self.get_fields()
-            )
+            }
             if wrong_fields:
                 raise AttributeError(
                     "_fill_optional field(s) %s are not related to model %s"
                     % (list(wrong_fields), self.model.__name__)
                 )
-        self.iterator_attrs = dict((k, v) for k, v in attrs.items() if is_iterator(v))
-        self.model_attrs = dict((k, v) for k, v in attrs.items() if not is_rel_field(k))
-        self.rel_attrs = dict((k, v) for k, v in attrs.items() if is_rel_field(k))
+        self.iterator_attrs = {k: v for k, v in attrs.items() if is_iterator(v)}
+        self.model_attrs = {k: v for k, v in attrs.items() if not is_rel_field(k)}
+        self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
         self.rel_fields = [
             x.split("__")[0] for x in self.rel_attrs.keys() if is_rel_field(x)
         ]
