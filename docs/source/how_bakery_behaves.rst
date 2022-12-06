@@ -108,7 +108,7 @@ Examples:
     BAKER_CUSTOM_CLASS = 'code.path.CustomBaker'
 
 
-Additionaly, if you want to your created instance to be returned respecting one of your custom ModelManagers, you can use the ``_from_manager`` parameter as the example bellow:
+Additionally, if you want to your created instance to be returned respecting one of your custom ModelManagers, you can use the ``_from_manager`` parameter as the example below:
 
 
 .. code-block:: python
