@@ -178,7 +178,7 @@ You can also use iterable to explicitly set values as: ::
     class CustomerTestModel(TestCase):
         def setUp(self):
             names = ("Onkar Awale", "Pruthviraj Patil", "Shubham Ojha")
-            
+
             self.customer = baker.make(
                 'shop.Customer',
                 age=21,
