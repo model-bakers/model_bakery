@@ -33,3 +33,7 @@ repos:
         language: system
         types:
           - python
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.10.1
+    hooks:
+      - id: validate-pyproject

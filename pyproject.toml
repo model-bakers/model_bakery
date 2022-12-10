@@ -1,0 +1,74 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools>=61.2",
+]
+
+[project]
+name = "model_bakery"
+version = "1.9.0"
+description = "Smart object creation facility for Django."
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+keywords = [
+  "django",
+  "factory",
+  "python",
+  "testing",
+]
+license = {text = "Apache 2.0"}
+authors = [{name = "berin", email = "bernardoxhc@gmail.com"}]
+dependencies = [
+  "django>=3.2",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+[project.urls]
+Homepage = "https://github.com/model-bakers/model_bakery"
+
+
+[tool.distutils.bdist_wheel]
+universal = 1
+
+[tool.setuptools]
+packages = ["model_bakery"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+model_bakery = ["py.typed"]
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+disallow_untyped_calls = true
+
+[tool.pydocstyle]
+add_ignore = "D1"
+match-dir = '(?!test|docs|venv|\.).*'
+
+[tool.pytest.ini_options]
+addopts = "--tb=short -rxs --nomigrations"
