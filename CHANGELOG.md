@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] Switch to Python 3.11 release in CI [#357](https://github.com/model-bakers/model_bakery/pull/357)
 - [dev] Unify and simplify tox config with tox-py
 - [dev] `pre-commit autoupdate && pre-commit run --all-files`
+- [dev] Run `pyupgrade` with Python 3.7 as a base
 
 ### Removed
 

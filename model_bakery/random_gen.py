@@ -273,7 +273,7 @@ def gen_coord():
 
 
 def gen_coords():
-    return "{x} {y}".format(x=gen_coord(), y=gen_coord())
+    return f"{gen_coord()} {gen_coord()}"
 
 
 def gen_point():
@@ -290,12 +290,12 @@ def _gen_line_string_without_prefix():
 
 
 def gen_line_string():
-    return "LINESTRING {}".format(_gen_line_string_without_prefix())
+    return f"LINESTRING {_gen_line_string_without_prefix()}"
 
 
 def _gen_polygon_without_prefix():
     start = gen_coords()
-    return "(({}, {}, {}, {}))".format(start, gen_coords(), gen_coords(), start)
+    return f"(({start}, {gen_coords()}, {gen_coords()}, {start}))"
 
 
 def gen_polygon():

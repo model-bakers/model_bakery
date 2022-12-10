@@ -44,7 +44,7 @@ def test_import_seq_from_recipe():
     try:
         from model_bakery.recipe import seq  # NoQA
     except ImportError:
-        pytest.fail("{} raised".format(ImportError.__name__))
+        pytest.fail(f"{ImportError.__name__} raised")
 
 
 def test_import_recipes():
@@ -417,7 +417,7 @@ class TestForeignKey:
 
     def test_one_to_one_relationship(self):
         lonely_people = baker.make_recipe("tests.generic.lonely_person", _quantity=2)
-        friend_ids = set([x.only_friend.id for x in lonely_people])
+        friend_ids = {x.only_friend.id for x in lonely_people}
         assert len(friend_ids) == 2
 
 

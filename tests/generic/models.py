@@ -282,7 +282,7 @@ class UnsupportedField(models.Field):
     description = "I'm bad company, baker doesn't know me"
 
     def __init__(self, *args, **kwargs):
-        super(UnsupportedField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class UnsupportedModel(models.Model):
@@ -426,7 +426,7 @@ class MovieManager(models.Manager):
         We want to test whether this annotation has been run after
         calling `baker.make()`.
         """
-        return super(MovieManager, self).get_queryset().annotate(name=models.F("title"))
+        return super().get_queryset().annotate(name=models.F("title"))
 
 
 class MovieWithAnnotation(Movie):
@@ -447,7 +447,7 @@ class DummyGenericIPAddressFieldModel(models.Model):
 
 
 class AbstractModel(models.Model):
-    class Meta(object):
+    class Meta:
         abstract = True
 
     name = models.CharField(max_length=30)

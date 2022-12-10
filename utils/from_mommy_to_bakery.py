@@ -52,7 +52,7 @@ def _rename_recipe_file(to_be_renamed, dry_run):
 
 def _replace_legacy_terms(file_path, dry_run):
     try:
-        content = open(file_path, "r").read()
+        content = open(file_path).read()
     except UnicodeDecodeError:
         return
     changed = []
