@@ -59,7 +59,7 @@ class Recipe(Generic[M]):
             elif isinstance(v, RecipeForeignKey):
                 a = {}
                 for key, value in list(rel_fields_attrs.items()):
-                    if key.startswith("%s__" % k):
+                    if key.startswith(f"{k}__"):
                         a[key] = rel_fields_attrs.pop(key)
                 recipe_attrs = baker.filter_rel_attrs(k, **a)
                 if _save_related:

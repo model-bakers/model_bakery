@@ -170,7 +170,7 @@ class TestDefiningRecipes:
         try:
             p.make(_quantity=5)
         except AttributeError as e:
-            pytest.fail("%s" % e)
+            pytest.fail(f"{e}")
 
 
 @pytest.mark.django_db
