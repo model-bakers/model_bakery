@@ -339,7 +339,7 @@ class TestsFillingFileField:
         assert isinstance(field, FileField)
         import time
 
-        path = "{}/{}/mock_file.txt".format(gettempdir(), time.strftime("%Y/%m/%d"))
+        path = f"{gettempdir()}/{time.strftime('%Y/%m/%d')}/mock_file.txt"
 
         assert abspath(path) == abspath(dummy.file_field.path)
         dummy.file_field.delete()
@@ -442,7 +442,7 @@ class TestFillingImageFileField:
         assert isinstance(field, ImageField)
         import time
 
-        path = "{}/{}/mock_img.jpeg".format(gettempdir(), time.strftime("%Y/%m/%d"))
+        path = f"{gettempdir()}/{time.strftime('%Y/%m/%d')}/mock_img.jpeg"
 
         # These require the file to exist in earlier versions of Django
         assert abspath(path) == abspath(dummy.image_field.path)
