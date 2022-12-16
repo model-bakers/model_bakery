@@ -343,12 +343,37 @@ class TestsFillingFileField:
 
         assert abspath(path) == abspath(dummy.file_field.path)
         dummy.file_field.delete()
+        dummy.delete()
 
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyFileFieldModel)
         with pytest.raises(ValueError):
             # Django raises ValueError if file does not exist
             assert dummy.file_field.path
+    
+    def test_filling_nested_file_fields(self):
+        dummy = baker.make(models.NestedFileFieldModel, _create_files=True)
+
+        assert dummy.file.file_field.path
+        dummy.file.file_field.delete()
+
+        if dummy.image.image_field:
+            assert dummy.image.image_field.path
+            dummy.image.image_field.delete()
+        
+        dummy.delete()
+
+    def test_does_not_fill_nested_file_fields_unflagged(self):
+        dummy = baker.make(models.NestedFileFieldModel)
+
+        with pytest.raises(ValueError):
+            assert dummy.file.file_field.path
+
+        if dummy.image.image_field:
+            with pytest.raises(ValueError):
+                assert dummy.image.image_field.path
+        
+        dummy.delete()
 
 
 @pytest.mark.django_db
@@ -585,3 +610,6 @@ class TestGisFieldsFilling:
 
     def test_fill_GeometryCollectionField_valid(self, person):
         self.assertGeomValid(person.geom_collection)
+
+if __name__ == "__main__":
+    pytest.main("tests/test_filling_fields.py")

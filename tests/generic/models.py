@@ -352,6 +352,10 @@ else:
     class DummyImageFieldModel(models.Model):
         pass
 
+class NestedFileFieldModel(models.Model):
+    file = models.ForeignKey(DummyFileFieldModel, on_delete=models.CASCADE)
+    image = models.ForeignKey(DummyImageFieldModel, on_delete=models.CASCADE)
+
 
 class DummyMultipleInheritanceModel(DummyDefaultFieldsModel, Person):
     my_id = models.AutoField(primary_key=True)
