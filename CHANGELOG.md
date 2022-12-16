@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] `pre-commit autoupdate && pre-commit run --all-files`
 - [dev] Run `pyupgrade` with Python 3.7 as a base
 - [dev] Convert `format` and some string interpolations to `fstring`
+- forward "_create_files" flag to child generators for relational fields
 
 ### Removed
 
