@@ -240,26 +240,26 @@ def _fk_model(field: Field) -> Tuple[str, Optional[Model]]:
         return ("model", field.related.parent_model)
 
 
-def _prepare_related(model: str, **attrs: Any) -> Union[Model, List[Model]]:
+def _prepare_related(model: str, _create_files=False, **attrs: Any) -> Union[Model, List[Model]]:
     from .baker import prepare
 
     return prepare(model, **attrs)
 
 
-def gen_related(model, **attrs):
+def gen_related(model, _create_files=False, **attrs):
     from .baker import make
 
-    return make(model, **attrs)
+    return make(model, _create_files=_create_files, **attrs)
 
 
 gen_related.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 gen_related.prepare = _prepare_related  # type: ignore[attr-defined]
 
 
-def gen_m2m(model, **attrs):
+def gen_m2m(model, _create_files=False, **attrs):
     from .baker import MAX_MANY_QUANTITY, make
 
-    return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
+    return make(model, _create_files=_create_files, _quantity=MAX_MANY_QUANTITY, **attrs)
 
 
 gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
