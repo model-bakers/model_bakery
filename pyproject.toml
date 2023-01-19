@@ -1,27 +1,22 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires = [
-  "setuptools>=61.2",
-]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "model_bakery"
-version = "1.9.0"
+name = "model-bakery"
+dynamic = ["version"]
 description = "Smart object creation facility for Django."
-[project.readme]
-file = "README.md"
-content-type = "text/markdown"
-
-keywords = [
-  "django",
-  "factory",
-  "python",
-  "testing",
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "berin", email = "bernardoxhc@gmail.com" },
+    { name = "amureki", email = "amureki@hey.com" },
 ]
-license = {text = "Apache 2.0"}
-authors = [{name = "berin", email = "bernardoxhc@gmail.com"}]
-dependencies = [
-  "django>=3.2",
+keywords = [
+    "django",
+    "factory",
+    "python",
+    "testing",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -32,7 +27,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Topic :: Software Development",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
@@ -40,20 +34,22 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development",
 ]
+dependencies = [
+    "django>=3.2",
+]
+
 [project.urls]
 Homepage = "https://github.com/model-bakers/model_bakery"
 
+[tool.hatch.version]
+path = "model_bakery/__about__.py"
 
-[tool.distutils.bdist_wheel]
-universal = 1
-
-[tool.setuptools]
-packages = ["model_bakery"]
-include-package-data = true
-
-[tool.setuptools.package-data]
-model_bakery = ["py.typed"]
+[tool.hatch.build.targets.sdist]
+include = [
+    "/model_bakery",
+]
 
 [tool.isort]
 multi_line_output = 3
