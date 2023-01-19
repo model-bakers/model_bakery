@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] Unify and simplify tox config with tox-py
 - [dev] `pre-commit autoupdate && pre-commit run --all-files`
 - [dev] Run `pyupgrade` with Python 3.7 as a base
+- [dev] PEP 621: Migrate from setup.py and setup.cfg to pyproject.toml
 - [dev] Convert `format` and some string interpolations to `fstring`
 
 ### Removed

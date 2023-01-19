@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "model-bakery"
+dynamic = ["version"]
+description = "Smart object creation facility for Django."
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "berin", email = "bernardoxhc@gmail.com" },
+    { name = "amureki", email = "amureki@hey.com" },
+]
+keywords = [
+    "django",
+    "factory",
+    "python",
+    "testing",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development",
+]
+dependencies = [
+    "django>=3.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/model-bakers/model_bakery"
+
+[tool.hatch.version]
+path = "model_bakery/__about__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/model_bakery",
+]
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+disallow_untyped_calls = true
+
+[tool.pydocstyle]
+add_ignore = "D1"
+match-dir = '(?!test|docs|venv|\.).*'
+
+[tool.pytest.ini_options]
+addopts = "--tb=short -rxs --nomigrations"
