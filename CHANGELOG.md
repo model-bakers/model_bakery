@@ -8,19 +8,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
-- Django 4.2 support [PR #386](https://github.com/model-bakers/model_bakery/pull/386)
 
 ### Changed
-- [dev] Switch to Python 3.11 release in CI [#357](https://github.com/model-bakers/model_bakery/pull/357)
+
+### Removed
+
+## [1.10.0](https://pypi.org/project/model-bakery/1.10.0/)
+
+### Added
+- Django 4.2 support
+
+### Changed
+- [dev] Switch to Python 3.11 release in CI
 - [dev] Unify and simplify tox config with tox-py
 - [dev] `pre-commit autoupdate && pre-commit run --all-files`
 - [dev] Run `pyupgrade` with Python 3.7 as a base
 - [dev] PEP 621: Migrate from setup.py and setup.cfg to pyproject.toml
 - [dev] Convert `format` and some string interpolations to `fstring`
 
-### Removed
-
 ## [1.9.0](https://pypi.org/project/model-bakery/1.9.0/)
+
+### Changed
 - Fixed a bug with `seq` being passed a tz-aware start value [PR #353](https://github.com/model-bakers/model_bakery/pull/353)
 - Create m2m when using `_bulk_create=True` [PR #354](https://github.com/model-bakers/model_bakery/pull/354)
 - [dev] Use official postgis docker image in CI [PR #355](https://github.com/model-bakers/model_bakery/pull/355)
