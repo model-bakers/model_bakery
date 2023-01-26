@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+## [1.10.1](https://pypi.org/project/model-bakery/1.10.1/)
+
+### Changed
+- [dev] Fix GitHub Action for publishing to PyPI
+
 ## [1.10.0](https://pypi.org/project/model-bakery/1.10.0/)
 
 ### Added
