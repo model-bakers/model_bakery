@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- [dev] Test Python 3.11 with Django 4.2
 
 ### Removed
 
