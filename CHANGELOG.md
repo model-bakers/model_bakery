@@ -10,9 +10,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- [dev] Test Python 3.11 with Django 4.2
 
 ### Removed
+
+## [1.10.2](https://pypi.org/project/model-bakery/1.10.2/)
+
+### Changed
+- [dev] Test Python 3.11 with Django 4.2
+- [dev] Add Django 4.2 to package classifiers
 
 ## [1.10.1](https://pypi.org/project/model-bakery/1.10.1/)
 
