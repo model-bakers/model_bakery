@@ -38,6 +38,7 @@ try:
         BigIntegerRangeField,
         DateRangeField,
         DateTimeRangeField,
+        DecimalRangeField,
         IntegerRangeField,
     )
 except ImportError:
@@ -51,14 +52,6 @@ except ImportError:
     BigIntegerRangeField = None
     DateRangeField = None
     DateTimeRangeField = None
-
-try:
-    from django.contrib.postgres.fields.ranges import FloatRangeField
-except ImportError:
-    FloatRangeField = None
-try:
-    from django.contrib.postgres.fields.ranges import DecimalRangeField
-except ImportError:
     DecimalRangeField = None
 
 
@@ -506,20 +499,6 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.bigint_range.lower, int)
         assert isinstance(person.bigint_range.upper, int)
         assert person.bigint_range.lower < person.bigint_range.upper
-
-    @pytest.mark.skipif(
-        FloatRangeField is None,
-        reason="FloatRangeField is deprecated since Django 2.2",
-    )
-    def test_filling_float_range_field(self, person):
-        from psycopg2._range import NumericRange
-
-        float_range_field = models.Person._meta.get_field("float_range")
-        assert isinstance(float_range_field, FloatRangeField)
-        assert isinstance(person.float_range, NumericRange)
-        assert isinstance(person.float_range.lower, float)
-        assert isinstance(person.float_range.upper, float)
-        assert person.float_range.lower < person.float_range.upper
 
     def test_filling_date_range_field(self, person):
         from psycopg2.extras import DateRange

@@ -1,7 +1,7 @@
-#######################################
-# TESTING PURPOSE ONLY MODELS!!       #
-# DO NOT ADD THE APP TO INSTALLED_APPS#
-#######################################
+########################################
+# TESTING PURPOSE ONLY MODELS!!        #
+# DO NOT ADD THE APP TO INSTALLED_APPS #
+########################################
 import datetime
 from decimal import Decimal
 from tempfile import gettempdir
@@ -23,7 +23,7 @@ from .fields import (
     FakeListField,
 )
 
-# check whether or not PIL is installed
+# check whether PIL is installed
 try:
     from PIL import ImageFile as PilImageFile  # NoQA
 except ImportError:
@@ -111,6 +111,7 @@ class Person(models.Model):
             BigIntegerRangeField,
             DateRangeField,
             DateTimeRangeField,
+            DecimalRangeField,
             IntegerRangeField,
         )
 
@@ -125,26 +126,9 @@ class Person(models.Model):
             bigint_range = BigIntegerRangeField()
             date_range = DateRangeField()
             datetime_range = DateTimeRangeField()
-    except ImportError:
-        # Skip PostgreSQL-related fields
-        pass
-
-    try:
-        from django.contrib.postgres.fields.ranges import FloatRangeField
-
-        if settings.USING_POSTGRES:
-            float_range = FloatRangeField()
-    except ImportError:
-        # Django version greater or equal than 3.1
-        pass
-
-    try:
-        from django.contrib.postgres.fields.ranges import DecimalRangeField
-
-        if settings.USING_POSTGRES:
             decimal_range = DecimalRangeField()
     except ImportError:
-        # Django version lower than 2.2
+        # Skip PostgreSQL-related fields
         pass
 
     if BAKER_GIS:
