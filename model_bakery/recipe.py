@@ -111,6 +111,7 @@ class Recipe(Generic[M]):
 
     def make(
         self,
+        _baker_cls=None,
         _quantity: Optional[int] = None,
         make_m2m: Optional[bool] = None,
         _refresh_after_create: Optional[bool] = None,
@@ -135,7 +136,12 @@ class Recipe(Generic[M]):
             defaults["_save_kwargs"] = _save_kwargs  # type: ignore[assignment]
 
         defaults.update(attrs)
-        return baker.make(self._model, _using=_using, **self._mapping(_using, defaults))
+        return baker.make(
+            self._model,
+            _baker_cls=_baker_cls,
+            _using=_using,
+            **self._mapping(_using, defaults),
+        )
 
     @overload
     def prepare(
@@ -160,6 +166,7 @@ class Recipe(Generic[M]):
     def prepare(
         self,
         _quantity: Optional[int] = None,
+        _baker_cls=None,
         _save_related: bool = False,
         _using: str = "",
         **attrs: Any,
@@ -170,7 +177,10 @@ class Recipe(Generic[M]):
         }
         defaults.update(attrs)
         return baker.prepare(
-            self._model, _using=_using, **self._mapping(_using, defaults)
+            self._model,
+            _using=_using,
+            _baker_cls=_baker_cls,
+            **self._mapping(_using, defaults),
         )
 
     def extend(self: _T, **attrs: Any) -> _T:

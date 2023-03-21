@@ -92,6 +92,7 @@ def make(
 
 def make(
     _model,
+    _baker_cls: Optional[Type["Baker"]] = None,
     _quantity: Optional[int] = None,
     make_m2m: bool = False,
     _save_kwargs: Optional[Dict] = None,
@@ -109,7 +110,8 @@ def make(
     """
     _save_kwargs = _save_kwargs or {}
     attrs.update({"_fill_optional": _fill_optional})
-    baker: Baker = Baker.create(
+    _baker_cls = _baker_cls or Baker
+    baker: Baker = _baker_cls.create(
         _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
     )
     if _valid_quantity(_quantity):
@@ -157,6 +159,7 @@ def prepare(
 
 def prepare(
     _model: Union[str, Type[M]],
+    _baker_cls: Optional[Type["Baker"]] = None,
     _quantity: Optional[int] = None,
     _save_related: bool = False,
     _using: str = "",
@@ -169,7 +172,8 @@ def prepare(
     fields you want to define its values by yourself.
     """
     attrs.update({"_fill_optional": _fill_optional})
-    baker = Baker.create(_model, _using=_using)
+    _baker_cls = _baker_cls or Baker
+    baker = _baker_cls.create(_model, _using=_using)
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
@@ -192,17 +196,32 @@ def _recipe(name: str) -> Any:
     return import_from_str(".".join((pkg, "baker_recipes", recipe_name)))
 
 
-def make_recipe(baker_recipe_name, _quantity=None, _using="", **new_attrs):
+def make_recipe(
+    baker_recipe_name,
+    _baker_cls: Optional[Type["Baker"]] = None,
+    _quantity=None,
+    _using="",
+    **new_attrs,
+):
     return _recipe(baker_recipe_name).make(
-        _quantity=_quantity, _using=_using, **new_attrs
+        _baker_cls=_baker_cls, _quantity=_quantity, _using=_using, **new_attrs
     )
 
 
 def prepare_recipe(
-    baker_recipe_name, _quantity=None, _save_related=False, _using="", **new_attrs
+    baker_recipe_name,
+    _baker_cls: Optional[Type["Baker"]] = None,
+    _quantity=None,
+    _save_related=False,
+    _using="",
+    **new_attrs,
 ):
     return _recipe(baker_recipe_name).prepare(
-        _quantity=_quantity, _save_related=_save_related, _using=_using, **new_attrs
+        _baker_cls=_baker_cls,
+        _quantity=_quantity,
+        _save_related=_save_related,
+        _using=_using,
+        **new_attrs,
     )
 
 
