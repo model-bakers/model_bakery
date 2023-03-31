@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
+- dropped support for `FloatRangeField` as it was removed in Django 3.1
 
 ## [1.10.2](https://pypi.org/project/model-bakery/1.10.2/)
 
