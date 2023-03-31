@@ -12,7 +12,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
+
+## [1.10.3](https://pypi.org/project/model-bakery/1.10.3/)
+
+### Changed
+- Enforce Python 3.7 as a minimum version in project metadata
+
+### Removed
 - dropped support for `FloatRangeField` as it was removed in Django 3.1
+- [dev] Temporary drop Django 4.2 to package classifiers (waiting for build backend support)
 
 ## [1.10.2](https://pypi.org/project/model-bakery/1.10.2/)
 
