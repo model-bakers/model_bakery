@@ -18,6 +18,7 @@ from random import choice, randint, random, uniform
 from typing import Any, Callable, List, Optional, Tuple, Union
 from uuid import UUID
 
+import django
 from django.core.files.base import ContentFile
 from django.db.models import Field, Model
 from django.utils.timezone import now
@@ -319,7 +320,10 @@ def gen_geometry_collection() -> str:
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
     def gen_range():
-        from psycopg2._range import NumericRange
+        if django.VERSION >= (4, 2):
+            from psycopg.types.range import NumericRange
+        else:
+            from psycopg2._range import NumericRange
 
         base_num = gen_integer(1, 100000)
         return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
@@ -328,7 +332,10 @@ def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
 
 
 def gen_date_range():
-    from psycopg2.extras import DateRange
+    if django.VERSION >= (4, 2):
+        from psycopg.types.range import DateRange
+    else:
+        from psycopg2.extras import DateRange
 
     base_date = gen_date()
     interval = gen_interval(offset=24 * 60 * 60 * 1000)  # force at least 1 day interval
@@ -337,9 +344,12 @@ def gen_date_range():
 
 
 def gen_datetime_range():
-    from psycopg2.extras import DateTimeTZRange
+    if django.VERSION >= (4, 2):
+        from psycopg.types.range import TimestamptzRange
+    else:
+        from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
     base_datetime = gen_datetime()
     interval = gen_interval()
     args = sorted([base_datetime - interval, base_datetime + interval])
-    return DateTimeTZRange(*args)
+    return TimestamptzRange(*args)

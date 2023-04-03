@@ -4,6 +4,7 @@ from decimal import Decimal
 from os.path import abspath
 from tempfile import gettempdir
 
+import django
 import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -471,7 +472,10 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.ci_text, str)
 
     def test_filling_decimal_range_field(self, person):
-        from psycopg2._range import NumericRange
+        if django.VERSION >= (4, 2):
+            from psycopg.types.range import NumericRange
+        else:
+            from psycopg2._range import NumericRange
 
         decimal_range_field = models.Person._meta.get_field("decimal_range")
         assert isinstance(decimal_range_field, DecimalRangeField)
@@ -481,7 +485,10 @@ class TestCIStringFieldsFilling:
         assert person.decimal_range.lower < person.decimal_range.upper
 
     def test_filling_integer_range_field(self, person):
-        from psycopg2._range import NumericRange
+        if django.VERSION >= (4, 2):
+            from psycopg.types.range import NumericRange
+        else:
+            from psycopg2._range import NumericRange
 
         int_range_field = models.Person._meta.get_field("int_range")
         assert isinstance(int_range_field, IntegerRangeField)
@@ -491,7 +498,10 @@ class TestCIStringFieldsFilling:
         assert person.int_range.lower < person.int_range.upper
 
     def test_filling_integer_range_field_for_big_int(self, person):
-        from psycopg2._range import NumericRange
+        if django.VERSION >= (4, 2):
+            from psycopg.types.range import NumericRange
+        else:
+            from psycopg2._range import NumericRange
 
         bigint_range_field = models.Person._meta.get_field("bigint_range")
         assert isinstance(bigint_range_field, BigIntegerRangeField)
@@ -501,7 +511,10 @@ class TestCIStringFieldsFilling:
         assert person.bigint_range.lower < person.bigint_range.upper
 
     def test_filling_date_range_field(self, person):
-        from psycopg2.extras import DateRange
+        if django.VERSION >= (4, 2):
+            from psycopg.types.range import DateRange
+        else:
+            from psycopg2.extras import DateRange
 
         date_range_field = models.Person._meta.get_field("date_range")
         assert isinstance(date_range_field, DateRangeField)
@@ -511,11 +524,14 @@ class TestCIStringFieldsFilling:
         assert person.date_range.lower < person.date_range.upper
 
     def test_filling_datetime_range_field(self, person):
-        from psycopg2.extras import DateTimeTZRange
+        if django.VERSION >= (4, 2):
+            from psycopg.types.range import TimestamptzRange
+        else:
+            from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
         datetime_range_field = models.Person._meta.get_field("datetime_range")
         assert isinstance(datetime_range_field, DateTimeRangeField)
-        assert isinstance(person.datetime_range, DateTimeTZRange)
+        assert isinstance(person.datetime_range, TimestamptzRange)
         assert isinstance(person.datetime_range.lower, datetime)
         assert isinstance(person.datetime_range.upper, datetime)
         assert person.datetime_range.lower < person.datetime_range.upper
