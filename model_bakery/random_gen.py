@@ -18,7 +18,6 @@ from random import choice, randint, random, uniform
 from typing import Any, Callable, List, Optional, Tuple, Union
 from uuid import UUID
 
-import django
 from django.core.files.base import ContentFile
 from django.db.models import Field, Model
 from django.utils.timezone import now
@@ -320,9 +319,9 @@ def gen_geometry_collection() -> str:
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
     def gen_range():
-        if django.VERSION >= (4, 2):
+        try:
             from psycopg.types.range import NumericRange
-        else:
+        except ImportError:
             from psycopg2._range import NumericRange
 
         base_num = gen_integer(1, 100000)
@@ -332,9 +331,9 @@ def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
 
 
 def gen_date_range():
-    if django.VERSION >= (4, 2):
+    try:
         from psycopg.types.range import DateRange
-    else:
+    except ImportError:
         from psycopg2.extras import DateRange
 
     base_date = gen_date()
@@ -344,9 +343,9 @@ def gen_date_range():
 
 
 def gen_datetime_range():
-    if django.VERSION >= (4, 2):
+    try:
         from psycopg.types.range import TimestamptzRange
-    else:
+    except ImportError:
         from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
     base_datetime = gen_datetime()
