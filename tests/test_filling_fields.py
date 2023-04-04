@@ -472,9 +472,9 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.ci_text, str)
 
     def test_filling_decimal_range_field(self, person):
-        if django.VERSION >= (4, 2):
+        try:
             from psycopg.types.range import NumericRange
-        else:
+        except ImportError:
             from psycopg2._range import NumericRange
 
         decimal_range_field = models.Person._meta.get_field("decimal_range")
@@ -485,9 +485,9 @@ class TestCIStringFieldsFilling:
         assert person.decimal_range.lower < person.decimal_range.upper
 
     def test_filling_integer_range_field(self, person):
-        if django.VERSION >= (4, 2):
+        try:
             from psycopg.types.range import NumericRange
-        else:
+        except ImportError:
             from psycopg2._range import NumericRange
 
         int_range_field = models.Person._meta.get_field("int_range")
@@ -498,9 +498,9 @@ class TestCIStringFieldsFilling:
         assert person.int_range.lower < person.int_range.upper
 
     def test_filling_integer_range_field_for_big_int(self, person):
-        if django.VERSION >= (4, 2):
+        try:
             from psycopg.types.range import NumericRange
-        else:
+        except ImportError:
             from psycopg2._range import NumericRange
 
         bigint_range_field = models.Person._meta.get_field("bigint_range")
@@ -511,9 +511,9 @@ class TestCIStringFieldsFilling:
         assert person.bigint_range.lower < person.bigint_range.upper
 
     def test_filling_date_range_field(self, person):
-        if django.VERSION >= (4, 2):
+        try:
             from psycopg.types.range import DateRange
-        else:
+        except ImportError:
             from psycopg2.extras import DateRange
 
         date_range_field = models.Person._meta.get_field("date_range")
@@ -524,9 +524,9 @@ class TestCIStringFieldsFilling:
         assert person.date_range.lower < person.date_range.upper
 
     def test_filling_datetime_range_field(self, person):
-        if django.VERSION >= (4, 2):
+        try:
             from psycopg.types.range import TimestamptzRange
-        else:
+        except ImportError:
             from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
         datetime_range_field = models.Person._meta.get_field("datetime_range")
