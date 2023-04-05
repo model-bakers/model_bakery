@@ -22,7 +22,10 @@ def pytest_configure():
         extra_db_name = ":memory:"
     elif test_db == "postgresql":
         using_postgres_flag = True
-        db_engine = "django.db.backends.postgresql_psycopg2"
+        if django.VERSION >= (4, 2):
+            db_engine = "django.db.backends.postgresql"
+        else:
+            db_engine = "django.db.backends.postgresql_psycopg2"
         db_name = "postgres"
         installed_apps = ["django.contrib.postgres"] + installed_apps
         extra_db_name = "extra_db"

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fixes `RangeField` support for Django 4.2 and psycopg3
 
 ### Removed
 

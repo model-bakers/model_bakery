@@ -319,16 +319,22 @@ def gen_geometry_collection() -> str:
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
     def gen_range():
-        from psycopg2._range import NumericRange
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
 
         base_num = gen_integer(1, 100000)
-        return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
+        return Range(number_cast(-1 * base_num), number_cast(base_num))
 
     return gen_range
 
 
 def gen_date_range():
-    from psycopg2.extras import DateRange
+    try:
+        from psycopg.types.range import DateRange
+    except ImportError:
+        from psycopg2.extras import DateRange
 
     base_date = gen_date()
     interval = gen_interval(offset=24 * 60 * 60 * 1000)  # force at least 1 day interval
@@ -337,9 +343,12 @@ def gen_date_range():
 
 
 def gen_datetime_range():
-    from psycopg2.extras import DateTimeTZRange
+    try:
+        from psycopg.types.range import TimestamptzRange
+    except ImportError:
+        from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
     base_datetime = gen_datetime()
     interval = gen_interval()
     args = sorted([base_datetime - interval, base_datetime + interval])
-    return DateTimeTZRange(*args)
+    return TimestamptzRange(*args)

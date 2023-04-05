@@ -56,26 +56,26 @@ except ImportError:
     JSONField = None
 
 try:
-    # PostgreSQL-specific field (only available when psycopg2 is installed)
+    # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
     ArrayField = None
 
 try:
     # Deprecated since Django 3.1, removed in Django 4.0
-    # PostgreSQL-specific field (only available when psycopg2 is installed)
+    # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import JSONField as PostgresJSONField
 except ImportError:
     PostgresJSONField = None
 
 try:
-    # PostgreSQL-specific field (only available when psycopg2 is installed)
+    # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import HStoreField
 except ImportError:
     HStoreField = None
 
 try:
-    # PostgreSQL-specific fields (only available when psycopg2 is installed)
+    # PostgreSQL-specific fields (only available when psycopg is installed)
     from django.contrib.postgres.fields.citext import (
         CICharField,
         CIEmailField,
@@ -94,7 +94,7 @@ except ImportError:
 
 
 try:
-    # PostgreSQL-specific fields (only available when psycopg2 is installed)
+    # PostgreSQL-specific fields (only available when psycopg is installed)
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
         DateRangeField,
