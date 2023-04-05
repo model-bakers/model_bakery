@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Fixes `RangeField` support for Django 4.2 and psycopg3
 
 ### Removed
+
+## [1.11.0](https://pypi.org/project/model-bakery/1.11.0/)
+
+### Added
+- Add psycopg3 support for Django 4.2
 
 ## [1.10.3](https://pypi.org/project/model-bakery/1.10.3/)
 
