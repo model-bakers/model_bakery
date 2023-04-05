@@ -320,12 +320,12 @@ def gen_geometry_collection() -> str:
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
     def gen_range():
         try:
-            from psycopg.types.range import NumericRange
+            from psycopg.types.range import Range
         except ImportError:
-            from psycopg2._range import NumericRange
+            from psycopg2._range import NumericRange as Range
 
         base_num = gen_integer(1, 100000)
-        return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
+        return Range(number_cast(-1 * base_num), number_cast(base_num))
 
     return gen_range
 
