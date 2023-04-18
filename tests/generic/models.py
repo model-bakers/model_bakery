@@ -116,6 +116,7 @@ class Person(models.Model):
         )
 
         if settings.USING_POSTGRES:
+            long_name = models.CharField()
             acquaintances = ArrayField(models.IntegerField())
             postgres_data = PostgresJSONField()
             hstore_data = HStoreField()
