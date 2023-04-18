@@ -6,6 +6,7 @@ import datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
+import django
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -116,7 +117,8 @@ class Person(models.Model):
         )
 
         if settings.USING_POSTGRES:
-            long_name = models.CharField()
+            if django.VERSION >= (4, 2):
+                long_name = models.CharField()
             acquaintances = ArrayField(models.IntegerField())
             postgres_data = PostgresJSONField()
             hstore_data = HStoreField()
