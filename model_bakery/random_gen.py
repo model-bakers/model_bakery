@@ -109,11 +109,8 @@ def gen_time() -> time:
     return now().time()
 
 
-def gen_string(max_length: int) -> str:
+def gen_string(max_length: int = MAX_LENGTH) -> str:
     return str("".join(choice(string.ascii_letters) for _ in range(max_length)))
-
-
-gen_string.required = ["max_length"]  # type: ignore[attr-defined]
 
 
 def gen_slug(max_length: int) -> str:
