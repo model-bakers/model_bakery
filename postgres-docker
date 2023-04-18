@@ -150,7 +150,7 @@ fi
 # Start postgres container
 echo "Starting '${CONTAINER_NAME}'..."
 
-$DOCKER run --rm --name ${CONTAINER_NAME} -e POSTGRES_HOST_AUTH_METHOD=trust -p ${PORT}:5432 -d postgis/postgis:11-3.0
+$DOCKER run --rm --name ${CONTAINER_NAME} -e POSTGRES_HOST_AUTH_METHOD=trust -p ${PORT}:5432 -d postgis/postgis:12-3.3
 
 # Wait a few seconds so the DB container can start up
 echo "Waiting for DB container..."
