@@ -118,7 +118,7 @@ def _gen_string_get_max_length(field: Field) -> Tuple[str, int]:
         max_length = MAX_LENGTH
     return "max_length", max_length
 
-gen_string.required = [_gen_string_get_max_length] # type: ignore[attr-defined]
+gen_string.required = [_gen_string_get_max_length]  # type: ignore[attr-defined]
 
 def gen_slug(max_length: int) -> str:
     valid_chars = string.ascii_letters + string.digits + "_-"
