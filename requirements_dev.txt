@@ -9,7 +9,7 @@ pillow==9.5.0
 pip-tools==6.12.3
 pre-commit==3.2.2
 psycopg
-psycopg2-binary==2.9.5
+psycopg2-binary==2.9.6
 pycodestyle==2.10.0
 pydocstyle[toml]==6.3.0
 pytest==7.3.1
