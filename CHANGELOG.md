@@ -8,12 +8,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.12.0](https://pypi.org/project/model-bakery/1.12.0/)
+
+### Added
 - Add support for CharField with max_length=None
 
 ### Changed
 - Fix utils.seq with start=0
-
-### Removed
 
 ## [1.11.0](https://pypi.org/project/model-bakery/1.11.0/)
 
