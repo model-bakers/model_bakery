@@ -94,7 +94,9 @@ def seq(value, increment_by=1, start=None, suffix=None):
             else:
                 yield series_date
     else:
-        for n in itertools.count(start or increment_by, increment_by):
+        for n in itertools.count(
+            increment_by if start is None else start, increment_by
+        ):
             if suffix:
                 yield value + str(n) + suffix
             else:
