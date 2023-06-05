@@ -113,7 +113,14 @@ def gen_string(max_length: int) -> str:
     return str("".join(choice(string.ascii_letters) for _ in range(max_length)))
 
 
-gen_string.required = ["max_length"]  # type: ignore[attr-defined]
+def _gen_string_get_max_length(field: Field) -> Tuple[str, int]:
+    max_length = getattr(field, "max_length", None)
+    if max_length is None:
+        max_length = MAX_LENGTH
+    return "max_length", max_length
+
+
+gen_string.required = [_gen_string_get_max_length]  # type: ignore[attr-defined]
 
 
 def gen_slug(max_length: int) -> str:
