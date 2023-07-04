@@ -6,7 +6,7 @@ flake8==6.0.0
 isort==5.12.0
 mypy==1.4.1
 pillow==10.0.0
-pip-tools==6.13.0
+pip-tools==6.14.0
 pre-commit==3.3.3
 psycopg
 psycopg2-binary==2.9.6
