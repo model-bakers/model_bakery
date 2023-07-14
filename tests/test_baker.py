@@ -1061,3 +1061,8 @@ class TestBakerSeeded(TestCase):
         assert random_gen.gen_integer() == 55195912693
 
         random_gen.baker_random.setstate(old_state)
+        baker.Baker._global_seed = baker.Baker.SENTINEL
+
+    @pytest.mark.django_db
+    def test_unseeded(self):
+        assert baker.Baker._global_seed is baker.Baker.SENTINEL

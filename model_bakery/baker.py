@@ -316,10 +316,12 @@ def _custom_baker_class() -> Optional[Type]:
 
 
 class Baker(Generic[M]):
+    SENTINEL = object()
+
     attr_mapping: Dict[str, Any] = {}
     type_mapping: Dict = {}
 
-    _global_seed: Union[int, float, str, bytes, bytearray, None] = None
+    _global_seed: Union[int, float, str, bytes, bytearray, None] = SENTINEL
 
     # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
