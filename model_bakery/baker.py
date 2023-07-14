@@ -59,6 +59,10 @@ def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
 
+def seed(seed: Union[int, float, str, bytes, bytearray, None]) -> None:
+    Baker.seed(seed)
+
+
 @overload
 def make(
     _model: Union[str, Type[M]],
@@ -315,9 +319,16 @@ class Baker(Generic[M]):
     attr_mapping: Dict[str, Any] = {}
     type_mapping: Dict = {}
 
+    _global_seed: Union[int, float, str, bytes, bytearray, None] = None
+
     # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
+
+    @classmethod
+    def seed(cls, seed: Union[int, float, str, bytes, bytearray, None]) -> None:
+        random_gen.baker_random.seed(seed)
+        cls._global_seed = seed
 
     @classmethod
     def create(
