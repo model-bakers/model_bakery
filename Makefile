@@ -14,5 +14,6 @@ lint:
 	@isort .
 	@flake8 .
 	@pydocstyle .
+	@mypy model_bakery
 
 .PHONY: test release
