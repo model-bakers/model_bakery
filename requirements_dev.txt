@@ -2,7 +2,7 @@
 
 black==23.7.0
 click==8.1.6
-flake8==6.0.0
+flake8==6.1.0
 isort==5.12.0
 mypy==1.4.1
 pillow==10.0.0
