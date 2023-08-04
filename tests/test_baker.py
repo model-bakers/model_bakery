@@ -1049,3 +1049,42 @@ class TestCreateM2MWhenBulkCreate(TestCase):
             )
         c1, c2 = models.Classroom.objects.all()[:2]
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
+
+
+class TestCreateProfileWithFakerGenerator(TestCase):
+    @pytest.mark.django_db
+    def test_create_profile_with_email_generated_by_faker(self):
+        profile = baker.make(
+            models.Profile,
+            _use_faker_generator=True,
+        )
+        assert profile.email
+
+    @pytest.mark.django_db
+    def test_create_profile_with_username_generated_by_faker(self):
+        user = baker.make(
+            models.User,
+            _use_faker_generator=True,
+        )
+        another_user = baker.make(models.User)
+        assert user.username and len(another_user.username) > len(user.username)
+
+    @pytest.mark.django_db
+    def test_create_person_with_name_generated_by_faker(self):
+        person = baker.make(
+            models.Person,
+            _use_faker_generator=True,
+        )
+        assert len(person.name.split(" ")) == 2
+
+    @pytest.mark.django_db
+    def test_create_person_with_name_generated_by_faker_different_than_default(self):
+        person = baker.make(
+            models.Person,
+            _use_faker_generator=True,
+        )
+        another_person = baker.make(models.Person)
+        assert (
+            len(another_person.name.split(" ")) == 1
+            and another_person.name != person.name
+        )

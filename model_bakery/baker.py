@@ -43,6 +43,7 @@ from .exceptions import (
     ModelNotFound,
     RecipeIteratorEmpty,
 )
+from .faker_gen import faker_generator_mapping
 from .utils import seq  # NoQA: enable seq to be imported from baker
 from .utils import import_from_str
 
@@ -69,6 +70,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _use_faker_generator: Optional[bool] = False,
     **attrs: Any,
 ) -> M:
     ...
@@ -85,6 +87,7 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     _fill_optional: Union[List[str], bool] = False,
+    _use_faker_generator: Optional[bool] = False,
     **attrs: Any,
 ) -> List[M]:
     ...
@@ -100,17 +103,22 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     _fill_optional: Union[List[str], bool] = False,
+    _use_faker_generator: Optional[bool] = False,
     **attrs: Any,
 ):
     """Create a persisted instance from a given model its associated models.
 
-    It fill the fields with random values or you can specify which
+    It fills the fields with random values or you can specify which
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
     attrs.update({"_fill_optional": _fill_optional})
     baker: Baker = Baker.create(
-        _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
+        _model,
+        make_m2m=make_m2m,
+        create_files=_create_files,
+        _using=_using,
+        _use_faker_generator=_use_faker_generator,
     )
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
@@ -326,11 +334,16 @@ class Baker(Generic[M]):
         make_m2m: bool = False,
         create_files: bool = False,
         _using: str = "",
+        _use_faker_generator: Optional[bool] = False,
     ) -> "Baker[NewM]":
         """Create the baker class defined by the `BAKER_CUSTOM_CLASS` setting."""
         baker_class = _custom_baker_class() or cls
         return cast(Type[Baker[NewM]], baker_class)(
-            _model, make_m2m, create_files, _using=_using
+            _model,
+            make_m2m,
+            create_files,
+            _using=_using,
+            _use_faker_generator=_use_faker_generator,
         )
 
     def __init__(
@@ -339,6 +352,7 @@ class Baker(Generic[M]):
         make_m2m: bool = False,
         create_files: bool = False,
         _using: str = "",
+        _use_faker_generator: Optional[bool] = False,
     ) -> None:
         self.make_m2m = make_m2m
         self.create_files = create_files
@@ -348,6 +362,7 @@ class Baker(Generic[M]):
         self.rel_attrs: Dict[str, Any] = {}
         self.rel_fields: List[str] = []
         self._using = _using
+        self._use_faker_generator = _use_faker_generator
 
         if isinstance(_model, str):
             self.model = cast(Type[M], self.finder.get_model(_model))
@@ -370,6 +385,7 @@ class Baker(Generic[M]):
         _refresh_after_create: bool = False,
         _from_manager=None,
         _fill_optional: Union[List[str], bool] = False,
+        _use_faker_generator: Optional[bool] = False,
         **attrs: Any,
     ):
         """Create and persist an instance of the model associated with Baker instance."""
@@ -658,6 +674,11 @@ class Baker(Generic[M]):
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
         model.
         """
+        field_name = field.attname
+        if self._use_faker_generator and field_name in faker_generator_mapping:
+            generator = faker_generator_mapping.get(field_name)
+            return generator()
+
         is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
             self._remote_field(field).model, contenttypes.models.ContentType
         )

@@ -116,6 +116,29 @@ Additionally, if you want to your created instance to be returned respecting one
     movie = baker.make(Movie, title='Old Boys', _from_manager='availables')  # This will use the Movie.availables model manager
 
 
+Also passing ``_use_faker_generator=True`` will make ``baker`` to use `Faker <https://pypi.org/project/Faker/>`_ to generate values. ``baker`` will read the field name and then select a generator from there. Currently we only support the following fields, however this list will increase:
+
+- ``username``
+- ``email``
+- ``first_name``
+- ``last_name``
+- ``name``
+- ``fullname``
+- ``full_name``
+- ``ip``
+- ``ipv4``
+- ``ipv6``
+
+Examples:
+
+.. code-block:: python
+
+    profile = baker.make(
+        models.Profile,
+        _use_faker_generator=True,
+    )
+    print(profile.name)  # would print a more realistic fake email, for example: 'Erik Barnett'
+
 Save method custom parameters
 -----------------------------
 
