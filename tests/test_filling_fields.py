@@ -4,7 +4,6 @@ from decimal import Decimal
 from os.path import abspath
 from tempfile import gettempdir
 
-import django
 import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType

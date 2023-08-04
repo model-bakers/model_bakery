@@ -14,7 +14,7 @@ import warnings
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
-from random import choice, randint, random, uniform
+from random import Random
 from typing import Any, Callable, List, Optional, Tuple, Union
 from uuid import UUID
 
@@ -26,6 +26,8 @@ MAX_LENGTH = 300
 # Using sys.maxint here breaks a bunch of tests when running against a
 # Postgres database.
 MAX_INT = 100000000000
+
+baker_random = Random()
 
 
 def get_content_file(content: bytes, name: str) -> ContentFile:
@@ -57,7 +59,7 @@ def gen_from_list(a_list: Union[List[str], range]) -> Callable:
         >>>     attr_mapping = {'some_field': gen_from_list(['A', 'B', 'C'])}
 
     """
-    return lambda: choice(list(a_list))
+    return lambda: baker_random.choice(list(a_list))
 
 
 # -- DEFAULT GENERATORS --
@@ -75,16 +77,16 @@ def gen_from_choices(choices: List) -> Callable:
 
 
 def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
-    return randint(min_int, max_int)
+    return baker_random.randint(min_int, max_int)
 
 
 def gen_float() -> float:
-    return random() * gen_integer()
+    return baker_random.random() * gen_integer()
 
 
 def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
     def num_as_str(x: int) -> str:
-        return "".join([str(randint(0, 9)) for _ in range(x)])
+        return "".join([str(baker_random.randint(0, 9)) for _ in range(x)])
 
     if decimal_places:
         return Decimal(
@@ -110,7 +112,9 @@ def gen_time() -> time:
 
 
 def gen_string(max_length: int) -> str:
-    return str("".join(choice(string.ascii_letters) for _ in range(max_length)))
+    return str(
+        "".join(baker_random.choice(string.ascii_letters) for _ in range(max_length))
+    )
 
 
 def _gen_string_get_max_length(field: Field) -> Tuple[str, int]:
@@ -125,7 +129,7 @@ gen_string.required = [_gen_string_get_max_length]  # type: ignore[attr-defined]
 
 def gen_slug(max_length: int) -> str:
     valid_chars = string.ascii_letters + string.digits + "_-"
-    return str("".join(choice(valid_chars) for _ in range(max_length)))
+    return str("".join(baker_random.choice(valid_chars) for _ in range(max_length)))
 
 
 gen_slug.required = ["max_length"]  # type: ignore[attr-defined]
@@ -136,11 +140,11 @@ def gen_text() -> str:
 
 
 def gen_boolean() -> bool:
-    return choice((True, False))
+    return baker_random.choice((True, False))
 
 
 def gen_null_boolean():
-    return choice((True, False, None))
+    return baker_random.choice((True, False, None))
 
 
 def gen_url() -> str:
@@ -152,15 +156,15 @@ def gen_email() -> str:
 
 
 def gen_ipv6() -> str:
-    return ":".join(format(randint(1, 65535), "x") for _ in range(8))
+    return ":".join(format(baker_random.randint(1, 65535), "x") for _ in range(8))
 
 
 def gen_ipv4() -> str:
-    return ".".join(str(randint(1, 255)) for _ in range(4))
+    return ".".join(str(baker_random.randint(1, 255)) for _ in range(4))
 
 
 def gen_ipv46() -> str:
-    ip_gen = choice([gen_ipv4, gen_ipv6])
+    ip_gen = baker_random.choice([gen_ipv4, gen_ipv6])
     return ip_gen()
 
 
@@ -197,7 +201,7 @@ gen_ip.required = ["protocol", "default_validators"]  # type: ignore[attr-define
 
 
 def gen_byte_string(max_length: int = 16) -> bytes:
-    generator = (randint(0, 255) for x in range(max_length))
+    generator = (baker_random.randint(0, 255) for x in range(max_length))
     return bytes(generator)
 
 
@@ -212,7 +216,7 @@ def gen_content_type():
     from django.contrib.contenttypes.models import ContentType
 
     try:
-        return ContentType.objects.get_for_model(choice(apps.get_models()))
+        return ContentType.objects.get_for_model(baker_random.choice(apps.get_models()))
     except (AssertionError, RuntimeError):
         # AssertionError is raised by Django's test framework when db access is not available:
         # https://github.com/django/django/blob/stable/4.0.x/django/test/testcases.py#L150
@@ -276,7 +280,7 @@ gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 
 
 def gen_coord() -> float:
-    return uniform(0, 1)
+    return baker_random.uniform(0, 1)
 
 
 def gen_coords() -> str:

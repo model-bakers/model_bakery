@@ -1049,3 +1049,22 @@ class TestCreateM2MWhenBulkCreate(TestCase):
             )
         c1, c2 = models.Classroom.objects.all()[:2]
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
+
+
+class TestBakerSeeded:
+    @pytest.fixture()
+    def reset_seed(self):
+        old_state = random_gen.baker_random.getstate()
+        yield
+        random_gen.baker_random.setstate(old_state)
+        baker.Baker._global_seed = baker.Baker.SENTINEL
+
+    @pytest.mark.django_db
+    def test_seed(self, reset_seed):
+        baker.seed(1)
+        assert baker.Baker._global_seed == 1
+        assert random_gen.gen_integer() == 55195912693
+
+    @pytest.mark.django_db
+    def test_unseeded(self):
+        assert baker.Baker._global_seed is baker.Baker.SENTINEL
