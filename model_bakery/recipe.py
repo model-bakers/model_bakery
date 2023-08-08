@@ -34,7 +34,9 @@ class Recipe(Generic[M]):
         # _iterator_backups will hold values of the form (backup_iterator, usable_iterator).
         self._iterator_backups = {}  # type: Dict[str, Any]
 
-    def _mapping(self, _using: str, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
+    def _mapping(  # noqa: C901
+        self, _using: str, new_attrs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         _save_related = new_attrs.get("_save_related", True)
         _quantity = new_attrs.get("_quantity")
         if _quantity is None:
