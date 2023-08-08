@@ -11,9 +11,7 @@ release:
 
 lint:
 	@black .
-	@isort .
-	@flake8 .
-	@pydocstyle .
+	@ruff .
 	@mypy model_bakery
 
 .PHONY: test release
