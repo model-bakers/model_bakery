@@ -43,8 +43,10 @@ from .exceptions import (
     ModelNotFound,
     RecipeIteratorEmpty,
 )
-from .utils import seq  # NoQA: enable seq to be imported from baker
-from .utils import import_from_str
+from .utils import (
+    import_from_str,
+    seq,  # noqa: F401 - Enable seq to be imported from recipes
+)
 
 recipes = None
 
@@ -618,11 +620,9 @@ class Baker(Generic[M]):
                 # only gets called if the object doesn't have a pk and also doesn't hold fk
                 # pointers.
                 fks = any(
-                    [
-                        fk
-                        for fk in value._meta.fields
-                        if isinstance(fk, (ForeignKey, OneToOneField))
-                    ]
+                    fk
+                    for fk in value._meta.fields
+                    if isinstance(fk, (ForeignKey, OneToOneField))
                 )
                 if not value.pk and not fks:
                     value.save()
@@ -681,7 +681,7 @@ class Baker(Generic[M]):
             return field.default
         elif field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
-        elif getattr(field, "choices"):
+        elif field.choices:
             generator = random_gen.gen_from_choices(field.choices)
         elif is_content_type_fk:
             generator = self.type_mapping[contenttypes.models.ContentType]

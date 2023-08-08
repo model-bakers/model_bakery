@@ -3,13 +3,14 @@ import itertools
 from decimal import Decimal
 from unittest.mock import patch
 
-import pytest
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
+
+import pytest
 
 from model_bakery import baker, random_gen
 from model_bakery.baker import MAX_MANY_QUANTITY
@@ -98,7 +99,7 @@ class TestsBakerCreatesSimpleModel:
             try:
                 baker.make(models.ModelWithImpostorField)
             except TypeError:
-                assert False, "TypeError raised"
+                raise AssertionError("TypeError raised")
 
     def test_make_should_create_one_object(self):
         person = baker.make(models.Person)
@@ -324,7 +325,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         try:
             baker.make(models.Person, classroom_set=[baker.make(models.Classroom)])
         except TypeError:
-            assert False, "type error raised"
+            raise AssertionError("type error raised")
 
     def test_save_object_instances_when_handling_one_to_many_relations(self):
         owner = baker.make(models.Person)
@@ -547,7 +548,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
                 models.Person, dog_set=[baker.make(models.Dog), baker.make(models.Dog)]
             )
         except TypeError:
-            assert False, "type error raised"
+            raise AssertionError("type error raised")
 
         assert person.dog_set.count() == 2
 
@@ -596,7 +597,7 @@ class TestHandlingUnsupportedModels:
     def test_unsupported_model_raises_an_explanatory_exception(self):
         try:
             baker.make(models.UnsupportedModel)
-            assert False, "Should have raised a TypeError"
+            raise AssertionError("Should have raised a TypeError")
         except TypeError as e:
             assert "not supported" in repr(e)
             assert "field unsupported_field" in repr(e)

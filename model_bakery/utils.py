@@ -120,5 +120,6 @@ def _validate_sequence_parameters(value, increment_by, start, suffix) -> None:
 
         if start:
             warnings.warn(
-                "start parameter is ignored when using seq with date, time or datetime objects"
+                "start parameter is ignored when using seq with date, time or datetime objects",
+                stacklevel=1,
             )

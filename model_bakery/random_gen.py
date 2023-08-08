@@ -69,7 +69,7 @@ def gen_from_choices(choices: List) -> Callable:
     choice_list = []
     for value, label in choices:
         if isinstance(label, (list, tuple)):
-            for val, lbl in label:
+            for val, _lbl in label:
                 choice_list.append(val)
         else:
             choice_list.append(value)
@@ -222,7 +222,9 @@ def gen_content_type():
         # https://github.com/django/django/blob/stable/4.0.x/django/test/testcases.py#L150
         # RuntimeError is raised by pytest-django when db access is not available:
         # https://github.com/pytest-dev/pytest-django/blob/v4.5.2/pytest_django/plugin.py#L709
-        warnings.warn("Database access disabled, returning ContentType raw instance")
+        warnings.warn(
+            "Database access disabled, returning ContentType raw instance", stacklevel=1
+        )
         return ContentType()
 
 
