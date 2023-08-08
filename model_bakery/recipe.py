@@ -17,9 +17,9 @@ from django.db.models import Model
 from . import baker
 from ._types import M
 from .exceptions import RecipeNotFound
-from .utils import (  # NoQA: Enable seq to be imported from recipes
+from .utils import (
     get_calling_module,
-    seq,
+    seq,  # noqa: F401 - Enable seq to be imported from recipes
 )
 
 finder = baker.ModelFinder()
@@ -58,7 +58,7 @@ class Recipe(Generic[M]):
                 mapping[k] = self._iterator_backups[k][1]
             elif isinstance(v, RecipeForeignKey):
                 a = {}
-                for key, value in list(rel_fields_attrs.items()):
+                for key, _value in list(rel_fields_attrs.items()):
                     if key.startswith(f"{k}__"):
                         a[key] = rel_fields_attrs.pop(key)
                 recipe_attrs = baker.filter_rel_attrs(k, **a)

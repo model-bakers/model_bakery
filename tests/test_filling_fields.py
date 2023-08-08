@@ -4,7 +4,6 @@ from decimal import Decimal
 from os.path import abspath
 from tempfile import gettempdir
 
-import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import (
@@ -14,6 +13,8 @@ from django.core.validators import (
 )
 from django.db import connection
 from django.db.models import FileField, ImageField, fields
+
+import pytest
 
 from model_bakery import baker
 from model_bakery.gis import BAKER_GIS
@@ -32,8 +33,8 @@ try:
         CIEmailField,
         CITextField,
         HStoreField,
+        JSONField as PostgresJSONField,
     )
-    from django.contrib.postgres.fields import JSONField as PostgresJSONField
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
         DateRangeField,
@@ -73,7 +74,7 @@ class TestFillingFromChoice:
     def test_if_gender_is_populated_from_choices(self, person):
         from tests.generic.models import GENDER_CHOICES
 
-        assert person.gender in map(lambda x: x[0], GENDER_CHOICES)
+        assert person.gender in (x[0] for x in GENDER_CHOICES)
 
     def test_if_occupation_populated_from_choices(self, person):
         from tests.generic.models import OCCUPATION_CHOICES
@@ -356,7 +357,7 @@ class TestFillingCustomFields:
         generator_dict = {
             "tests.generic.fields.CustomFieldWithGenerator": generators.gen_value_string
         }
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
         assert "value" == obj.custom_value
 
@@ -370,7 +371,7 @@ class TestFillingCustomFields:
             "tests.generic.generators.gen_value_string"
         }
         # fmt: on
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
         assert "value" == obj.custom_value
 
@@ -379,7 +380,7 @@ class TestFillingCustomFields:
         generator_dict = {
             "tests.generic.fields.CustomForeignKey": "model_bakery.random_gen.gen_related"
         }
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )

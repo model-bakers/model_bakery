@@ -101,8 +101,11 @@ class Person(models.Model):
         pass
 
     try:
-        from django.contrib.postgres.fields import ArrayField, HStoreField
-        from django.contrib.postgres.fields import JSONField as PostgresJSONField
+        from django.contrib.postgres.fields import (
+            ArrayField,
+            HStoreField,
+            JSONField as PostgresJSONField,
+        )
         from django.contrib.postgres.fields.citext import (
             CICharField,
             CIEmailField,
@@ -226,9 +229,9 @@ class Classroom(models.Model):
 
 class ClassroomM2MRelated(models.Model):
     """
-    This model was created in order to reproduce the scenario described
-    at issue 248 that is: a model with a M2M field (Classroom) being also used
-    as a M2M field from another model (ClassroomM2MRelated)
+    Regression test for #248.
+
+    A model with an M2M field (Classroom) being also used as an M2M field from another model (ClassroomM2MRelated).
     """
 
     related_classrooms = models.ManyToManyField(Classroom)

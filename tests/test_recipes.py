@@ -4,8 +4,9 @@ from decimal import Decimal
 from random import choice  # noqa
 from unittest.mock import patch
 
-import pytest
 from django.utils.timezone import now
+
+import pytest
 
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
