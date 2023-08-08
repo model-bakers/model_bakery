@@ -26,7 +26,7 @@ make test
 make lint
 ```
 
-If you don't follow the step 4, your PR may fail due to `black`, `isort`, `flake8` or `pydocstyle` warnings.
+If you don't follow the step 4, your PR may fail due to `black` or `ruff` warnings.
 
 To run `postgresql` and `postgis` specific tests:
 

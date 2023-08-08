@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- [dev] Replaced `pycodestyle`, `pydocstyle`, `flake8` and `isort` with `ruff`
 
 ### Removed
 
