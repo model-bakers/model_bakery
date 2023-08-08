@@ -421,7 +421,7 @@ class Baker(Generic[M]):
             if f not in self.model._meta.related_objects
         ]
 
-    def _make(
+    def _make(  # noqa: C901
         self,
         commit=True,
         commit_related=True,
@@ -750,7 +750,7 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     return clean_dict
 
 
-def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
+def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:  # noqa: C901
     """
     Bulk create entries and all related FKs as well.
 
