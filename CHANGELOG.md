@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - [dev] Replaced `pycodestyle`, `pydocstyle`, `flake8` and `isort` with `ruff`
+- Small improvements to `recipe.py::_mapping`
 
 ### Removed
 
