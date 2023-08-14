@@ -51,7 +51,7 @@ from .utils import (
 
 if BAKER_CONTENTTYPES:
     from django.contrib.contenttypes import models as contenttypes_models
-    from django.contrib.contenttypes.fields import GenericRelation
+    from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 else:
     contenttypes_models = None
     GenericRelation = None
@@ -622,7 +622,7 @@ class Baker(Generic[M]):
 
         if field.name not in self.model_attrs:  # noqa: SIM102
             if field.name not in self.rel_fields and (
-                field.null and not field.fill_optional
+                not field.fill_optional and field.null
             ):
                 return True
 
@@ -702,12 +702,16 @@ class Baker(Generic[M]):
         model.
         """
         is_content_type_fk = False
+        is_generic_fk = False
         if BAKER_CONTENTTYPES:
             is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
                 self._remote_field(field).model, contenttypes_models.ContentType
             )
+            is_generic_fk = isinstance(field, GenericForeignKey)
+        if is_generic_fk:
+            generator = self.type_mapping[GenericForeignKey]
         # we only use default unless the field is overwritten in `self.rel_fields`
-        if field.has_default() and field.name not in self.rel_fields:
+        elif field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
                 return field.default()
             return field.default
