@@ -1,3 +1,4 @@
+import collections
 import itertools
 from typing import (
     Any,
@@ -44,7 +45,7 @@ class Recipe(Generic[M]):
             # do not generate values if field value is provided
             if k in new_attrs:
                 continue
-            elif baker.is_iterator(v):
+            elif isinstance(v, collections.abc.Iterator):
                 if isinstance(self._model, str):
                     m = finder.get_model(self._model)
                 else:
