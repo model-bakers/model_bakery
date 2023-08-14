@@ -604,7 +604,7 @@ class Baker(Generic[M]):
 
         if field.name not in self.model_attrs:
             if field.name not in self.rel_fields and (
-                field.null and not field.fill_optional
+                not field.fill_optional and field.null
             ):
                 return True
 
@@ -671,11 +671,16 @@ class Baker(Generic[M]):
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
         model.
         """
+        from django.contrib.contenttypes.fields import GenericForeignKey
+
         is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
             self._remote_field(field).model, contenttypes.models.ContentType
         )
+        is_generic_fk = isinstance(field, GenericForeignKey)
         # we only use default unless the field is overwritten in `self.rel_fields`
-        if field.has_default() and field.name not in self.rel_fields:
+        if is_generic_fk:
+            generator = self.type_mapping[contenttypes.models.ContentType]
+        elif field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
                 return field.default()
             return field.default
