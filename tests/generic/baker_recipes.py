@@ -111,7 +111,7 @@ movie_with_cast = Recipe(
     "generic.Movie", cast_members=related(cast_member, cast_member)
 )
 
-overrided_save = Recipe("generic.ModelWithOverridedSave")
+overwritten_save = Recipe("generic.ModelWithOverwrittenSave")
 
 with_save_kwargs = Recipe(
     "generic.ModelWithSaveKwargs", _save_kwargs={"breed": "updated_breed"}

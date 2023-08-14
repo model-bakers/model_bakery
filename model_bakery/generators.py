@@ -56,26 +56,26 @@ except ImportError:
     JSONField = None
 
 try:
-    # PostgreSQL-specific field (only available when psycopg2 is installed)
+    # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
     ArrayField = None
 
 try:
-    # Deprecated since Django 3.1
-    # PostgreSQL-specific field (only available when psycopg2 is installed)
+    # Deprecated since Django 3.1, removed in Django 4.0
+    # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import JSONField as PostgresJSONField
 except ImportError:
     PostgresJSONField = None
 
 try:
-    # PostgreSQL-specific field (only available when psycopg2 is installed)
+    # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import HStoreField
 except ImportError:
     HStoreField = None
 
 try:
-    # PostgreSQL-specific fields (only available when psycopg2 is installed)
+    # PostgreSQL-specific fields (only available when psycopg is installed)
     from django.contrib.postgres.fields.citext import (
         CICharField,
         CIEmailField,
@@ -87,14 +87,14 @@ except ImportError:
     CITextField = None
 
 try:
-    # Deprecated since Django 3.1
+    # Deprecated since Django 3.1, removed in Django 4.0
     from django.db.models import NullBooleanField
 except ImportError:
     NullBooleanField = None
 
 
 try:
-    # PostgreSQL-specific fields (only available when psycopg2 is installed)
+    # PostgreSQL-specific fields (only available when psycopg is installed)
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
         DateRangeField,
@@ -108,12 +108,6 @@ except ImportError:
     DateTimeRangeField = None
     DecimalRangeField = None
     IntegerRangeField = None
-
-try:
-    # Deprecated since Django 2.2
-    from django.contrib.postgres.fields.ranges import FloatRangeField
-except ImportError:
-    FloatRangeField = None
 
 
 def _make_integer_gen_by_range(field_type: Any) -> Callable:
@@ -184,8 +178,6 @@ if IntegerRangeField:
     default_mapping[IntegerRangeField] = random_gen.gen_pg_numbers_range(int)
 if BigIntegerRangeField:
     default_mapping[BigIntegerRangeField] = random_gen.gen_pg_numbers_range(int)
-if FloatRangeField:
-    default_mapping[FloatRangeField] = random_gen.gen_pg_numbers_range(float)
 if DateRangeField:
     default_mapping[DateRangeField] = random_gen.gen_date_range
 if DateTimeRangeField:

@@ -3,13 +3,14 @@ import itertools
 from decimal import Decimal
 from unittest.mock import patch
 
-import pytest
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
+
+import pytest
 
 from model_bakery import baker, random_gen
 from model_bakery.baker import MAX_MANY_QUANTITY
@@ -98,7 +99,7 @@ class TestsBakerCreatesSimpleModel:
             try:
                 baker.make(models.ModelWithImpostorField)
             except TypeError:
-                assert False, "TypeError raised"
+                raise AssertionError("TypeError raised")
 
     def test_make_should_create_one_object(self):
         person = baker.make(models.Person)
@@ -324,7 +325,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         try:
             baker.make(models.Person, classroom_set=[baker.make(models.Classroom)])
         except TypeError:
-            assert False, "type error raised"
+            raise AssertionError("type error raised")
 
     def test_save_object_instances_when_handling_one_to_many_relations(self):
         owner = baker.make(models.Person)
@@ -334,7 +335,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
             _quantity=2,
         )
 
-        assert 0 == models.Dog.objects.count()  # ensure there're no dogs in our db
+        assert 0 == models.Dog.objects.count()  # ensure there are no dogs in our db
         home = baker.make(
             models.Home,
             owner=owner,
@@ -494,7 +495,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert kid.enjoy_jards_macale is True
         assert kid.name == "Mike"
 
-    def test_creating_person_from_factory_using_paramters(self):
+    def test_creating_person_from_factory_using_parameters(self):
         person_baker_ = baker.Baker(models.Person)
         person = person_baker_.make(
             enjoy_jards_macale=False, age=20, gender="M", name="John"
@@ -541,13 +542,13 @@ class TestBakerCreatesAssociatedModels(TestCase):
         lonely_person = baker.make(models.LonelyPerson, only_friend__name="Bob")
         assert "Bob" == lonely_person.only_friend.name
 
-    def test_allow_create_fkey_related_model(self):
+    def test_allow_create_fk_related_model(self):
         try:
             person = baker.make(
                 models.Person, dog_set=[baker.make(models.Dog), baker.make(models.Dog)]
             )
         except TypeError:
-            assert False, "type error raised"
+            raise AssertionError("type error raised")
 
         assert person.dog_set.count() == 2
 
@@ -596,7 +597,7 @@ class TestHandlingUnsupportedModels:
     def test_unsupported_model_raises_an_explanatory_exception(self):
         try:
             baker.make(models.UnsupportedModel)
-            assert False, "Should have raised a TypeError"
+            raise AssertionError("Should have raised a TypeError")
         except TypeError as e:
             assert "not supported" in repr(e)
             assert "field unsupported_field" in repr(e)
@@ -691,7 +692,7 @@ class TestFillBlanksTestCase:
         )
         assert len(dummy.blank_char_field) == 50
 
-    def test_fill_field_optinal_when_preparing(self):
+    def test_fill_field_optional_when_preparing(self):
         dummy = baker.prepare(
             models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
         )
@@ -800,7 +801,7 @@ class TestBakerHandlesModelWithList:
 
 
 @pytest.mark.django_db
-class TestBakerGeneratesIPAdresses:
+class TestBakerGeneratesIPAddresses:
     def test_create_model_with_valid_ips(self):
         form_data = {
             "ipv4_field": random_gen.gen_ipv4(),
@@ -815,11 +816,11 @@ class TestBakerAllowsSaveParameters(TestCase):
 
     def test_allows_save_kwargs_on_baker_make(self):
         owner = baker.make(models.Person)
-        dog = baker.make(models.ModelWithOverridedSave, _save_kwargs={"owner": owner})
+        dog = baker.make(models.ModelWithOverwrittenSave, _save_kwargs={"owner": owner})
         assert owner == dog.owner
 
         dog1, dog2 = baker.make(
-            models.ModelWithOverridedSave, _save_kwargs={"owner": owner}, _quantity=2
+            models.ModelWithOverwrittenSave, _save_kwargs={"owner": owner}, _quantity=2
         )
         assert dog1.owner == owner
         assert dog2.owner == owner
@@ -1049,3 +1050,22 @@ class TestCreateM2MWhenBulkCreate(TestCase):
             )
         c1, c2 = models.Classroom.objects.all()[:2]
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
+
+
+class TestBakerSeeded:
+    @pytest.fixture()
+    def reset_seed(self):
+        old_state = random_gen.baker_random.getstate()
+        yield
+        random_gen.baker_random.setstate(old_state)
+        baker.Baker._global_seed = baker.Baker.SENTINEL
+
+    @pytest.mark.django_db
+    def test_seed(self, reset_seed):
+        baker.seed(1)
+        assert baker.Baker._global_seed == 1
+        assert random_gen.gen_integer() == 55195912693
+
+    @pytest.mark.django_db
+    def test_unseeded(self):
+        assert baker.Baker._global_seed is baker.Baker.SENTINEL

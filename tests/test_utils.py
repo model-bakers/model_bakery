@@ -116,6 +116,12 @@ class TestSeq:
         assert next(sequence) == pytest.approx(4.83)
         assert next(sequence) == pytest.approx(6.63)
 
+    def test_numbers_start_from_zero(self):
+        sequence = seq(0, start=0)
+        assert next(sequence) == 0
+        assert next(sequence) == 1
+        assert next(sequence) == 2
+
     def test_numbers_with_suffix(self):
         with pytest.raises(TypeError) as exc:
             next(seq(1, suffix="iamnotanumber"))

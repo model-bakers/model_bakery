@@ -1,11 +1,12 @@
-#######################################
-# TESTING PURPOSE ONLY MODELS!!       #
-# DO NOT ADD THE APP TO INSTALLED_APPS#
-#######################################
+########################################
+# TESTING PURPOSE ONLY MODELS!!        #
+# DO NOT ADD THE APP TO INSTALLED_APPS #
+########################################
 import datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
+import django
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -23,7 +24,7 @@ from .fields import (
     FakeListField,
 )
 
-# check whether or not PIL is installed
+# check whether PIL is installed
 try:
     from PIL import ImageFile as PilImageFile  # NoQA
 except ImportError:
@@ -100,8 +101,11 @@ class Person(models.Model):
         pass
 
     try:
-        from django.contrib.postgres.fields import ArrayField, HStoreField
-        from django.contrib.postgres.fields import JSONField as PostgresJSONField
+        from django.contrib.postgres.fields import (
+            ArrayField,
+            HStoreField,
+            JSONField as PostgresJSONField,
+        )
         from django.contrib.postgres.fields.citext import (
             CICharField,
             CIEmailField,
@@ -111,10 +115,13 @@ class Person(models.Model):
             BigIntegerRangeField,
             DateRangeField,
             DateTimeRangeField,
+            DecimalRangeField,
             IntegerRangeField,
         )
 
         if settings.USING_POSTGRES:
+            if django.VERSION >= (4, 2):
+                long_name = models.CharField()
             acquaintances = ArrayField(models.IntegerField())
             postgres_data = PostgresJSONField()
             hstore_data = HStoreField()
@@ -125,26 +132,9 @@ class Person(models.Model):
             bigint_range = BigIntegerRangeField()
             date_range = DateRangeField()
             datetime_range = DateTimeRangeField()
-    except ImportError:
-        # Skip PostgreSQL-related fields
-        pass
-
-    try:
-        from django.contrib.postgres.fields.ranges import FloatRangeField
-
-        if settings.USING_POSTGRES:
-            float_range = FloatRangeField()
-    except ImportError:
-        # Django version greater or equal than 3.1
-        pass
-
-    try:
-        from django.contrib.postgres.fields.ranges import DecimalRangeField
-
-        if settings.USING_POSTGRES:
             decimal_range = DecimalRangeField()
     except ImportError:
-        # Django version lower than 2.2
+        # Skip PostgreSQL-related fields
         pass
 
     if BAKER_GIS:
@@ -220,7 +210,7 @@ class RelatedNamesWithEmptyDefaultsModel(models.Model):
     )
 
 
-class ModelWithOverridedSave(Dog):
+class ModelWithOverwrittenSave(Dog):
     def save(self, *args, **kwargs):
         self.owner = kwargs.pop("owner")
         return super().save(*args, **kwargs)
@@ -239,9 +229,9 @@ class Classroom(models.Model):
 
 class ClassroomM2MRelated(models.Model):
     """
-    This model was created in order to reproduce the scenario described
-    at issue 248 that is: a model with a M2M field (Classroom) being also used
-    as a M2M field from another model (ClassroomM2MRelated)
+    Regression test for #248.
+
+    A model with an M2M field (Classroom) being also used as an M2M field from another model (ClassroomM2MRelated).
     """
 
     related_classrooms = models.ManyToManyField(Classroom)
@@ -351,6 +341,7 @@ else:
     # doesn't matter, won't be using
     class DummyImageFieldModel(models.Model):
         pass
+
 
 class NestedFileFieldModel(models.Model):
     file = models.ForeignKey(DummyFileFieldModel, on_delete=models.CASCADE)

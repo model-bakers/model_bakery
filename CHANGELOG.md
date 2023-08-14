@@ -10,16 +10,70 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- [dev] Switch to Python 3.11 release in CI [#357](https://github.com/model-bakers/model_bakery/pull/357)
-- [dev] Unify and simplify tox config with tox-py
-- [dev] `pre-commit autoupdate && pre-commit run --all-files`
-- [dev] Run `pyupgrade` with Python 3.7 as a base
-- [dev] Convert `format` and some string interpolations to `fstring`
+- [dev] Replaced `pycodestyle`, `pydocstyle`, `flake8` and `isort` with `ruff`
+- Small improvements to `recipe.py::_mapping`
+- Improvements to `baker.py::bulk_create`
+- Drop `baker.py::is_iterator`
+- Drop Python 3.7 support (reached end of life)
+- [dev] Drop tox in favor of using GitHub Actions matrix
 - forward "_create_files" flag to child generators for relational fields
 
 ### Removed
 
+## [1.13.0](https://pypi.org/project/model-bakery/1.13.0/)
+
+### Added
+- Add support for global seeding to baker random generation
+
+## [1.12.0](https://pypi.org/project/model-bakery/1.12.0/)
+
+### Added
+- Add support for CharField with max_length=None
+
+### Changed
+- Fix utils.seq with start=0
+
+## [1.11.0](https://pypi.org/project/model-bakery/1.11.0/)
+
+### Added
+- Add psycopg3 support for Django 4.2
+
+## [1.10.3](https://pypi.org/project/model-bakery/1.10.3/)
+
+### Changed
+- Enforce Python 3.7 as a minimum version in project metadata
+
+### Removed
+- dropped support for `FloatRangeField` as it was removed in Django 3.1
+- [dev] Temporary drop Django 4.2 to package classifiers (waiting for build backend support)
+
+## [1.10.2](https://pypi.org/project/model-bakery/1.10.2/)
+
+### Changed
+- [dev] Test Python 3.11 with Django 4.2
+- [dev] Add Django 4.2 to package classifiers
+
+## [1.10.1](https://pypi.org/project/model-bakery/1.10.1/)
+
+### Changed
+- [dev] Fix GitHub Action for publishing to PyPI
+
+## [1.10.0](https://pypi.org/project/model-bakery/1.10.0/)
+
+### Added
+- Django 4.2 support
+
+### Changed
+- [dev] Switch to Python 3.11 release in CI
+- [dev] Unify and simplify tox config with tox-py
+- [dev] `pre-commit autoupdate && pre-commit run --all-files`
+- [dev] Run `pyupgrade` with Python 3.7 as a base
+- [dev] PEP 621: Migrate from setup.py and setup.cfg to pyproject.toml
+- [dev] Convert `format` and some string interpolations to `fstring`
+
 ## [1.9.0](https://pypi.org/project/model-bakery/1.9.0/)
+
+### Changed
 - Fixed a bug with `seq` being passed a tz-aware start value [PR #353](https://github.com/model-bakers/model_bakery/pull/353)
 - Create m2m when using `_bulk_create=True` [PR #354](https://github.com/model-bakers/model_bakery/pull/354)
 - [dev] Use official postgis docker image in CI [PR #355](https://github.com/model-bakers/model_bakery/pull/355)

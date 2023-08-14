@@ -1,3 +1,4 @@
+import collections
 from os.path import dirname, join
 from typing import (
     Any,
@@ -43,8 +44,10 @@ from .exceptions import (
     ModelNotFound,
     RecipeIteratorEmpty,
 )
-from .utils import seq  # NoQA: enable seq to be imported from baker
-from .utils import import_from_str
+from .utils import (
+    import_from_str,
+    seq,  # noqa: F401 - Enable seq to be imported from recipes
+)
 
 recipes = None
 
@@ -57,6 +60,10 @@ MAX_MANY_QUANTITY = 5
 
 def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
+
+
+def seed(seed: Union[int, float, str, bytes, bytearray, None]) -> None:
+    Baker.seed(seed)
 
 
 @overload
@@ -104,7 +111,7 @@ def make(
 ):
     """Create a persisted instance from a given model its associated models.
 
-    It fill the fields with random values or you can specify which
+    Baker fills the fields with random values, or you can specify which
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
@@ -165,7 +172,7 @@ def prepare(
 ):
     """Create but do not persist an instance from a given model.
 
-    It fill the fields with random values or you can specify which
+    Baker fills the fields with random values, or you can specify which
     fields you want to define its values by yourself.
     """
     attrs.update({"_fill_optional": _fill_optional})
@@ -277,10 +284,7 @@ class ModelFinder:
 
 
 def is_iterator(value: Any) -> bool:
-    if not hasattr(value, "__iter__"):
-        return False
-
-    return hasattr(value, "__next__")
+    return isinstance(value, collections.abc.Iterator)
 
 
 def _custom_baker_class() -> Optional[Type]:
@@ -312,12 +316,21 @@ def _custom_baker_class() -> Optional[Type]:
 
 
 class Baker(Generic[M]):
+    SENTINEL = object()
+
     attr_mapping: Dict[str, Any] = {}
     type_mapping: Dict = {}
+
+    _global_seed: Union[object, int, float, str, bytes, bytearray, None] = SENTINEL
 
     # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
+
+    @classmethod
+    def seed(cls, seed: Union[int, float, str, bytes, bytearray, None]) -> None:
+        random_gen.baker_random.seed(seed)
+        cls._global_seed = seed
 
     @classmethod
     def create(
@@ -406,7 +419,7 @@ class Baker(Generic[M]):
             if f not in self.model._meta.related_objects
         ]
 
-    def _make(
+    def _make(  # noqa: C901
         self,
         commit=True,
         commit_related=True,
@@ -537,7 +550,9 @@ class Baker(Generic[M]):
                     f"related to model {self.model.__name__}"
                 )
 
-        self.iterator_attrs = {k: v for k, v in attrs.items() if is_iterator(v)}
+        self.iterator_attrs = {
+            k: v for k, v in attrs.items() if isinstance(v, collections.abc.Iterator)
+        }
         self.model_attrs = {k: v for k, v in attrs.items() if not is_rel_field(k)}
         self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
         self.rel_fields = [
@@ -605,11 +620,9 @@ class Baker(Generic[M]):
                 # only gets called if the object doesn't have a pk and also doesn't hold fk
                 # pointers.
                 fks = any(
-                    [
-                        fk
-                        for fk in value._meta.fields
-                        if isinstance(fk, (ForeignKey, OneToOneField))
-                    ]
+                    fk
+                    for fk in value._meta.fields
+                    if isinstance(fk, (ForeignKey, OneToOneField))
                 )
                 if not value.pk and not fks:
                     value.save()
@@ -644,7 +657,7 @@ class Baker(Generic[M]):
     ) -> Union[OneToOneRel, ManyToOneRel]:
         return field.remote_field
 
-    def generate_value(self, field: Field, commit: bool = True) -> Any:
+    def generate_value(self, field: Field, commit: bool = True) -> Any:  # noqa: C901
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
@@ -668,7 +681,7 @@ class Baker(Generic[M]):
             return field.default
         elif field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
-        elif getattr(field, "choices"):
+        elif field.choices:
             generator = random_gen.gen_from_choices(field.choices)
         elif is_content_type_fk:
             generator = self.type_mapping[contenttypes.models.ContentType]
@@ -689,7 +702,10 @@ class Baker(Generic[M]):
         if field.name in self.rel_fields:
             generator_attrs.update(filter_rel_attrs(field.name, **self.rel_attrs))
 
-        if field.__class__ in (ForeignKey, OneToOneField, ManyToManyField) and not is_content_type_fk:
+        if (
+            field.__class__ in (ForeignKey, OneToOneField, ManyToManyField)
+            and not is_content_type_fk
+        ):
             # create files also on related models if required
             generator_attrs["_create_files"] = self.create_files
 
@@ -708,24 +724,22 @@ def get_required_values(
     required value is a string, simply fetch the value from the field
     and return.
     """
-    # FIXME: avoid abbreviations
-    rt = {}  # type: Dict[str, Any]
+    required_values = {}  # type: Dict[str, Any]
     if hasattr(generator, "required"):
         for item in generator.required:  # type: ignore[attr-defined]
-
             if callable(item):  # baker can deal with the nasty hacking too!
                 key, value = item(field)
-                rt[key] = value
+                required_values[key] = value
 
             elif isinstance(item, str):
-                rt[item] = getattr(field, item)
+                required_values[item] = getattr(field, item)
 
             else:
                 raise ValueError(
                     f"Required value '{item}' is of wrong type. Don't make baker sad."
                 )
 
-    return rt
+    return required_values
 
 
 def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
@@ -742,6 +756,28 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     return clean_dict
 
 
+def _save_related_objs(model, objects, _using=None) -> None:
+    """Recursively save all related foreign keys for each entry."""
+    _save_kwargs = {"using": _using} if _using else {}
+
+    fk_fields = [
+        f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
+    ]
+
+    for fk in fk_fields:
+        fk_objects = []
+        for obj in objects:
+            fk_obj = getattr(obj, fk.name, None)
+            if fk_obj and not fk_obj.pk:
+                fk_objects.append(fk_obj)
+
+        if fk_objects:
+            _save_related_objs(fk.related_model, fk_objects)
+            for i, fk_obj in enumerate(fk_objects):
+                fk_obj.save(**_save_kwargs)
+                setattr(objects[i], fk.name, fk_obj)
+
+
 def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     """
     Bulk create entries and all related FKs as well.
@@ -749,39 +785,19 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     Important: there's no way to avoid save calls since Django does
     not return the created objects after a bulk_insert call.
     """
-    _save_kwargs = {}
-    if baker._using:
-        _save_kwargs = {"using": baker._using}
-
-    def _save_related_objs(model, objects) -> None:
-        fk_fields = [
-            f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
-        ]
-
-        for fk in fk_fields:
-            fk_objects = []
-            for obj in objects:
-                fk_obj = getattr(obj, fk.name, None)
-                if fk_obj and not fk_obj.pk:
-                    fk_objects.append(fk_obj)
-
-            if fk_objects:
-                _save_related_objs(fk.related_model, fk_objects)
-                for i, fk_obj in enumerate(fk_objects):
-                    fk_obj.save(**_save_kwargs)
-                    setattr(objects[i], fk.name, fk_obj)
-
+    # Create a list of entries by calling the prepare method of the Baker instance
+    # quantity number of times, passing in the additional keyword arguments
     entries = [
         baker.prepare(
             **kwargs,
         )
         for _ in range(quantity)
     ]
-    _save_related_objs(baker.model, entries)
 
+    _save_related_objs(baker.model, entries, _using=baker._using)
+
+    # Use the desired database to create the entries
     if baker._using:
-        # Try to use the desired DB and let Django fail if spanning
-        # relationships without the proper router setup
         manager = baker.model._base_manager.using(baker._using)
     else:
         manager = baker.model._base_manager

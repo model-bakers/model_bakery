@@ -4,7 +4,6 @@ from decimal import Decimal
 from os.path import abspath
 from tempfile import gettempdir
 
-import pytest
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import (
@@ -14,6 +13,8 @@ from django.core.validators import (
 )
 from django.db import connection
 from django.db.models import FileField, ImageField, fields
+
+import pytest
 
 from model_bakery import baker
 from model_bakery.gis import BAKER_GIS
@@ -32,12 +33,13 @@ try:
         CIEmailField,
         CITextField,
         HStoreField,
+        JSONField as PostgresJSONField,
     )
-    from django.contrib.postgres.fields import JSONField as PostgresJSONField
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
         DateRangeField,
         DateTimeRangeField,
+        DecimalRangeField,
         IntegerRangeField,
     )
 except ImportError:
@@ -51,14 +53,6 @@ except ImportError:
     BigIntegerRangeField = None
     DateRangeField = None
     DateTimeRangeField = None
-
-try:
-    from django.contrib.postgres.fields.ranges import FloatRangeField
-except ImportError:
-    FloatRangeField = None
-try:
-    from django.contrib.postgres.fields.ranges import DecimalRangeField
-except ImportError:
     DecimalRangeField = None
 
 
@@ -80,7 +74,7 @@ class TestFillingFromChoice:
     def test_if_gender_is_populated_from_choices(self, person):
         from tests.generic.models import GENDER_CHOICES
 
-        assert person.gender in map(lambda x: x[0], GENDER_CHOICES)
+        assert person.gender in (x[0] for x in GENDER_CHOICES)
 
     def test_if_occupation_populated_from_choices(self, person):
         from tests.generic.models import OCCUPATION_CHOICES
@@ -350,7 +344,7 @@ class TestsFillingFileField:
         with pytest.raises(ValueError):
             # Django raises ValueError if file does not exist
             assert dummy.file_field.path
-    
+
     def test_filling_nested_file_fields(self):
         dummy = baker.make(models.NestedFileFieldModel, _create_files=True)
 
@@ -360,7 +354,7 @@ class TestsFillingFileField:
         if dummy.image.image_field:
             assert dummy.image.image_field.path
             dummy.image.image_field.delete()
-        
+
         dummy.delete()
 
     def test_does_not_fill_nested_file_fields_unflagged(self):
@@ -372,7 +366,7 @@ class TestsFillingFileField:
         if dummy.image.image_field:
             with pytest.raises(ValueError):
                 assert dummy.image.image_field.path
-        
+
         dummy.delete()
 
 
@@ -388,7 +382,7 @@ class TestFillingCustomFields:
         generator_dict = {
             "tests.generic.fields.CustomFieldWithGenerator": generators.gen_value_string
         }
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
         assert "value" == obj.custom_value
 
@@ -402,7 +396,7 @@ class TestFillingCustomFields:
             "tests.generic.generators.gen_value_string"
         }
         # fmt: on
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
         assert "value" == obj.custom_value
 
@@ -411,7 +405,7 @@ class TestFillingCustomFields:
         generator_dict = {
             "tests.generic.fields.CustomForeignKey": "model_bakery.random_gen.gen_related"
         }
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )
@@ -503,51 +497,49 @@ class TestCIStringFieldsFilling:
         assert isinstance(person.ci_text, str)
 
     def test_filling_decimal_range_field(self, person):
-        from psycopg2._range import NumericRange
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
 
         decimal_range_field = models.Person._meta.get_field("decimal_range")
         assert isinstance(decimal_range_field, DecimalRangeField)
-        assert isinstance(person.decimal_range, NumericRange)
+        assert isinstance(person.decimal_range, Range)
         assert isinstance(person.decimal_range.lower, Decimal)
         assert isinstance(person.decimal_range.upper, Decimal)
         assert person.decimal_range.lower < person.decimal_range.upper
 
     def test_filling_integer_range_field(self, person):
-        from psycopg2._range import NumericRange
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
 
         int_range_field = models.Person._meta.get_field("int_range")
         assert isinstance(int_range_field, IntegerRangeField)
-        assert isinstance(person.int_range, NumericRange)
+        assert isinstance(person.int_range, Range)
         assert isinstance(person.int_range.lower, int)
         assert isinstance(person.int_range.upper, int)
         assert person.int_range.lower < person.int_range.upper
 
     def test_filling_integer_range_field_for_big_int(self, person):
-        from psycopg2._range import NumericRange
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
 
         bigint_range_field = models.Person._meta.get_field("bigint_range")
         assert isinstance(bigint_range_field, BigIntegerRangeField)
-        assert isinstance(person.bigint_range, NumericRange)
+        assert isinstance(person.bigint_range, Range)
         assert isinstance(person.bigint_range.lower, int)
         assert isinstance(person.bigint_range.upper, int)
         assert person.bigint_range.lower < person.bigint_range.upper
 
-    @pytest.mark.skipif(
-        FloatRangeField is None,
-        reason="FloatRangeField is deprecated since Django 2.2",
-    )
-    def test_filling_float_range_field(self, person):
-        from psycopg2._range import NumericRange
-
-        float_range_field = models.Person._meta.get_field("float_range")
-        assert isinstance(float_range_field, FloatRangeField)
-        assert isinstance(person.float_range, NumericRange)
-        assert isinstance(person.float_range.lower, float)
-        assert isinstance(person.float_range.upper, float)
-        assert person.float_range.lower < person.float_range.upper
-
     def test_filling_date_range_field(self, person):
-        from psycopg2.extras import DateRange
+        try:
+            from psycopg.types.range import DateRange
+        except ImportError:
+            from psycopg2.extras import DateRange
 
         date_range_field = models.Person._meta.get_field("date_range")
         assert isinstance(date_range_field, DateRangeField)
@@ -557,11 +549,14 @@ class TestCIStringFieldsFilling:
         assert person.date_range.lower < person.date_range.upper
 
     def test_filling_datetime_range_field(self, person):
-        from psycopg2.extras import DateTimeTZRange
+        try:
+            from psycopg.types.range import TimestamptzRange
+        except ImportError:
+            from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
         datetime_range_field = models.Person._meta.get_field("datetime_range")
         assert isinstance(datetime_range_field, DateTimeRangeField)
-        assert isinstance(person.datetime_range, DateTimeTZRange)
+        assert isinstance(person.datetime_range, TimestamptzRange)
         assert isinstance(person.datetime_range.lower, datetime)
         assert isinstance(person.datetime_range.upper, datetime)
         assert person.datetime_range.lower < person.datetime_range.upper
@@ -610,6 +605,7 @@ class TestGisFieldsFilling:
 
     def test_fill_GeometryCollectionField_valid(self, person):
         self.assertGeomValid(person.geom_collection)
+
 
 if __name__ == "__main__":
     pytest.main("tests/test_filling_fields.py")

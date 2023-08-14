@@ -1,3 +1,4 @@
+import collections
 import itertools
 from typing import (
     Any,
@@ -17,9 +18,9 @@ from django.db.models import Model
 from . import baker
 from ._types import M
 from .exceptions import RecipeNotFound
-from .utils import (  # NoQA: Enable seq to be imported from recipes
+from .utils import (
     get_calling_module,
-    seq,
+    seq,  # noqa: F401 - Enable seq to be imported from recipes
 )
 
 finder = baker.ModelFinder()
@@ -36,17 +37,15 @@ class Recipe(Generic[M]):
 
     def _mapping(self, _using: str, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
         _save_related = new_attrs.get("_save_related", True)
-        _quantity = new_attrs.get("_quantity")
-        if _quantity is None:
-            _quantity = 1
+        _quantity = new_attrs.get("_quantity", 1)
         rel_fields_attrs = {k: v for k, v in new_attrs.items() if "__" in k}
         new_attrs = {k: v for k, v in new_attrs.items() if "__" not in k}
         mapping = self.attr_mapping.copy()
         for k, v in self.attr_mapping.items():
             # do not generate values if field value is provided
-            if new_attrs.get(k):
+            if k in new_attrs:
                 continue
-            elif baker.is_iterator(v):
+            elif isinstance(v, collections.abc.Iterator):
                 if isinstance(self._model, str):
                     m = finder.get_model(self._model)
                 else:
@@ -57,24 +56,20 @@ class Recipe(Generic[M]):
                     )
                 mapping[k] = self._iterator_backups[k][1]
             elif isinstance(v, RecipeForeignKey):
-                a = {}
-                for key, value in list(rel_fields_attrs.items()):
-                    if key.startswith(f"{k}__"):
-                        a[key] = rel_fields_attrs.pop(key)
-                recipe_attrs = baker.filter_rel_attrs(k, **a)
+                rel_attrs = baker.filter_rel_attrs(k, **rel_fields_attrs)
                 if _save_related:
                     # Create a unique foreign key for each quantity if one_to_one required
                     if v.one_to_one is True:
                         rel_gen = [
-                            v.recipe.make(_using=_using, **recipe_attrs)
+                            v.recipe.make(_using=_using, **rel_attrs)
                             for _ in range(_quantity)
                         ]
                         mapping[k] = itertools.cycle(rel_gen)
                     # Otherwise create shared foreign key for each quantity
                     else:
-                        mapping[k] = v.recipe.make(_using=_using, **recipe_attrs)
+                        mapping[k] = v.recipe.make(_using=_using, **rel_attrs)
                 else:
-                    mapping[k] = v.recipe.prepare(_using=_using, **recipe_attrs)
+                    mapping[k] = v.recipe.prepare(_using=_using, **rel_attrs)
             elif isinstance(v, related):
                 mapping[k] = v.make()
         mapping.update(new_attrs)
