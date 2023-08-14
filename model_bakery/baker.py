@@ -750,46 +750,48 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     return clean_dict
 
 
-def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:  # noqa: C901
+def _save_related_objs(model, objects, _using=None) -> None:
+    """Recursively save all related foreign keys for each entry."""
+    _save_kwargs = {"using": _using} if _using else {}
+
+    fk_fields = [
+        f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
+    ]
+
+    for fk in fk_fields:
+        fk_objects = []
+        for obj in objects:
+            fk_obj = getattr(obj, fk.name, None)
+            if fk_obj and not fk_obj.pk:
+                fk_objects.append(fk_obj)
+
+        if fk_objects:
+            _save_related_objs(fk.related_model, fk_objects)
+            for i, fk_obj in enumerate(fk_objects):
+                fk_obj.save(**_save_kwargs)
+                setattr(objects[i], fk.name, fk_obj)
+
+
+def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     """
     Bulk create entries and all related FKs as well.
 
     Important: there's no way to avoid save calls since Django does
     not return the created objects after a bulk_insert call.
     """
-    _save_kwargs = {}
-    if baker._using:
-        _save_kwargs = {"using": baker._using}
-
-    def _save_related_objs(model, objects) -> None:
-        fk_fields = [
-            f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
-        ]
-
-        for fk in fk_fields:
-            fk_objects = []
-            for obj in objects:
-                fk_obj = getattr(obj, fk.name, None)
-                if fk_obj and not fk_obj.pk:
-                    fk_objects.append(fk_obj)
-
-            if fk_objects:
-                _save_related_objs(fk.related_model, fk_objects)
-                for i, fk_obj in enumerate(fk_objects):
-                    fk_obj.save(**_save_kwargs)
-                    setattr(objects[i], fk.name, fk_obj)
-
+    # Create a list of entries by calling the prepare method of the Baker instance
+    # quantity number of times, passing in the additional keyword arguments
     entries = [
         baker.prepare(
             **kwargs,
         )
         for _ in range(quantity)
     ]
-    _save_related_objs(baker.model, entries)
 
+    _save_related_objs(baker.model, entries, _using=baker._using)
+
+    # Use the desired database to create the entries
     if baker._using:
-        # Try to use the desired DB and let Django fail if spanning
-        # relationships without the proper router setup
         manager = baker.model._base_manager.using(baker._using)
     else:
         manager = baker.model._base_manager
