@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Small improvements to `recipe.py::_mapping`
 - Improvements to `baker.py::bulk_create`
 - Drop `baker.py::is_iterator`
+- Drop Python 3.7 support (reached end of life)
+- [dev] Drop tox in favor of using GitHub Actions matrix
 
 ### Removed
 
