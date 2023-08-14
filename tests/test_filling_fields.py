@@ -348,24 +348,15 @@ class TestsFillingFileField:
     def test_filling_nested_file_fields(self):
         dummy = baker.make(models.NestedFileFieldModel, _create_files=True)
 
-        assert dummy.file.file_field.path
-        dummy.file.file_field.delete()
-
-        if dummy.image.image_field:
-            assert dummy.image.image_field.path
-            dummy.image.image_field.delete()
-
+        assert dummy.attached_file.file_field.path
+        dummy.attached_file.file_field.delete()
         dummy.delete()
 
     def test_does_not_fill_nested_file_fields_unflagged(self):
         dummy = baker.make(models.NestedFileFieldModel)
 
         with pytest.raises(ValueError):
-            assert dummy.file.file_field.path
-
-        if dummy.image.image_field:
-            with pytest.raises(ValueError):
-                assert dummy.image.image_field.path
+            assert dummy.attached_file.file_field.path
 
         dummy.delete()
 
