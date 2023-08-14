@@ -343,6 +343,10 @@ else:
         pass
 
 
+class NestedFileFieldModel(models.Model):
+    attached_file = models.ForeignKey(DummyFileFieldModel, on_delete=models.CASCADE)
+
+
 class DummyMultipleInheritanceModel(DummyDefaultFieldsModel, Person):
     my_id = models.AutoField(primary_key=True)
     my_dummy_field = models.IntegerField()

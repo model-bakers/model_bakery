@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Drop `baker.py::is_iterator`
 - Drop Python 3.7 support (reached end of life)
 - [dev] Drop tox in favor of using GitHub Actions matrix
+- forward "_create_files" flag to child generators for relational fields
 
 ### Removed
 

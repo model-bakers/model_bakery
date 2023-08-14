@@ -337,12 +337,28 @@ class TestsFillingFileField:
 
         assert abspath(path) == abspath(dummy.file_field.path)
         dummy.file_field.delete()
+        dummy.delete()
 
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyFileFieldModel)
         with pytest.raises(ValueError):
             # Django raises ValueError if file does not exist
             assert dummy.file_field.path
+
+    def test_filling_nested_file_fields(self):
+        dummy = baker.make(models.NestedFileFieldModel, _create_files=True)
+
+        assert dummy.attached_file.file_field.path
+        dummy.attached_file.file_field.delete()
+        dummy.delete()
+
+    def test_does_not_fill_nested_file_fields_unflagged(self):
+        dummy = baker.make(models.NestedFileFieldModel)
+
+        with pytest.raises(ValueError):
+            assert dummy.attached_file.file_field.path
+
+        dummy.delete()
 
 
 @pytest.mark.django_db

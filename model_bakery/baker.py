@@ -657,7 +657,7 @@ class Baker(Generic[M]):
     ) -> Union[OneToOneRel, ManyToOneRel]:
         return field.remote_field
 
-    def generate_value(self, field: Field, commit: bool = True) -> Any:
+    def generate_value(self, field: Field, commit: bool = True) -> Any:  # noqa: C901
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
@@ -701,6 +701,13 @@ class Baker(Generic[M]):
 
         if field.name in self.rel_fields:
             generator_attrs.update(filter_rel_attrs(field.name, **self.rel_attrs))
+
+        if (
+            field.__class__ in (ForeignKey, OneToOneField, ManyToManyField)
+            and not is_content_type_fk
+        ):
+            # create files also on related models if required
+            generator_attrs["_create_files"] = self.create_files
 
         if not commit:
             generator = getattr(generator, "prepare", generator)
