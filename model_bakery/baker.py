@@ -717,7 +717,7 @@ def get_required_values(
     required value is a string, simply fetch the value from the field
     and return.
     """
-    required_values = {}  # type: # Dict[str, Any]
+    required_values = {}  # type: Dict[str, Any]
     if hasattr(generator, "required"):
         for item in generator.required:  # type: ignore[attr-defined]
             if callable(item):  # baker can deal with the nasty hacking too!
