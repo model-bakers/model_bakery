@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Smart object creation facility for Django."
 readme = "README.md"
 requires-python = ">=3.8"
-license = "Apache-2.0"
+license = {text = "Apache License 2.0"}
 authors = [
     { name = "berin", email = "bernardoxhc@gmail.com" },
     { name = "amureki", email = "amureki@hey.com" },
