@@ -335,7 +335,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
             _quantity=2,
         )
 
-        assert 0 == models.Dog.objects.count()  # ensure there're no dogs in our db
+        assert 0 == models.Dog.objects.count()  # ensure there are no dogs in our db
         home = baker.make(
             models.Home,
             owner=owner,
@@ -495,7 +495,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert kid.enjoy_jards_macale is True
         assert kid.name == "Mike"
 
-    def test_creating_person_from_factory_using_paramters(self):
+    def test_creating_person_from_factory_using_parameters(self):
         person_baker_ = baker.Baker(models.Person)
         person = person_baker_.make(
             enjoy_jards_macale=False, age=20, gender="M", name="John"
@@ -542,7 +542,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         lonely_person = baker.make(models.LonelyPerson, only_friend__name="Bob")
         assert "Bob" == lonely_person.only_friend.name
 
-    def test_allow_create_fkey_related_model(self):
+    def test_allow_create_fk_related_model(self):
         try:
             person = baker.make(
                 models.Person, dog_set=[baker.make(models.Dog), baker.make(models.Dog)]
@@ -692,7 +692,7 @@ class TestFillBlanksTestCase:
         )
         assert len(dummy.blank_char_field) == 50
 
-    def test_fill_field_optinal_when_preparing(self):
+    def test_fill_field_optional_when_preparing(self):
         dummy = baker.prepare(
             models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
         )
@@ -801,7 +801,7 @@ class TestBakerHandlesModelWithList:
 
 
 @pytest.mark.django_db
-class TestBakerGeneratesIPAdresses:
+class TestBakerGeneratesIPAddresses:
     def test_create_model_with_valid_ips(self):
         form_data = {
             "ipv4_field": random_gen.gen_ipv4(),
@@ -816,11 +816,11 @@ class TestBakerAllowsSaveParameters(TestCase):
 
     def test_allows_save_kwargs_on_baker_make(self):
         owner = baker.make(models.Person)
-        dog = baker.make(models.ModelWithOverridedSave, _save_kwargs={"owner": owner})
+        dog = baker.make(models.ModelWithOverwrittenSave, _save_kwargs={"owner": owner})
         assert owner == dog.owner
 
         dog1, dog2 = baker.make(
-            models.ModelWithOverridedSave, _save_kwargs={"owner": owner}, _quantity=2
+            models.ModelWithOverwrittenSave, _save_kwargs={"owner": owner}, _quantity=2
         )
         assert dog1.owner == owner
         assert dog2.owner == owner

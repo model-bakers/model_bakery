@@ -210,7 +210,7 @@ class RelatedNamesWithEmptyDefaultsModel(models.Model):
     )
 
 
-class ModelWithOverridedSave(Dog):
+class ModelWithOverwrittenSave(Dog):
     def save(self, *args, **kwargs):
         self.owner = kwargs.pop("owner")
         return super().save(*args, **kwargs)

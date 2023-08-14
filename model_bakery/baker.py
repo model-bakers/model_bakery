@@ -110,7 +110,7 @@ def make(
 ):
     """Create a persisted instance from a given model its associated models.
 
-    It fill the fields with random values or you can specify which
+    Baker fills the fields with random values, or you can specify which
     fields you want to define its values by yourself.
     """
     _save_kwargs = _save_kwargs or {}
@@ -171,7 +171,7 @@ def prepare(
 ):
     """Create but do not persist an instance from a given model.
 
-    It fill the fields with random values or you can specify which
+    Baker fills the fields with random values, or you can specify which
     fields you want to define its values by yourself.
     """
     attrs.update({"_fill_optional": _fill_optional})
@@ -717,23 +717,22 @@ def get_required_values(
     required value is a string, simply fetch the value from the field
     and return.
     """
-    # FIXME: avoid abbreviations
-    rt = {}  # type: Dict[str, Any]
+    required_values = {}  # type: # Dict[str, Any]
     if hasattr(generator, "required"):
         for item in generator.required:  # type: ignore[attr-defined]
             if callable(item):  # baker can deal with the nasty hacking too!
                 key, value = item(field)
-                rt[key] = value
+                required_values[key] = value
 
             elif isinstance(item, str):
-                rt[item] = getattr(field, item)
+                required_values[item] = getattr(field, item)
 
             else:
                 raise ValueError(
                     f"Required value '{item}' is of wrong type. Don't make baker sad."
                 )
 
-    return rt
+    return required_values
 
 
 def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:

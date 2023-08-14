@@ -329,7 +329,7 @@ class TestExecutingRecipes:
         owner = baker.make(Person)
 
         dog = baker.make_recipe(
-            "tests.generic.overrided_save", _save_kwargs={"owner": owner}
+            "tests.generic.overwritten_save", _save_kwargs={"owner": owner}
         )
         assert owner == dog.owner
 
@@ -484,7 +484,6 @@ class TestSequences:
     def test_increment_for_strings_with_bad_suffix(self):
         from model_bakery.recipe import seq  # NoQA
 
-        # Bad suffix
         bob_person = person_recipe.extend(email=seq("bob", suffix=42))
         with pytest.raises(TypeError) as exc:
             bob_person.make()
