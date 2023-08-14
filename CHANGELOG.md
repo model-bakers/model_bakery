@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] Replaced `pycodestyle`, `pydocstyle`, `flake8` and `isort` with `ruff`
 - Small improvements to `recipe.py::_mapping`
 - Improvements to `baker.py::bulk_create`
+- Drop `baker.py::is_iterator`
 
 ### Removed
 

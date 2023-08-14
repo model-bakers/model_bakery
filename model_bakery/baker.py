@@ -1,3 +1,4 @@
+import collections
 from os.path import dirname, join
 from typing import (
     Any,
@@ -283,10 +284,7 @@ class ModelFinder:
 
 
 def is_iterator(value: Any) -> bool:
-    if not hasattr(value, "__iter__"):
-        return False
-
-    return hasattr(value, "__next__")
+    return isinstance(value, collections.abc.Iterator)
 
 
 def _custom_baker_class() -> Optional[Type]:
@@ -552,7 +550,9 @@ class Baker(Generic[M]):
                     f"related to model {self.model.__name__}"
                 )
 
-        self.iterator_attrs = {k: v for k, v in attrs.items() if is_iterator(v)}
+        self.iterator_attrs = {
+            k: v for k, v in attrs.items() if isinstance(v, collections.abc.Iterator)
+        }
         self.model_attrs = {k: v for k, v in attrs.items() if not is_rel_field(k)}
         self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
         self.rel_fields = [
