@@ -596,7 +596,3 @@ class TestGisFieldsFilling:
 
     def test_fill_GeometryCollectionField_valid(self, person):
         self.assertGeomValid(person.geom_collection)
-
-
-if __name__ == "__main__":
-    pytest.main("tests/test_filling_fields.py")
