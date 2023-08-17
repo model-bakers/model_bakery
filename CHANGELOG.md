@@ -10,15 +10,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- [dev] Replaced `pycodestyle`, `pydocstyle`, `flake8` and `isort` with `ruff`
-- Small improvements to `recipe.py::_mapping`
-- Improvements to `baker.py::bulk_create`
-- Drop `baker.py::is_iterator`
-- Drop Python 3.7 support (reached end of life)
-- [dev] Drop tox in favor of using GitHub Actions matrix
-- forward "_create_files" flag to child generators for relational fields
 
 ### Removed
+
+## [1.14.0](https://pypi.org/project/model-bakery/1.14.0/)
+
+### Added
+- forward "_create_files" flag to child generators for relational fields
+
+### Changed
+- Small improvements to `recipe.py::_mapping`
+- Improvements to `baker.py::bulk_create`
+- [dev] Replaced `pycodestyle`, `pydocstyle`, `flake8` and `isort` with `ruff`
+- [dev] Drop tox in favor of using GitHub Actions matrix
+
+### Removed
+- Drop `baker.py::is_iterator`
+- Drop Python 3.7 support (reached end of life)
 
 ## [1.13.0](https://pypi.org/project/model-bakery/1.13.0/)
 
