@@ -122,3 +122,10 @@ ip_fields = Recipe(
     ipv4_field=seq("127.0.0.", increment_by=2),
     ipv6_field=seq("2001:12f8:0:28::", start=4, increment_by=2),
 )
+
+issue439_related = Recipe(
+    "generic.Issue439RelatedModel", name=seq("RelatedModel #"), my_flag=False
+)
+issue439_model = Recipe(
+    "generic.Issue439Model", related_model=foreign_key(issue439_related)
+)

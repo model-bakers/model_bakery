@@ -644,3 +644,20 @@ class TestIterators:
             DummyBlankFieldsModel, blank_text_field="not an iterator, so don't iterate!"
         )
         assert r.make().blank_text_field == "not an iterator, so don't iterate!"
+
+
+@pytest.mark.django_db
+class TestIssue439:
+    def test_ok(self):
+        my_obj = baker.make_recipe("tests.generic.issue439_model")
+        assert my_obj.related_model.name == "RelatedModel #1"
+
+        assert my_obj.related_model.my_flag is False
+
+    def test_not_ok(self):
+        my_obj = baker.make_recipe(
+            "tests.generic.issue439_model", related_model__my_flag=True
+        )
+        assert my_obj.related_model.name == "RelatedModel #1"
+
+        assert my_obj.related_model.my_flag is True

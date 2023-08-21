@@ -472,3 +472,13 @@ class Issue291Model3(models.Model):
         Issue291Model2, related_name="bazs", on_delete=models.CASCADE
     )
     name = models.CharField(max_length=32)
+
+
+class Issue439Model(models.Model):
+    name = models.CharField(max_length=32)
+    related_model = models.ForeignKey("Issue439RelatedModel", on_delete=models.CASCADE)
+
+
+class Issue439RelatedModel(models.Model):
+    name = models.CharField(max_length=32)
+    my_flag = models.BooleanField(default=False)
