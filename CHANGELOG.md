@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Revert erroneous optimisation of related logic (fix #439)
+- Bring tox back
 
 ### Removed
 
