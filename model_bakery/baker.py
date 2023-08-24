@@ -746,7 +746,7 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> Dict[str, Any]:
     clean_dict = {}
 
     for k, v in rel_attrs.items():
-        if k.startswith(field_name + "__"):
+        if k.startswith(f"{field_name}__"):
             splitted_key = k.split("__")
             key = "__".join(splitted_key[1:])
             clean_dict[key] = v

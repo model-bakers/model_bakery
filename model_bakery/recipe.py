@@ -35,7 +35,9 @@ class Recipe(Generic[M]):
         # _iterator_backups will hold values of the form (backup_iterator, usable_iterator).
         self._iterator_backups = {}  # type: Dict[str, Any]
 
-    def _mapping(self, _using: str, new_attrs: Dict[str, Any]) -> Dict[str, Any]:
+    def _mapping(  # noqa: C901
+        self, _using: str, new_attrs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         _save_related = new_attrs.get("_save_related", True)
         _quantity = new_attrs.get("_quantity", 1)
         rel_fields_attrs = {k: v for k, v in new_attrs.items() if "__" in k}
@@ -56,20 +58,25 @@ class Recipe(Generic[M]):
                     )
                 mapping[k] = self._iterator_backups[k][1]
             elif isinstance(v, RecipeForeignKey):
-                rel_attrs = baker.filter_rel_attrs(k, **rel_fields_attrs)
+                attrs = {}
+                # Remove any related field attrs from the recipe attrs before filtering
+                for key, _value in list(rel_fields_attrs.items()):
+                    if key.startswith(f"{k}__"):
+                        attrs[key] = rel_fields_attrs.pop(key)
+                recipe_attrs = baker.filter_rel_attrs(k, **attrs)
                 if _save_related:
                     # Create a unique foreign key for each quantity if one_to_one required
                     if v.one_to_one is True:
                         rel_gen = [
-                            v.recipe.make(_using=_using, **rel_attrs)
+                            v.recipe.make(_using=_using, **recipe_attrs)
                             for _ in range(_quantity)
                         ]
                         mapping[k] = itertools.cycle(rel_gen)
                     # Otherwise create shared foreign key for each quantity
                     else:
-                        mapping[k] = v.recipe.make(_using=_using, **rel_attrs)
+                        mapping[k] = v.recipe.make(_using=_using, **recipe_attrs)
                 else:
-                    mapping[k] = v.recipe.prepare(_using=_using, **rel_attrs)
+                    mapping[k] = v.recipe.prepare(_using=_using, **recipe_attrs)
             elif isinstance(v, related):
                 mapping[k] = v.make()
         mapping.update(new_attrs)

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Revert erroneous optimisation of related logic (fix #439)
 
 ### Removed
 
