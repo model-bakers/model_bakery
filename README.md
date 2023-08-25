@@ -25,6 +25,8 @@ pip install model_bakery
 
 # models.py
 
+from django.db import models
+
 class Customer(models.Model):
     enjoy_jards_macale = models.BooleanField()
     name = models.CharField(max_length=30)
