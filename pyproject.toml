@@ -43,6 +43,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
+    "coverage",
     "pillow",
     "pytest",
     "pytest-django",
@@ -53,6 +54,23 @@ test = [
 
 [project.urls]
 Homepage = "https://github.com/model-bakers/model_bakery"
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = [
+    "model_bakery",
+    "tests",
+]
+
+[tool.coverage.paths]
+source = [
+    "model_bakery",
+    ".tox/**/site-packages/model_bakery",
+]
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.hatch.version]
 path = "model_bakery/__about__.py"
