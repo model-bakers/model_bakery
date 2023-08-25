@@ -1,15 +1,16 @@
 # Model Bakery: Smart fixtures for better tests
 
+[![Build](https://img.shields.io/github/actions/workflow/status/model-bakers/model_bakery/ci.yml?branch=main)](https://github.com/model-bakers/model_bakery/actions?workflow=Tests)
+[![Coverage](https://img.shields.io/badge/Coverage-97%25-success)](https://github.com/model-bakers/model_bakery/actions?workflow=Tests)
+[![Latest PyPI version](https://img.shields.io/pypi/v/model_bakery.svg)](https://pypi.python.org/pypi/model_bakery/)
+[![Documentation Status](https://readthedocs.org/projects/model-bakery/badge/?version=latest)](https://model-bakery.readthedocs.io/en/latest/?badge=latest)
+
 *Model Bakery* offers you a smart way to create fixtures for testing in
 Django.
 With a simple and powerful API you can create many objects with a single
 line of code.
 
 Model Bakery is a rename of the legacy [Model Mommy project](https://pypi.org/project/model_mommy/).
-
-![Tests](https://github.com/model-bakers/model_bakery/workflows/Tests/badge.svg)
-[![Latest PyPI version](https://img.shields.io/pypi/v/model_bakery.svg)](https://pypi.python.org/pypi/model_bakery/)
-[![Documentation Status](https://readthedocs.org/projects/model-bakery/badge/?version=latest)](https://model-bakery.readthedocs.io/en/latest/?badge=latest)
 
 ## Install
 
