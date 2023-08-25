@@ -14,3 +14,5 @@ build/
 lib64
 pyvenv.cfg
 dist/
+/.coverage
+/.coverage.*

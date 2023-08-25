@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- [dev] Test coverage report
 
 ### Changed
 
@@ -20,7 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Revert erroneous optimisation of related logic (fix #439)
-- Bring tox back
+- [dev] Bring tox back
 
 ### Removed
 
