@@ -60,7 +60,10 @@ branch = true
 parallel = true
 source = [
     "model_bakery",
-    "tests",
+]
+omit = [
+    "model_bakery/__about__.py",
+    "model_bakery/_types.py",
 ]
 
 [tool.coverage.paths]
