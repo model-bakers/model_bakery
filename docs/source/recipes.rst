@@ -143,7 +143,6 @@ You can also use ``related``, when you want two or more models to share the same
 
 .. code-block:: python
 
-
     from model_bakery.recipe import related, Recipe
     from shop.models import Customer, PurchaseHistory
 
@@ -172,6 +171,7 @@ If you want to set m2m relationship you can use ``related`` as well:
 When creating models based on a ``foreign_key`` recipe using the ``_quantity`` argument, only one related model will be created for all new instances.
 
 .. code-block:: python
+
     from model_baker.recipe import foreign_key, Recipe
 
     person = Recipe(Person, name='Albert')
@@ -184,6 +184,7 @@ When creating models based on a ``foreign_key`` recipe using the ``_quantity`` a
 This will cause an issue if your models use ``OneToOneField``. In that case, you can provide ``one_to_one=True`` to the recipe to make sure every instance created by ``_quantity`` has a unique id.
 
 .. code-block:: python
+
     from model_baker.recipe import foreign_key, Recipe
 
     person = Recipe(Person, name='Albert')
@@ -237,7 +238,6 @@ Sometimes, you have a field with an unique value and using ``make`` can cause ra
 
 .. code-block:: python
 
-
     >>> from model_bakery.recipe import Recipe, seq
     >>> from shop.models import Customer
 
@@ -282,7 +282,6 @@ Sequences and iterables can be used not only for recipes, but with ``baker`` as 
 
 .. code-block:: python
 
-
     >>> from model_bakery import baker
 
     >>> customer = baker.make('Customer', name=baker.seq('Joe'))
@@ -299,7 +298,6 @@ Sequences and iterables can be used not only for recipes, but with ``baker`` as 
 You can also provide an optional ``increment_by`` argument which will modify incrementing behaviour. This can be an integer, float, Decimal or timedelta. If you want to start your increment differently, you can use the ``start`` argument, only if it's not a sequence for ``date``, ``datetime`` or ``time`` objects.
 
 .. code-block:: python
-
 
     >>> from datetime import date, timedelta
     >>> from model_bakery.recipe import Recipe, seq

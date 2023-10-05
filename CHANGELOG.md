@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] Test coverage report
 
 ### Changed
+- [dev] Cleanup Sphinx documentation config
 
 ### Removed
 
