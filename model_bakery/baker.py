@@ -499,10 +499,17 @@ class Baker(Generic[M]):
         self, attrs: Dict[str, Any], _commit, _save_kwargs, _from_manager
     ) -> M:
         one_to_many_keys = {}
+        auto_now_keys = {}
+
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
             if isinstance(field, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[k] = attrs.pop(k)
+
+            if getattr(field.field, "auto_now_add", False) or getattr(
+                field.field, "auto_now", False
+            ):
+                auto_now_keys[k] = attrs[k]
 
         instance = self.model(**attrs)
         # m2m only works for persisted instances
@@ -510,6 +517,7 @@ class Baker(Generic[M]):
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
             self._handle_m2m(instance)
+            self._handle_auto_now(instance, auto_now_keys)
 
             if _from_manager:
                 # Fetch the instance using the given Manager, e.g.
@@ -609,6 +617,12 @@ class Baker(Generic[M]):
                 return True
 
         return False
+
+    def _handle_auto_now(self, instance: Model, attrs: Dict[str, Any]):
+        if not attrs:
+            return
+
+        instance.__class__.objects.filter(pk=instance.pk).update(**attrs)
 
     def _handle_one_to_many(self, instance: Model, attrs: Dict[str, Any]):
         for key, values in attrs.items():
