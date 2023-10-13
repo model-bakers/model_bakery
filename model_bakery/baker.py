@@ -412,12 +412,10 @@ class Baker(Generic[M]):
         params.update(attrs)
         return self._make(**params)
 
-    def get_fields(self) -> List[Any]:
-        return [
-            f
-            for f in self.model._meta.get_fields()
-            if f not in self.model._meta.related_objects
-        ]
+    def get_fields(self) -> Set[Any]:
+        return set(self.model._meta.get_fields()) - set(
+            self.model._meta.related_objects
+        )
 
     def _make(  # noqa: C901
         self,
