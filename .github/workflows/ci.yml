@@ -30,8 +30,6 @@ jobs:
 
   tests:
     name: Python ${{ matrix.python-version }}
-    needs:
-      - linters
     runs-on: ubuntu-22.04
     strategy:
       matrix:

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Improved performance of `Baker.get_fields()`
 - [dev] Cleanup Sphinx documentation config
 - [dev] Update `pre-commit` config
+- [dev] CI: remove hard requirement on linters for tests to run
 
 ### Removed
 
