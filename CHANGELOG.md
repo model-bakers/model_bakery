@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.16.0](https://pypi.org/project/model-bakery/1.16.0/)
+
+### Added
 - [dev] Test coverage report
 
 ### Changed
@@ -15,8 +23,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] Cleanup Sphinx documentation config
 - [dev] Update `pre-commit` config
 - [dev] CI: remove hard requirement on linters for tests to run
-
-### Removed
 
 ## [1.15.0](https://pypi.org/project/model-bakery/1.15.0/)
 
