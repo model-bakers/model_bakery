@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-added-large-files
       - id: debug-statements
@@ -13,6 +13,7 @@ repos:
         name: ruff
         entry: ruff
         language: system
+        args: [ --fix, --exit-non-zero-on-fix ]
         types:
           - python
       - id: black
