@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Remove unnecessary casting to string methods random_gen.gen_slug and random_gen.gen_string
 
 ### Removed
 
