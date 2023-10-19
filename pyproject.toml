@@ -51,6 +51,10 @@ test = [
     "ruff",
     "mypy",
 ]
+docs = [
+    "Sphinx",
+    "sphinx-rtd-theme",
+]
 
 [project.urls]
 Homepage = "https://github.com/model-bakers/model_bakery"
