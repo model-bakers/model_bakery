@@ -509,8 +509,9 @@ class Baker(Generic[M]):
             if isinstance(field, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[k] = attrs.pop(k)
 
-            if getattr(field.field, "auto_now_add", False) or getattr(
-                field.field, "auto_now", False
+            if hasattr(field, "field") and (
+                getattr(field.field, "auto_now_add", False)
+                or getattr(field.field, "auto_now", False)
             ):
                 auto_now_keys[k] = attrs[k]
 
