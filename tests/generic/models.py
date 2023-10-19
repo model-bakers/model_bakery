@@ -473,6 +473,7 @@ class Issue291Model3(models.Model):
     )
     name = models.CharField(max_length=32)
 
+
 class ModelWithAutoNowFields(models.Model):
     sent_date = models.DateTimeField()
     created = models.DateTimeField(auto_now_add=True)

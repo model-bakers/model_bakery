@@ -502,6 +502,10 @@ class Baker(Generic[M]):
 
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
+
+            if not field:
+                continue
+
             if isinstance(field, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[k] = attrs.pop(k)
 
