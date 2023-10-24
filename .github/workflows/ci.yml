@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         lint-command:
-          - ruff --format=github .
+          - ruff --output-format=github .
           - black --check --diff .
           - mypy model_bakery
     steps:
