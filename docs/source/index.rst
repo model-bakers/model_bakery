@@ -20,7 +20,7 @@ Install it with ``pip``
 
 .. code-block:: console
 
-    $ pip install model_bakery
+    $ pip install model-bakery
 
 
 Contributing to Model Bakery
