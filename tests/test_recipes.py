@@ -10,7 +10,7 @@ import pytest
 
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
-from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key
+from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key, seq
 from model_bakery.timezone import tz_aware
 from tests.generic.baker_recipes import SmallDogRecipe, pug
 from tests.generic.models import (
@@ -165,8 +165,6 @@ class TestDefiningRecipes:
         assert not person.id
 
     def test_defining_recipes_str(self):
-        from model_bakery.recipe import seq
-
         p = Recipe("generic.Person", name=seq("foo"))
         try:
             p.make(_quantity=5)
@@ -449,8 +447,6 @@ class TestSequences:
         assert person.name == "joe3"
 
     def test_increment_for_strings_with_suffix(self):
-        from model_bakery.recipe import seq  # NoQA
-
         fred_person = person_recipe.extend(email=seq("fred", suffix="@example.com"))
         person = fred_person.make()
         assert person.email == "fred1@example.com"
@@ -460,8 +456,6 @@ class TestSequences:
         assert person.email == "fred3@example.com"
 
     def test_increment_for_fks(self):
-        from model_bakery.recipe import seq  # NoQA
-
         profiles = baker.make(Profile, _quantity=3)
         start_id = profiles[0].id
         seq_user = user_recipe.extend(username="name", profile_id=seq(start_id))
@@ -471,8 +465,6 @@ class TestSequences:
         assert user.profile_id == start_id + 2
 
     def test_increment_for_one_to_one(self):
-        from model_bakery.recipe import seq  # NoQA
-
         people = baker.make(Person, _quantity=3)
         start_id = people[0].id
         seq_lonely_person = lonely_person_recipe.extend(only_friend_id=seq(start_id))
@@ -482,16 +474,12 @@ class TestSequences:
         assert user.only_friend_id == start_id + 2
 
     def test_increment_for_strings_with_bad_suffix(self):
-        from model_bakery.recipe import seq  # NoQA
-
         bob_person = person_recipe.extend(email=seq("bob", suffix=42))
         with pytest.raises(TypeError) as exc:
             bob_person.make()
             assert str(exc.value) == "Sequences suffix can only be a string"
 
     def test_increment_for_strings_with_suffix_and_start(self):
-        from model_bakery.recipe import seq  # NoQA
-
         fred_person = person_recipe.extend(
             email=seq("fred", start=5, suffix="@example.com")
         )
@@ -532,8 +520,6 @@ class TestSequences:
         assert dummy.default_float_field == 4.23
 
     def test_increment_for_numbers_with_suffix(self):
-        from model_bakery.recipe import seq  # NoQA
-
         with pytest.raises(TypeError) as exc:
             baker.make_recipe(
                 "tests.generic.serial_numbers",
