@@ -8,12 +8,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.17.0](https://pypi.org/project/model-bakery/1.17.0/)
+
+### Added
 - Add support to `auto_now` and `auto_now_add` fields.
 
 ### Changed
-- Remove unnecessary casting to string methods random_gen.gen_slug and random_gen.gen_string
-
-### Removed
+- Remove unnecessary casting to string methods `random_gen.gen_slug` and `random_gen.gen_string`
+- [doc] Update installation command
 
 ## [1.16.0](https://pypi.org/project/model-bakery/1.16.0/)
 
