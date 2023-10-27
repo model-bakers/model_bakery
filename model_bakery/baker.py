@@ -567,9 +567,7 @@ class Baker(Generic[M]):
         }
         self.model_attrs = {k: v for k, v in attrs.items() if not is_rel_field(k)}
         self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
-        self.rel_fields = [
-            x.split("__")[0] for x in self.rel_attrs.keys() if is_rel_field(x)
-        ]
+        self.rel_fields = [x.split("__")[0] for x in self.rel_attrs if is_rel_field(x)]
 
     def _skip_field(self, field: Field) -> bool:
         from django.contrib.contenttypes.fields import GenericRelation
@@ -598,7 +596,7 @@ class Baker(Generic[M]):
         if isinstance(field, (AutoField, GenericRelation, OrderWrt)):
             return True
 
-        if all(
+        if all(  # noqa: SIM102
             [
                 field.name not in self.model_attrs,
                 field.name not in self.rel_fields,
@@ -614,7 +612,7 @@ class Baker(Generic[M]):
             ):
                 return True
 
-        if field.name not in self.model_attrs:
+        if field.name not in self.model_attrs:  # noqa: SIM102
             if field.name not in self.rel_fields and (
                 field.null and not field.fill_optional
             ):

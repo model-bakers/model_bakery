@@ -141,7 +141,7 @@ class TestDefiningRecipes:
     def test_make_recipe_without_all_model_needed_data(self):
         person_recipe = Recipe(Person, name="John Doe")
         person = person_recipe.make()
-        assert "John Doe" == person.name
+        assert person.name == "John Doe"
         assert person.nickname
         assert person.age
         assert person.bio
@@ -154,7 +154,7 @@ class TestDefiningRecipes:
     def test_prepare_recipe_without_all_model_needed_data(self):
         person_recipe = Recipe(Person, name="John Doe")
         person = person_recipe.prepare()
-        assert "John Doe" == person.name
+        assert person.name == "John Doe"
         assert person.nickname
         assert person.age
         assert person.bio
@@ -235,7 +235,7 @@ class TestExecutingRecipes:
     def test_make_extended_recipe(self):
         extended_dog = baker.make_recipe("tests.generic.extended_dog")
         assert extended_dog.breed == "Super basset"
-        # No side effects happened due to extension
+        # No side effects happened due to a recipe extension
         base_dog = baker.make_recipe("tests.generic.dog")
         assert base_dog.breed == "Pug"
 
@@ -251,7 +251,7 @@ class TestExecutingRecipes:
         assert not dog.id
         assert dog.owner.id
 
-    def test_make_recipe_with_quantity_parameter_respection_model_args(self):
+    def test_make_recipe_with_quantity_parameter_respecting_model_args(self):
         people = baker.make_recipe(
             "tests.generic.person", _quantity=3, name="Dennis Ritchie", age=70
         )
@@ -284,7 +284,7 @@ class TestExecutingRecipes:
             assert isinstance(person, Person)
             assert person.id is None
 
-    def test_prepare_recipe_with_quantity_parameter_respection_model_args(self):
+    def test_prepare_recipe_with_quantity_parameter_respecting_model_args(self):
         people = baker.prepare_recipe(
             "tests.generic.person", _quantity=3, name="Dennis Ritchie", age=70
         )
@@ -338,10 +338,10 @@ class TestExecutingRecipes:
     def test_ip_fields_with_start(self):
         first, second = baker.make_recipe("tests.generic.ip_fields", _quantity=2)
 
-        assert "127.0.0.2" == first.ipv4_field
-        assert "2001:12f8:0:28::4" == first.ipv6_field
-        assert "127.0.0.4" == second.ipv4_field
-        assert "2001:12f8:0:28::6" == second.ipv6_field
+        assert first.ipv4_field == "127.0.0.2"
+        assert first.ipv6_field == "2001:12f8:0:28::4"
+        assert second.ipv4_field == "127.0.0.4"
+        assert second.ipv6_field == "2001:12f8:0:28::6"
 
 
 @pytest.mark.django_db
@@ -537,9 +537,9 @@ class TestSequences:
 
     def test_creates_unique_field_recipe_using_quantity_argument(self):
         dummies = baker.make_recipe("tests.generic.dummy_unique_field", _quantity=3)
-        assert 11 == dummies[0].value
-        assert 12 == dummies[1].value
-        assert 13 == dummies[2].value
+        assert dummies[0].value == 11
+        assert dummies[1].value == 12
+        assert dummies[2].value == 13
 
     def test_increment_by_3(self):
         dummy = baker.make_recipe("tests.generic.serial_numbers_by")
@@ -600,20 +600,20 @@ class TestSequences:
 class TestIterators:
     def test_accepts_generators(self):
         r = Recipe(DummyBlankFieldsModel, blank_char_field=itertools.cycle(["a", "b"]))
-        assert "a" == r.make().blank_char_field
-        assert "b" == r.make().blank_char_field
-        assert "a" == r.make().blank_char_field
+        assert r.make().blank_char_field == "a"
+        assert r.make().blank_char_field == "b"
+        assert r.make().blank_char_field == "a"
 
     def test_accepts_iterators(self):
         r = Recipe(DummyBlankFieldsModel, blank_char_field=iter(["a", "b", "c"]))
-        assert "a" == r.make().blank_char_field
-        assert "b" == r.make().blank_char_field
-        assert "c" == r.make().blank_char_field
+        assert r.make().blank_char_field == "a"
+        assert r.make().blank_char_field == "b"
+        assert r.make().blank_char_field == "c"
 
     def test_empty_iterator_exception(self):
         r = Recipe(DummyBlankFieldsModel, blank_char_field=iter(["a", "b"]))
-        assert "a" == r.make().blank_char_field
-        assert "b" == r.make().blank_char_field
+        assert r.make().blank_char_field == "a"
+        assert r.make().blank_char_field == "b"
         with pytest.raises(RecipeIteratorEmpty):
             r.make()
 

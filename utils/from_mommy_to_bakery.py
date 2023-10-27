@@ -51,10 +51,8 @@ def _rename_recipe_file(to_be_renamed, dry_run):
 
 
 def _replace_legacy_terms(file_path, dry_run):
-    try:
-        content = open(file_path).read()
-    except UnicodeDecodeError:
-        return
+    with open(file_path, encoding="utf-8") as f:
+        content = f.read()
     changed = []
     for patterns in LEGACY_AND_NEW:
         old, new = patterns["old"], patterns["new"]
@@ -63,7 +61,8 @@ def _replace_legacy_terms(file_path, dry_run):
 
     if any(changed):
         if dry_run is False:
-            open(file_path, "w").write(content)
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(content)
         else:
             print(file_path)
 
@@ -77,10 +76,10 @@ def _sanitize_folder_or_file(folder_or_file):
 
 
 def check_files(dry_run):
-    excluded_by_gitignore = [
-        _sanitize_folder_or_file(folder_or_file)
-        for folder_or_file in open(".gitignore").readlines()
-    ]
+    with open(".gitignore") as f:
+        excluded_by_gitignore = [
+            _sanitize_folder_or_file(folder_or_file) for folder_or_file in f.readlines()
+        ]
 
     exclude = EXCLUDE[:]
     exclude.extend(excluded_by_gitignore)
