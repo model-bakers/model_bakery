@@ -121,7 +121,7 @@ class TestsBakerCreatesSimpleModel:
             models.NonAbstractPerson, name="bob", enjoy_jards_macale=False
         )
         assert isinstance(person, models.NonAbstractPerson)
-        assert "bob" == person.name
+        assert person.name == "bob"
         assert person.enjoy_jards_macale is False
 
     def test_abstract_model_subclass_creation(self):
@@ -210,16 +210,16 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         )
         assert models.Person.objects.count() == 5
         p1, p2, p3, p4, p5 = models.Person.objects.all().order_by("pk")
-        assert "a" == p1.name
-        assert "d1" == p1.id_document
-        assert "b" == p2.name
-        assert "d2" == p2.id_document
-        assert "c" == p3.name
-        assert "d3" == p3.id_document
-        assert "a" == p4.name
-        assert "d4" == p4.id_document
-        assert "b" == p5.name
-        assert "d5" == p5.id_document
+        assert p1.name == "a"
+        assert p1.id_document == "d1"
+        assert p2.name == "b"
+        assert p2.id_document == "d2"
+        assert p3.name == "c"
+        assert p3.id_document == "d3"
+        assert p4.name == "a"
+        assert p4.id_document == "d4"
+        assert p5.name == "b"
+        assert p5.id_document == "d5"
 
     def test_accepts_generators_with_quantity_for_unique_fields(self):
         baker.make(
@@ -229,9 +229,9 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         )
         assert models.DummyUniqueIntegerFieldModel.objects.count() == 3
         num_1, num_2, num_3 = models.DummyUniqueIntegerFieldModel.objects.all()
-        assert 1 == num_1.value
-        assert 2 == num_2.value
-        assert 3 == num_3.value
+        assert num_1.value == 1
+        assert num_2.value == 2
+        assert num_3.value == 3
 
     def test_generators_work_with_user_model(self):
         from django.contrib.auth import get_user_model
@@ -240,9 +240,9 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         baker.make(User, username=itertools.cycle(["a", "b", "c"]), _quantity=3)
         assert User.objects.count() == 3
         u1, u2, u3 = User.objects.all()
-        assert "a" == u1.username
-        assert "b" == u2.username
-        assert "c" == u3.username
+        assert u1.username == "a"
+        assert u2.username == "b"
+        assert u3.username == "c"
 
 
 @pytest.mark.django_db
@@ -335,14 +335,14 @@ class TestBakerCreatesAssociatedModels(TestCase):
             _quantity=2,
         )
 
-        assert 0 == models.Dog.objects.count()  # ensure there are no dogs in our db
+        assert models.Dog.objects.count() == 0  # ensure there are no dogs in our db
         home = baker.make(
             models.Home,
             owner=owner,
             dogs=dogs_set,
         )
         assert home.dogs.count() == 2
-        assert 2 == models.Dog.objects.count()  # dogs in dogs_set were created
+        assert models.Dog.objects.count() == 2  # dogs in dogs_set were created
 
     def test_prepare_fk(self):
         dog = baker.prepare(models.Dog)
@@ -476,7 +476,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     def test_nullable_many_to_many_is_not_created_even_if_flagged(self):
         classroom = baker.make(models.Classroom, make_m2m=True)
-        assert not classroom.students.count()
+        assert classroom.students.count() == 0
 
     def test_m2m_changed_signal_is_fired(self):
         # TODO: Use object attrs instead of mocks for Django 1.4 compat
@@ -507,17 +507,17 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     def test_ForeignKey_model_field_population(self):
         dog = baker.make(models.Dog, breed="X1", owner__name="Bob")
-        assert "X1" == dog.breed
-        assert "Bob" == dog.owner.name
+        assert dog.breed == "X1"
+        assert dog.owner.name == "Bob"
 
     def test_ForeignKey_model_field_population_should_work_with_prepare(self):
         dog = baker.prepare(models.Dog, breed="X1", owner__name="Bob")
-        assert "X1" == dog.breed
-        assert "Bob" == dog.owner.name
+        assert dog.breed == "X1"
+        assert dog.owner.name == "Bob"
 
     def test_ForeignKey_model_field_population_for_not_required_fk(self):
         user = baker.make(models.User, profile__email="a@b.com")
-        assert "a@b.com" == user.profile.email
+        assert user.profile.email == "a@b.com"
 
     def test_does_not_creates_null_ForeignKey(self):
         user = baker.make(models.User)
@@ -529,18 +529,18 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     def test_ensure_recursive_ForeignKey_population(self):
         bill = baker.make(models.PaymentBill, user__profile__email="a@b.com")
-        assert "a@b.com" == bill.user.profile.email
+        assert bill.user.profile.email == "a@b.com"
 
     def test_field_lookup_for_m2m_relationship(self):
         store = baker.make(models.Store, suppliers__gender="M")
         suppliers = store.suppliers.all()
         assert suppliers
         for supplier in suppliers:
-            assert "M" == supplier.gender
+            assert supplier.gender == "M"
 
     def test_field_lookup_for_one_to_one_relationship(self):
         lonely_person = baker.make(models.LonelyPerson, only_friend__name="Bob")
-        assert "Bob" == lonely_person.only_friend.name
+        assert lonely_person.only_friend.name == "Bob"
 
     def test_allow_create_fk_related_model(self):
         try:
@@ -561,9 +561,9 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
         assert person.pk
         assert person.one_related.pk
-        assert 1, person.fk_related.count()
-        assert "Foo" == person.one_related.name
-        assert "Bar" == person.fk_related.get().name
+        assert person.fk_related.count() == 1
+        assert person.one_related.name == "Foo"
+        assert person.fk_related.get().name == "Bar"
 
     def test_field_lookup_for_related_field_does_not_work_with_prepare(self):
         person = baker.prepare(
@@ -573,7 +573,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         )
 
         assert not person.pk
-        assert 0 == models.RelatedNamesModel.objects.count()
+        assert models.RelatedNamesModel.objects.count() == 0
 
     def test_ensure_reverse_fk_for_many_to_one_is_working(self):
         """This is a regression test to make sure issue 291 is fixed."""
@@ -621,7 +621,7 @@ class TestHandlingContentTypeField:
 class TestHandlingContentTypeFieldNoQueries:
     def test_create_model_with_contenttype_field(self):
         # Clear ContentType's internal cache so that it *will* try to connect to
-        # the database in order to fetch the corresponding ContentType model for
+        # the database to fetch the corresponding ContentType model for
         # a randomly chosen model.
         ContentType.objects.clear_cache()
 
@@ -788,7 +788,7 @@ class TestBakerHandlesModelWithNext:
         assert instance.id
         assert instance.fk.id
         assert instance.fk.attr
-        assert "foo" == instance.fk.next()
+        assert instance.fk.next() == "foo"
 
 
 @pytest.mark.django_db
@@ -930,7 +930,7 @@ class TestBakerSupportsMultiDatabase(TestCase):
         dog_qs = models.Dog.objects.using(settings.EXTRA_DB).all()
         person_qs = models.Person.objects.using(settings.EXTRA_DB).all()
         assert dog_qs.count() == 5
-        # since we're using recipes, all dogs belongs to the same owner
+        # since we're using recipes, all dogs belong to the same owner
         assert person_qs.count() == 1
         for dog in dogs:
             dog.refresh_from_db()

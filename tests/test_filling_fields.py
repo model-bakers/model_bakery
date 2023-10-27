@@ -375,7 +375,7 @@ class TestFillingCustomFields:
         }
         settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
-        assert "value" == obj.custom_value
+        assert obj.custom_value == "value"
 
     def test_uses_generator_defined_as_string_on_settings_for_custom_field(
         self, custom_cfg
@@ -389,7 +389,7 @@ class TestFillingCustomFields:
         # fmt: on
         settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
-        assert "value" == obj.custom_value
+        assert obj.custom_value == "value"
 
     def test_uses_generator_defined_on_settings_for_custom_foreignkey(self, custom_cfg):
         """Should use the function defined in the import path for a foreign key field."""
@@ -400,7 +400,7 @@ class TestFillingCustomFields:
         obj = baker.make(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )
-        assert "a@b.com" == obj.custom_fk.email
+        assert obj.custom_fk.email == "a@b.com"
 
     def test_uses_generator_defined_as_string_for_custom_field(self, custom_cfg):
         """Should import and use the generator function used in the add method."""
@@ -409,7 +409,7 @@ class TestFillingCustomFields:
             "tests.generic.generators.gen_value_string",
         )
         obj = baker.make(models.CustomFieldWithGeneratorModel)
-        assert "value" == obj.custom_value
+        assert obj.custom_value == "value"
 
     def test_uses_generator_function_for_custom_foreignkey(self, custom_cfg):
         """Should use the generator function passed as a value for the add method."""
@@ -417,7 +417,7 @@ class TestFillingCustomFields:
         obj = baker.make(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )
-        assert "a@b.com" == obj.custom_fk.email
+        assert obj.custom_fk.email == "a@b.com"
 
     def test_can_override_django_default_field_functions_generator(self, custom_cfg):
         def gen_char():
@@ -427,11 +427,11 @@ class TestFillingCustomFields:
 
         person = baker.make(models.Person)
 
-        assert "Some value" == person.name
+        assert person.name == "Some value"
 
     def test_ensure_adding_generators_via_settings_works(self):
         obj = baker.make(models.CustomFieldViaSettingsModel)
-        assert "always the same text" == obj.custom_value
+        assert obj.custom_value == "always the same text"
 
 
 @pytest.mark.django_db

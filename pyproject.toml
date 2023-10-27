@@ -101,6 +101,7 @@ select = [
     "S", # flake8-bandit
     "B", # flake8-bugbear
     "C", # flake8-comprehensions
+    "SIM", # flake8-simplify
     "I", # isort
     "E", # pycodestyle errors
     "W", # pycodestyle warnings
