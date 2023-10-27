@@ -1,6 +1,9 @@
 include model_bakery/mock_file.txt
 include model_bakery/mock_img.jpeg
-include README.rst
-include requirements.txt
-include tox.ini
+include LICENSE
+include README.md
+include CHANGELOG.md
+include CONTRIBUTING.md
 recursive-include tests *.py
+recursive-include docs *.rst
+recursive-include utils *.py

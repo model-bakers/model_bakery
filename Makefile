@@ -9,5 +9,9 @@ release:
 	@python setup.py sdist bdist_wheel
 	@twine upload dist/*
 
-.PHONY: test release
+lint:
+	@black .
+	@ruff .
+	@mypy model_bakery
 
+.PHONY: help test release lint

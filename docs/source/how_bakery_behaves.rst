@@ -12,13 +12,13 @@ You can override this behavior by:
     # from "Basic Usage" page, assume all fields either null=True or blank=True
     from model_bakery import baker
 
-    customer = baker.make('shop.Customer', happy=True, bio='Happy customer')
+    customer = baker.make('shop.Customer', enjoy_jards_macale=True, bio="A fan of Jards Malacé")
 
 2. Passing ``_fill_optional`` with a list of fields to fill with random data
 
 .. code-block:: python
 
-    customer = baker.make('shop.Customer', _fill_optional=['happy', 'bio'])
+    customer = baker.make('shop.Customer', _fill_optional=['enjoy_jards_macale', 'bio'])
 
 3. Passing ``_fill_optional=True`` to fill all fields with random data
 
@@ -49,6 +49,7 @@ Currently supported fields
 * ``FileField``, ``ImageField``
 * ``JSONField``, ``ArrayField``, ``HStoreField``
 * ``CICharField``, ``CIEmailField``, ``CITextField``
+* ``DecimalRangeField``, ``IntegerRangeField``, ``BigIntegerRangeField``, ``DateRangeField``, ``DateTimeRangeField``
 
 Require ``django.contrib.gis`` in ``INSTALLED_APPS``:
 
@@ -58,7 +59,7 @@ Custom fields
 -------------
 
 Model Bakery allows you to define generators methods for your custom fields or overrides its default generators.
-This can be achieved by specifing the field and generator function for the ``generators.add`` function.
+This can be achieved by specifying the field and generator function for the ``generators.add`` function.
 Both can be the real python objects imported in settings or just specified as import path string.
 
 Examples:
@@ -95,7 +96,7 @@ Examples:
 .. code-block:: python
 
     # in the module code.path:
-    class CustomBaker(baker.Baker)
+    class CustomBaker(baker.Baker):
         def get_fields(self):
             return [
                 field
@@ -107,7 +108,7 @@ Examples:
     BAKER_CUSTOM_CLASS = 'code.path.CustomBaker'
 
 
-Additionaly, if you want to your created instance to be returned respecting one of your custom ModelManagers, you can use the ``_from_manager`` parameter as the example bellow:
+Additionally, if you want to your created instance to be returned respecting one of your custom ModelManagers, you can use the ``_from_manager`` parameter as the example below:
 
 
 .. code-block:: python

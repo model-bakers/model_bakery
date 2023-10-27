@@ -1,27 +1,13 @@
-"""
-Add support for Django 1.4+ safe datetimes.
-https://docs.djangoproject.com/en/1.4/topics/i18n/timezones/
-"""
-# TODO: the whole file seems to be not needed anymore, since Django has this tooling built-in
+"""Utility functions to manage timezone code."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
-try:
-    from django.conf import settings
-    from django.utils.timezone import now, utc
-except ImportError:
-    def now():
-        return datetime.now()
+from django.conf import settings
 
 
-def smart_datetime(*args):
-    value = datetime(*args)
-    return tz_aware(value)
-
-
-def tz_aware(d):
-    value = d
+def tz_aware(value: datetime) -> datetime:
+    """Return an UTC-aware datetime in case of USE_TZ=True."""
     if settings.USE_TZ:
-        value = d.replace(tzinfo=utc)
+        value = value.replace(tzinfo=timezone.utc)
 
     return value

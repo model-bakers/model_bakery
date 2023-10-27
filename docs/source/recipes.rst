@@ -57,6 +57,7 @@ File: **test_model.py** ::
                 'shop.customer_joe'
             )
 
+
 Or if you don't want a persisted instance: ::
 
     from model_bakery import baker
@@ -64,7 +65,16 @@ Or if you don't want a persisted instance: ::
     baker.prepare_recipe('shop.customer_joe')
 
 
-Another examples
+.. note::
+
+    You don't have to place necessarily your ``baker_recipes.py`` file inside your app's root directory.
+    If you have a tests directory within the app, for example, you can add your recipes inside it and still
+    use ``make_recipe``/``prepare_recipe`` by adding the tests module to the string you've passed as an argument.
+    For example: ``baker.make_recipe("shop.tests.customer_joe")``
+
+    So, short summary, you can place your ``baker_recipes.py`` **anywhere** you want to and to use it having in mind
+    you'll only have to simulate an import but obfuscating the ``baker_recipes`` module from the import string.
+
 
 .. note::
 
@@ -117,7 +127,7 @@ You can define ``foreign_key`` relations:
     )
 
     history = Recipe(PurchaseHistory,
-        customer=foreign_key(customer)
+        owner=foreign_key(customer)
     )
 
 Notice that ``customer`` is a *recipe*.
@@ -132,7 +142,6 @@ Using the ``foreign_key`` is important for 2 reasons:
 You can also use ``related``, when you want two or more models to share the same parent:
 
 .. code-block:: python
-
 
     from model_bakery.recipe import related, Recipe
     from shop.models import Customer, PurchaseHistory
@@ -158,6 +167,33 @@ If you want to set m2m relationship you can use ``related`` as well:
     history_with_prods = history.extend(
         products=related(pencil, pen)
     )
+
+When creating models based on a ``foreign_key`` recipe using the ``_quantity`` argument, only one related model will be created for all new instances.
+
+.. code-block:: python
+
+    from model_baker.recipe import foreign_key, Recipe
+
+    person = Recipe(Person, name='Albert')
+    dog = Recipe(Dog, owner=foreign_key(person))
+
+    # All dogs share the same owner
+    dogs = dog.make_recipe(_quantity=2)
+    assert dogs[0].owner.id == dogs[1].owner.id
+
+This will cause an issue if your models use ``OneToOneField``. In that case, you can provide ``one_to_one=True`` to the recipe to make sure every instance created by ``_quantity`` has a unique id.
+
+.. code-block:: python
+
+    from model_baker.recipe import foreign_key, Recipe
+
+    person = Recipe(Person, name='Albert')
+    dog = Recipe(Dog, owner=foreign_key(person, one_to_one=True))
+
+    # Each dog has a unique owner
+    dogs = dog.make_recipe(_quantity=2)
+    assert dogs[0].owner.id != dogs[1].owner.id
+
 
 
 Recipes with callables
@@ -202,81 +238,101 @@ Sometimes, you have a field with an unique value and using ``make`` can cause ra
 
 .. code-block:: python
 
+    >>> from model_bakery.recipe import Recipe, seq
+    >>> from shop.models import Customer
 
-    from model_bakery.recipe import Recipe, seq
-    from shop.models import Customer
-
-    customer = Recipe(Customer,
+    >>> customer = Recipe(Customer,
         name=seq('Joe'),
         age=seq(15)
     )
 
-    customer = baker.make_recipe('shop.customer')
-    customer.name
-    >>> 'Joe1'
-    customer.age
-    >>> 16
+    >>> customer = baker.make_recipe('shop.customer')
+    >>> customer.name
+    'Joe1'
+    >>> customer.age
+    16
 
-    new_customer = baker.make_recipe('shop.customer')
-    new_customer.name
-    >>> 'Joe2'
-    new_customer.age
-    >>> 17
+    >>> new_customer = baker.make_recipe('shop.customer')
+    >>> new_customer.name
+    'Joe2'
+    >>> new_customer.age
+    17
 
 This will append a counter to strings to avoid uniqueness problems and it will sum the counter with numerical values.
 
-Sequences and iterables can be used not only for recipes, but with ``baker.make`` as well:
+An optional ``suffix`` parameter can be supplied to augment the value for cases like generating emails
+or other strings with common suffixes.
 
 .. code-block:: python
 
+    >>> from model_bakery import.recipe import Recipe, seq
+    >>> from shop.models import Customer
 
-    # it can be imported directly from model_bakery
-    from model_bakery import seq
-    from model_bakery import baker
+    >>> customer = Recipe(Customer, email=seq('user', suffix='@example.com'))
 
-    customer = baker.make('Customer', name=seq('Joe'))
-    customer.name
-    >>> 'Joe1'
+    >>> customer = baker.make_recipe('shop.customer')
+    >>> customer.email
+    'user1@example.com'
 
-    customers = baker.make('Customer', name=seq('Chad'), _quantity=3)
-    for customer in customers:
-        print(customer.name)
-    >>> 'Chad1'
-    >>> 'Chad2'
-    >>> 'Chad3'
+    >>> customer = baker.make_recipe('shop.customer')
+    >>> customer.email
+    'user2@example.com'
 
-You can also provide an optional ``increment_by`` argument which will modify incrementing behaviour. This can be an integer, float, Decimal or timedelta.
+Sequences and iterables can be used not only for recipes, but with ``baker`` as well:
 
 .. code-block:: python
 
+    >>> from model_bakery import baker
 
-    from datetime import date, timedelta
-    from model_bakery.recipe import Recipe, seq
-    from shop.models import Customer
+    >>> customer = baker.make('Customer', name=baker.seq('Joe'))
+    >>> customer.name
+    'Joe1'
+
+    >>> customers = baker.make('Customer', name=baker.seq('Chad'), _quantity=3)
+    >>> for customer in customers:
+    ...     print(customer.name)
+    'Chad1'
+    'Chad2'
+    'Chad3'
+
+You can also provide an optional ``increment_by`` argument which will modify incrementing behaviour. This can be an integer, float, Decimal or timedelta. If you want to start your increment differently, you can use the ``start`` argument, only if it's not a sequence for ``date``, ``datetime`` or ``time`` objects.
+
+.. code-block:: python
+
+    >>> from datetime import date, timedelta
+    >>> from model_bakery.recipe import Recipe, seq
+    >>> from shop.models import Customer
 
 
-    customer = Recipe(Customer,
+    >>> customer = Recipe(Customer,
         age=seq(15, increment_by=3)
         height_ft=seq(5.5, increment_by=.25)
         # assume today's date is 21/07/2014
-        appointment=seq(date(2014, 7, 21), timedelta(days=1))
+        appointment=seq(date(2014, 7, 21), timedelta(days=1)),
+        name=seq('Custom num: ', increment_by=2, start=5),
     )
 
-    customer = baker.make_recipe('shop.customer')
-    customer.age
-    >>> 18
-    customer.height_ft
-    >>> 5.75
-    customer.appointment
-    >>> datetime.date(2014, 7, 22)
+    >>> customer = baker.make_recipe('shop.customer')
+    >>> customer.age
+    18
+    >>> customer.height_ft
+    5.75
+    >>> customer.appointment
+    datetime.date(2014, 7, 22)
+    >>> customer.name
+    'Custom num: 5'
 
-    new_customer = baker.make_recipe('shop.customer')
-    new_customer.age
-    >>> 21
-    new_customer.height_ft
-    >>> 6.0
-    new_customer.appointment
-    >>> datetime.date(2014, 7, 23)
+    >>> new_customer = baker.make_recipe('shop.customer')
+    >>> new_customer.age
+    21
+    >>> new_customer.height_ft
+    6.0
+    >>> new_customer.appointment
+    datetime.date(2014, 7, 23)
+    >>> customer.name
+    'Custom num: 7'
+
+Be aware that ``seq`` may query the database to determine when to reset. Therefore, a ``SimpleTestCase`` test method (which disallows database access) can call ``prepare_recipe`` on a Recipe with a ``seq`` once, but not not more than once within a test, even though the record itself is never saved to the database.
 
 Overriding recipe definitions
 -----------------------------
@@ -302,8 +358,8 @@ If you need to reuse and override existent recipe call extend method:
         Customer,
         bio='Some customer bio',
         age=30,
-        happy=True,
+        enjoy_jards_macale=True,
     )
     sad_customer = customer.extend(
-        happy=False,
+        enjoy_jards_macale=False,
     )

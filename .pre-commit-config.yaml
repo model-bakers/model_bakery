@@ -1,13 +1,24 @@
 repos:
--   repo: git@github.com:pre-commit/pre-commit-hooks
-    rev: v2.1.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
     hooks:
-    -   id: check-added-large-files
-    -   id: debug-statements
-    -   id: end-of-file-fixer
-    -   id: requirements-txt-fixer
-    -   id: trailing-whitespace
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.7.6
+      - id: check-added-large-files
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+  - repo: local
     hooks:
-    -   id: flake8
+      - id: ruff
+        name: ruff
+        entry: ruff
+        language: system
+        args: [ --fix, --exit-non-zero-on-fix ]
+        types:
+          - python
+      - id: black
+        name: black
+        entry: black
+        language: system
+        types:
+          - python
