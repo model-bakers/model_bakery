@@ -15,7 +15,7 @@ Model Bakery is a rename of the legacy [Model Mommy project](https://pypi.org/pr
 ## Install
 
 ```bash
-pip install model_bakery
+pip install model-bakery
 ```
 
 ## Usage and Info

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add support to `auto_now` and `auto_now_add` fields.
 
 ### Changed
+- Remove unnecessary casting to string methods random_gen.gen_slug and random_gen.gen_string
 
 ### Removed
 
