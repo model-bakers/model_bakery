@@ -1069,3 +1069,26 @@ class TestBakerSeeded:
     @pytest.mark.django_db
     def test_unseeded(self):
         assert baker.Baker._global_seed is baker.Baker.SENTINEL
+
+
+class TestAutoNowFields:
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("use_tz", [False, True])
+    def test_make_with_auto_now(self, use_tz, settings):
+        settings.USE_TZ = use_tz
+        tzinfo = datetime.timezone.utc if use_tz else None
+
+        now = datetime.datetime(2023, 10, 20, 15, 30).replace(tzinfo=tzinfo)
+
+        instance = baker.make(
+            models.ModelWithAutoNowFields,
+            created=now,
+            updated=now,
+            sent_date=now,
+        )
+
+        instance.refresh_from_db()
+
+        assert instance.created == now
+        assert instance.updated == now
+        assert instance.sent_date == now

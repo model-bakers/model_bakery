@@ -472,3 +472,9 @@ class Issue291Model3(models.Model):
         Issue291Model2, related_name="bazs", on_delete=models.CASCADE
     )
     name = models.CharField(max_length=32)
+
+
+class ModelWithAutoNowFields(models.Model):
+    sent_date = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
