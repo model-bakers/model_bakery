@@ -98,15 +98,16 @@ addopts = "--tb=short -rxs --nomigrations"
 target-version = "py38"
 
 select = [
+    "S", # flake8-bandit
+    "B", # flake8-bugbear
+    "C", # flake8-comprehensions
+    "I", # isort
     "E", # pycodestyle errors
     "W", # pycodestyle warnings
     "F", # pyflakes
-    "I", # isort
-    "S", # flake8-bandit
     "D", # pydocstyle
     "UP", # pyupgrade
-    "B", # flake8-bugbear
-    "C", # flake8-comprehensions
+    "RUF100", # Unused noqa directive
 ]
 
 ignore = ["B904", "E501", "S101", "D1", "D212"]
