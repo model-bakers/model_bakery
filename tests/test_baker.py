@@ -1074,7 +1074,7 @@ class TestBakerSeeded:
 class TestAutoNowFields:
     @pytest.mark.django_db
     @pytest.mark.parametrize("use_tz", [False, True])
-    def test_make_with_auto_now(self, use_tz):
+    def test_make_with_auto_now(self, use_tz, settings):
         settings.USE_TZ = use_tz
         tzinfo = datetime.timezone.utc if use_tz else None
 
