@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- [dev] Add `pytest-cov` to improve DX
 
 ### Changed
-- Remove unnecessary casting to string methods random_gen.gen_slug and random_gen.gen_string
+- Remove unnecessary casting to string methods `random_gen.gen_slug` and `random_gen.gen_string`
 
 ### Removed
 
