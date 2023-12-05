@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
+- Drop Django 4.1 support (reached end of life)
 
 ## [1.17.0](https://pypi.org/project/model-bakery/1.17.0/)
 
