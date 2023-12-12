@@ -1039,8 +1039,8 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
         assert movie.title == movie.name
 
 
+@pytest.mark.django_db
 class TestCreateM2MWhenBulkCreate(TestCase):
-    @pytest.mark.django_db
     def test_create(self):
         query_count = 13 if DJANGO_VERSION >= (4, 0) else 14
         with self.assertNumQueries(query_count):
@@ -1050,6 +1050,13 @@ class TestCreateM2MWhenBulkCreate(TestCase):
             )
         c1, c2 = models.Classroom.objects.all()[:2]
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
+
+    def test_make_should_create_objects_using_reverse_name(self):
+        detail = baker.make(models.HouseDetail)
+        houses = baker.make(
+            models.House, housedetail_set=[detail], _quantity=20, _bulk_create=True
+        )
+        assert houses[0].housedetail_set.count() == 1
 
 
 class TestBakerSeeded:

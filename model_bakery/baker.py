@@ -841,4 +841,18 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
                         for obj in kwargs[field.name]
                     ]
                 )
+
+        # set many-to-many relations that are specified using related name from kwargs
+        for field in baker.model._meta.get_fields():
+            if field.many_to_many and hasattr(field, "related_model"):
+                reverse_relation_name = (
+                    field.related_query_name
+                    or field.related_name
+                    or f"{field.related_model._meta.model_name}_set"
+                )
+                if reverse_relation_name in kwargs:
+                    getattr(entry, reverse_relation_name).set(
+                        kwargs[reverse_relation_name]
+                    )
+
     return created_entries
