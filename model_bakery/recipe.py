@@ -94,8 +94,7 @@ class Recipe(Generic[M]):
         _bulk_create: bool = False,
         _save_kwargs: Optional[Dict[str, Any]] = None,
         **attrs: Any,
-    ) -> M:
-        ...
+    ) -> M: ...
 
     @overload
     def make(
@@ -108,8 +107,7 @@ class Recipe(Generic[M]):
         _bulk_create: bool = False,
         _save_kwargs: Optional[Dict[str, Any]] = None,
         **attrs: Any,
-    ) -> List[M]:
-        ...
+    ) -> List[M]: ...
 
     def make(
         self,
@@ -146,8 +144,7 @@ class Recipe(Generic[M]):
         _save_related: bool = False,
         _using: str = "",
         **attrs: Any,
-    ) -> M:
-        ...
+    ) -> M: ...
 
     @overload
     def prepare(
@@ -156,8 +153,7 @@ class Recipe(Generic[M]):
         _save_related: bool = False,
         _using: str = "",
         **attrs: Any,
-    ) -> List[M]:
-        ...
+    ) -> List[M]: ...
 
     def prepare(
         self,

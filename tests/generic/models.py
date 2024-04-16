@@ -87,24 +87,17 @@ class Person(models.Model):
     occupation = models.CharField(max_length=10, choices=OCCUPATION_CHOICES)
     uuid = models.UUIDField(primary_key=False)
     name_hash = models.BinaryField(max_length=16)
-    days_since_last_login = models.BigIntegerField()
+    days_since_last_login = models.SmallIntegerField()
+    days_since_account_creation = models.BigIntegerField()
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
-
-    try:
-        from django.db.models import JSONField
-
-        data = JSONField()
-    except ImportError:
-        # Skip JSONField-related fields
-        pass
+    data = models.JSONField()
 
     try:
         from django.contrib.postgres.fields import (
             ArrayField,
             HStoreField,
-            JSONField as PostgresJSONField,
         )
         from django.contrib.postgres.fields.citext import (
             CICharField,
@@ -123,7 +116,6 @@ class Person(models.Model):
             if django.VERSION >= (4, 2):
                 long_name = models.CharField()
             acquaintances = ArrayField(models.IntegerField())
-            postgres_data = PostgresJSONField()
             hstore_data = HStoreField()
             ci_char = CICharField(max_length=30)
             ci_email = CIEmailField()
