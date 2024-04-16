@@ -258,6 +258,7 @@ class DummyIntModel(models.Model):
 class DummyPositiveIntModel(models.Model):
     positive_small_int_field = models.PositiveSmallIntegerField()
     positive_int_field = models.PositiveIntegerField()
+    positive_big_int_field = models.PositiveBigIntegerField()
 
 
 class DummyNumbersModel(models.Model):

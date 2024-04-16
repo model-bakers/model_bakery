@@ -8,13 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
-
 - Add Django 5.0 support
 
 ### Changed
 
 ### Removed
-- Drop Django 4.1 support (reached end of life)
+- Drop Django 3.2 and 4.1 support (reached end of life)
 
 ## [1.17.0](https://pypi.org/project/model-bakery/1.17.0/)
 

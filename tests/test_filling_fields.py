@@ -214,6 +214,15 @@ class TestFillingPositiveIntFields:
         assert isinstance(dummy_positive_int_model.positive_int_field, int)
         assert dummy_positive_int_model.positive_int_field > 0
 
+    def test_fill_PositiveBigIntegerField_with_a_random_number(self):
+        dummy_positive_int_model = baker.make(models.DummyPositiveIntModel)
+        positive_big_int_field = models.DummyPositiveIntModel._meta.get_field(
+            "positive_big_int_field"
+        )
+        assert isinstance(positive_big_int_field, fields.PositiveBigIntegerField)
+        assert isinstance(dummy_positive_int_model.positive_big_int_field, int)
+        assert dummy_positive_int_model.positive_big_int_field > 0
+
 
 @pytest.mark.django_db
 class TestFillingOthersNumericFields:
@@ -559,9 +568,6 @@ class TestCIStringFieldsFilling:
 class TestPostgreSQLFieldsFilling:
     def test_fill_arrayfield_with_empty_array(self, person):
         assert person.acquaintances == []
-
-    def test_fill_jsonfield_with_empty_dict(self, person):
-        assert person.postgres_data == {}
 
     def test_fill_hstorefield_with_empty_dict(self, person):
         assert person.hstore_data == {}
