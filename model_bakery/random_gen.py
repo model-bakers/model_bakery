@@ -27,7 +27,7 @@ MAX_LENGTH = 300
 # Postgres database.
 MAX_INT = 100000000000
 
-baker_random = Random()
+baker_random = Random()  # noqa: S311
 
 
 def get_content_file(content: bytes, name: str) -> ContentFile:

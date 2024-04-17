@@ -15,7 +15,6 @@ from typing import (
     overload,
 )
 
-from django import VERSION as DJANGO_VERSION
 from django.apps import apps
 from django.conf import settings
 from django.contrib import contenttypes
@@ -78,8 +77,7 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     **attrs: Any,
-) -> M:
-    ...
+) -> M: ...
 
 
 @overload
@@ -94,8 +92,7 @@ def make(
     _bulk_create: bool = False,
     _fill_optional: Union[List[str], bool] = False,
     **attrs: Any,
-) -> List[M]:
-    ...
+) -> List[M]: ...
 
 
 def make(
@@ -147,8 +144,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     **attrs,
-) -> M:
-    ...
+) -> M: ...
 
 
 @overload
@@ -159,8 +155,7 @@ def prepare(
     _using: str = "",
     _fill_optional: Union[List[str], bool] = False,
     **attrs,
-) -> List[M]:
-    ...
+) -> List[M]: ...
 
 
 def prepare(
@@ -818,12 +813,7 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     else:
         manager = baker.model._base_manager
 
-    existing_entries = list(manager.values_list("pk", flat=True))
     created_entries = manager.bulk_create(entries)
-    # bulk_create in Django < 4.0 does not return ids of created objects.
-    #  drop this after 01 Apr 2024 (Django 3.2 LTS end of life)
-    if DJANGO_VERSION < (4, 0):
-        created_entries = manager.exclude(pk__in=existing_entries)
 
     # set many-to-many relations from kwargs
     for entry in created_entries:

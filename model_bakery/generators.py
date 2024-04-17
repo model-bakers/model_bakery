@@ -3,6 +3,8 @@ from typing import Any, Callable, Dict, Optional, Type, Union
 
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
+    AutoField,
+    BigAutoField,
     BigIntegerField,
     BinaryField,
     BooleanField,
@@ -19,11 +21,14 @@ from django.db.models import (
     ImageField,
     IntegerField,
     IPAddressField,
+    JSONField,
     ManyToManyField,
     OneToOneField,
+    PositiveBigIntegerField,
     PositiveIntegerField,
     PositiveSmallIntegerField,
     SlugField,
+    SmallAutoField,
     SmallIntegerField,
     TextField,
     TimeField,
@@ -35,38 +40,10 @@ from . import random_gen
 from .utils import import_from_str
 
 try:
-    # Proper support starts with Django 3.0
-    #  (as it uses `django/db/backends/base/operations.py` for matching ranges)
-    from django.db.models import AutoField, BigAutoField, SmallAutoField
-except ImportError:
-    AutoField = None
-    BigAutoField = None
-    SmallAutoField = None
-
-try:
-    # added in Django 3.1
-    from django.db.models import PositiveBigIntegerField
-except ImportError:
-    PositiveBigIntegerField = None
-
-try:
-    # Replaced `django.contrib.postgres.fields.JSONField` in Django 3.1
-    from django.db.models import JSONField
-except ImportError:
-    JSONField = None
-
-try:
     # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
     ArrayField = None
-
-try:
-    # Deprecated since Django 3.1, removed in Django 4.0
-    # PostgreSQL-specific field (only available when psycopg is installed)
-    from django.contrib.postgres.fields import JSONField as PostgresJSONField
-except ImportError:
-    PostgresJSONField = None
 
 try:
     # PostgreSQL-specific field (only available when psycopg is installed)
@@ -85,12 +62,6 @@ except ImportError:
     CICharField = None
     CIEmailField = None
     CITextField = None
-
-try:
-    # Deprecated since Django 3.1, removed in Django 4.0
-    from django.db.models import NullBooleanField
-except ImportError:
-    NullBooleanField = None
 
 
 try:
@@ -124,9 +95,13 @@ default_mapping = {
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
     BooleanField: random_gen.gen_boolean,
+    AutoField: _make_integer_gen_by_range(AutoField),
+    BigAutoField: _make_integer_gen_by_range(BigAutoField),
     IntegerField: _make_integer_gen_by_range(IntegerField),
+    SmallAutoField: _make_integer_gen_by_range(SmallAutoField),
     BigIntegerField: _make_integer_gen_by_range(BigIntegerField),
     SmallIntegerField: _make_integer_gen_by_range(SmallIntegerField),
+    PositiveBigIntegerField: _make_integer_gen_by_range(PositiveBigIntegerField),
     PositiveIntegerField: _make_integer_gen_by_range(PositiveIntegerField),
     PositiveSmallIntegerField: _make_integer_gen_by_range(PositiveSmallIntegerField),
     FloatField: random_gen.gen_float,
@@ -146,14 +121,11 @@ default_mapping = {
     FileField: random_gen.gen_file_field,
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
+    JSONField: random_gen.gen_json,
 }  # type: Dict[Type, Callable]
 
 if ArrayField:
     default_mapping[ArrayField] = random_gen.gen_array
-if JSONField:
-    default_mapping[JSONField] = random_gen.gen_json
-if PostgresJSONField:
-    default_mapping[PostgresJSONField] = random_gen.gen_json
 if HStoreField:
     default_mapping[HStoreField] = random_gen.gen_hstore
 if CICharField:
@@ -162,16 +134,6 @@ if CIEmailField:
     default_mapping[CIEmailField] = random_gen.gen_email
 if CITextField:
     default_mapping[CITextField] = random_gen.gen_text
-if AutoField:
-    default_mapping[AutoField] = _make_integer_gen_by_range(AutoField)
-if BigAutoField:
-    default_mapping[BigAutoField] = _make_integer_gen_by_range(BigAutoField)
-if SmallAutoField:
-    default_mapping[SmallAutoField] = _make_integer_gen_by_range(SmallAutoField)
-if PositiveBigIntegerField:
-    default_mapping[PositiveBigIntegerField] = _make_integer_gen_by_range(
-        PositiveBigIntegerField
-    )
 if DecimalRangeField:
     default_mapping[DecimalRangeField] = random_gen.gen_pg_numbers_range(Decimal)
 if IntegerRangeField:
@@ -182,8 +144,6 @@ if DateRangeField:
     default_mapping[DateRangeField] = random_gen.gen_date_range
 if DateTimeRangeField:
     default_mapping[DateTimeRangeField] = random_gen.gen_datetime_range
-if NullBooleanField:
-    default_mapping[NullBooleanField] = random_gen.gen_boolean
 
 
 # Add GIS fields

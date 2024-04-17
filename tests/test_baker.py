@@ -3,7 +3,6 @@ import itertools
 from decimal import Decimal
 from unittest.mock import patch
 
-from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Manager
@@ -153,7 +152,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             assert all(p.name == "George Washington" for p in people)
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
-        query_count = 2 if DJANGO_VERSION >= (4, 0) else 3
+        query_count = 1
         with self.assertNumQueries(query_count):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
         assert models.Person.objects.count() == 5
@@ -365,7 +364,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_one_to_one(self):
-        query_count = 7 if DJANGO_VERSION >= (4, 0) else 8
+        query_count = 6
         with self.assertNumQueries(query_count):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
@@ -373,7 +372,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_chaining_bulk_create_reduces_query_count(self):
-        query_count = 5 if DJANGO_VERSION >= (4, 0) else 7
+        query_count = 3
         with self.assertNumQueries(query_count):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
             person_iter = models.Person.objects.all().iterator()
@@ -389,7 +388,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_fk(self):
-        query_count = 7 if DJANGO_VERSION >= (4, 0) else 8
+        query_count = 6
         with self.assertNumQueries(query_count):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
@@ -1042,7 +1041,7 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
 class TestCreateM2MWhenBulkCreate(TestCase):
     @pytest.mark.django_db
     def test_create(self):
-        query_count = 13 if DJANGO_VERSION >= (4, 0) else 14
+        query_count = 12
         with self.assertNumQueries(query_count):
             person = baker.make(models.Person)
             baker.make(
