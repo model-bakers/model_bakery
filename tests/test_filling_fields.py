@@ -5,7 +5,6 @@ from os.path import abspath
 from tempfile import gettempdir
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.validators import (
     validate_ipv4_address,
     validate_ipv6_address,
@@ -17,6 +16,7 @@ from django.db.models import FileField, ImageField, fields
 import pytest
 
 from model_bakery import baker
+from model_bakery.content_types import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
 from model_bakery.random_gen import gen_related
 from tests.generic import generators, models
@@ -271,9 +271,15 @@ class TestFillingIPAddressField:
             validate_ipv46_address(obj.ipv46_field)
 
 
+# skipif
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 @pytest.mark.django_db
 class TestFillingGenericForeignKeyField:
     def test_filling_content_type_field(self):
+        from django.contrib.contenttypes.models import ContentType
+
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
@@ -285,6 +291,8 @@ class TestFillingGenericForeignKeyField:
         Otherwise, calling ``next()`` when a GFK is in ``iterator_attrs``
         would be bypassed.
         """
+        from django.contrib.contenttypes.models import ContentType
+
         objects = baker.make(models.Profile, _quantity=2)
         dummies = baker.make(
             models.DummyGenericForeignKeyModel,
@@ -579,7 +587,6 @@ class TestGisFieldsFilling:
         assert geom.valid is True, geom.valid_reason
 
     def test_fill_PointField_valid(self, person):
-        print(BAKER_GIS)
         self.assertGeomValid(person.point)
 
     def test_fill_LineStringField_valid(self, person):

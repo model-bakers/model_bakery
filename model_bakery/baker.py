@@ -17,7 +17,6 @@ from typing import (
 
 from django.apps import apps
 from django.conf import settings
-from django.contrib import contenttypes
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -36,6 +35,7 @@ from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
 
 from . import generators, random_gen
 from ._types import M, NewM
+from .content_types import BAKER_CONTENTTYPES
 from .exceptions import (
     AmbiguousModelName,
     CustomBakerNotFound,
@@ -48,6 +48,13 @@ from .utils import (
     import_from_str,
     seq,  # noqa: F401 - Enable seq to be imported from recipes
 )
+
+if BAKER_CONTENTTYPES:
+    from django.contrib.contenttypes import models as contenttypes_models
+    from django.contrib.contenttypes.fields import GenericRelation
+else:
+    contenttypes_models = None
+    GenericRelation = None
 
 recipes = None
 
@@ -564,9 +571,7 @@ class Baker(Generic[M]):
         self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
         self.rel_fields = [x.split("__")[0] for x in self.rel_attrs if is_rel_field(x)]
 
-    def _skip_field(self, field: Field) -> bool:
-        from django.contrib.contenttypes.fields import GenericRelation
-
+    def _skip_field(self, field: Field) -> bool:  # noqa: C901
         # check for fill optional argument
         if isinstance(self.fill_in_optional, bool):
             field.fill_optional = self.fill_in_optional
@@ -588,7 +593,15 @@ class Baker(Generic[M]):
         if isinstance(field, OneToOneField) and self._remote_field(field).parent_link:
             return True
 
-        if isinstance(field, (AutoField, GenericRelation, OrderWrt)):
+        other_fields_to_skip = [
+            AutoField,
+            OrderWrt,
+        ]
+
+        if BAKER_CONTENTTYPES:
+            other_fields_to_skip.append(GenericRelation)
+
+        if isinstance(field, tuple(other_fields_to_skip)):
             return True
 
         if all(  # noqa: SIM102
@@ -682,9 +695,11 @@ class Baker(Generic[M]):
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
         model.
         """
-        is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
-            self._remote_field(field).model, contenttypes.models.ContentType
-        )
+        is_content_type_fk = False
+        if BAKER_CONTENTTYPES:
+            is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
+                self._remote_field(field).model, contenttypes_models.ContentType
+            )
         # we only use default unless the field is overwritten in `self.rel_fields`
         if field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
@@ -695,7 +710,7 @@ class Baker(Generic[M]):
         elif field.choices:
             generator = random_gen.gen_from_choices(field.choices)
         elif is_content_type_fk:
-            generator = self.type_mapping[contenttypes.models.ContentType]
+            generator = self.type_mapping[contenttypes_models.ContentType]
         elif generators.get(field.__class__):
             generator = generators.get(field.__class__)
         elif field.__class__ in self.type_mapping:

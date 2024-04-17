@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add Django 5.0 support
 
 ### Changed
+- Allow baking without `contenttypes` framework
 
 ### Removed
 - Drop Django 3.2 and 4.1 support (reached end of life)
