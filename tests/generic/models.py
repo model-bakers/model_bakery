@@ -8,11 +8,10 @@ from tempfile import gettempdir
 
 import django
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
 from django.utils.timezone import now
 
+from model_bakery.baker import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
 from model_bakery.timezone import tz_aware
 
@@ -36,6 +35,16 @@ if BAKER_GIS:
     from django.contrib.gis.db import models
 else:
     from django.db import models
+
+
+# check if the contenttypes app is installed
+if BAKER_CONTENTTYPES:
+    from django.contrib.contenttypes import models as contenttypes
+    from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+else:
+    contenttypes = None
+    GenericRelation = None
+    GenericForeignKey = None
 
 GENDER_CHOICES = [
     ("M", "male"),
@@ -272,14 +281,17 @@ class UnsupportedModel(models.Model):
     unsupported_field = UnsupportedField()
 
 
-class DummyGenericForeignKeyModel(models.Model):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
+if BAKER_CONTENTTYPES:
 
+    class DummyGenericForeignKeyModel(models.Model):
+        content_type = models.ForeignKey(
+            contenttypes.ContentType, on_delete=models.CASCADE
+        )
+        object_id = models.PositiveIntegerField()
+        content_object = GenericForeignKey("content_type", "object_id")
 
-class DummyGenericRelationModel(models.Model):
-    relation = GenericRelation(DummyGenericForeignKeyModel)
+    class DummyGenericRelationModel(models.Model):
+        relation = GenericRelation(DummyGenericForeignKeyModel)
 
 
 class DummyNullFieldsModel(models.Model):

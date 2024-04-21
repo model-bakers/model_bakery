@@ -150,14 +150,12 @@ if DateTimeRangeField:
 
 
 def get_type_mapping() -> Dict[Type, Callable]:
-    from django.contrib.contenttypes.models import ContentType
-
+    from .content_types import default_contenttypes_mapping
     from .gis import default_gis_mapping
 
     mapping = default_mapping.copy()
-    mapping[ContentType] = random_gen.gen_content_type
+    mapping.update(default_contenttypes_mapping)
     mapping.update(default_gis_mapping)
-
     return mapping.copy()
 
 

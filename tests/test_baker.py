@@ -3,8 +3,8 @@ import itertools
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.apps import apps
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
@@ -12,7 +12,7 @@ from django.test import TestCase, override_settings
 import pytest
 
 from model_bakery import baker, random_gen
-from model_bakery.baker import MAX_MANY_QUANTITY
+from model_bakery.baker import BAKER_CONTENTTYPES, MAX_MANY_QUANTITY
 from model_bakery.exceptions import (
     AmbiguousModelName,
     InvalidQuantityException,
@@ -232,6 +232,11 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert num_2.value == 2
         assert num_3.value == 3
 
+    # skip if auth app is not installed
+    @pytest.mark.skipif(
+        not apps.is_installed("django.contrib.auth"),
+        reason="Django auth app is not installed",
+    )
     def test_generators_work_with_user_model(self):
         from django.contrib.auth import get_user_model
 
@@ -602,6 +607,9 @@ class TestHandlingUnsupportedModels:
             assert "field unsupported_field" in repr(e)
 
 
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 @pytest.mark.django_db
 class TestHandlingModelsWithGenericRelationFields:
     def test_create_model_with_generic_relation(self):
@@ -609,16 +617,26 @@ class TestHandlingModelsWithGenericRelationFields:
         assert isinstance(dummy, models.DummyGenericRelationModel)
 
 
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 @pytest.mark.django_db
 class TestHandlingContentTypeField:
     def test_create_model_with_contenttype_field(self):
+        from django.contrib.contenttypes.models import ContentType
+
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
 
 
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 class TestHandlingContentTypeFieldNoQueries:
     def test_create_model_with_contenttype_field(self):
+        from django.contrib.contenttypes.models import ContentType
+
         # Clear ContentType's internal cache so that it *will* try to connect to
         # the database to fetch the corresponding ContentType model for
         # a randomly chosen model.
