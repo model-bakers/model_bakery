@@ -52,7 +52,7 @@ class Recipe(Generic[M]):
                     m = finder.get_model(self._model)
                 else:
                     m = self._model
-                if k not in self._iterator_backups or m.objects.count() == 0:
+                if k not in self._iterator_backups or not m.objects.exists():
                     self._iterator_backups[k] = itertools.tee(
                         self._iterator_backups.get(k, [v])[0]
                     )
