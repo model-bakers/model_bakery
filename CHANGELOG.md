@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+## [1.18.1](https://pypi.org/project/model-bakery/1.18.1/)
+
+### Changed
+- Replace expensive `count()` with cheap `exists()`
+
 ## [1.18.0](https://pypi.org/project/model-bakery/1.18.0/)
 
 ### Added
