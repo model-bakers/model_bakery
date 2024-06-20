@@ -406,6 +406,11 @@ class TestForeignKey:
         assert lady.dog_set.all()[0].breed == "Pug"
         assert lady.dog_set.all()[1].breed == "Basset"
 
+    def test_related_models_recipes_make_mutiple(self):
+        ladies = baker.make_recipe("tests.generic.dog_lady", _quantity=2)
+        assert ladies[0].dog_set.count() == 2
+        assert ladies[1].dog_set.count() == 2
+
     def test_nullable_related(self):
         nullable = baker.make_recipe("tests.generic.nullable_related")
         assert nullable.dummynullfieldsmodel_set.count() == 1
