@@ -638,6 +638,9 @@ class Baker(Generic[M]):
         for key, values in attrs.items():
             manager = getattr(instance, key)
 
+            if callable(values):
+                values = values()
+
             for value in values:
                 # Django will handle any operation to persist nested non-persisted FK because
                 # save doesn't do so and, thus, raises constraint errors. That's why save()
@@ -659,6 +662,9 @@ class Baker(Generic[M]):
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
+            if callable(values):
+                values = values()
+
             for value in values:
                 if not value.pk:
                     value.save()

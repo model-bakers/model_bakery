@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix `make_recipe` to work with `_quantity` (#28)
 
 ### Removed
 

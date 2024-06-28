@@ -78,7 +78,8 @@ class Recipe(Generic[M]):
                 else:
                     mapping[k] = v.recipe.prepare(_using=_using, **recipe_attrs)
             elif isinstance(v, related):
-                mapping[k] = v.make()
+                mapping[k] = v.make
+
         mapping.update(new_attrs)
         mapping.update(rel_fields_attrs)
         return mapping
