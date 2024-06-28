@@ -814,7 +814,7 @@ class TestBakerHandlesModelWithList:
         instance = baker.make(models.BaseModelForList, fk=["foo"])
 
         assert instance.id
-        assert ["foo"] == instance.fk
+        assert instance.fk == ["foo"]
 
 
 @pytest.mark.django_db
