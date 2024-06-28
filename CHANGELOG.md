@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Fix `make_recipe` to work with `_quantity` (#28)
 
 ### Removed
+
+## [1.18.2](https://pypi.org/project/model-bakery/1.18.2/)
+
+### Changed
+- Fix `make_recipe` to work with `_quantity` (#28)
 
 ## [1.18.1](https://pypi.org/project/model-bakery/1.18.1/)
 
