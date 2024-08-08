@@ -15,6 +15,7 @@ from typing import (
     overload,
 )
 
+from django import VERSION as DJANGO_VERSION
 from django.apps import apps
 from django.conf import settings
 from django.db.models import (

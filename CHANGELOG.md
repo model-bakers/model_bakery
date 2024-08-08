@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Add Django 5.1 support
 
 ### Changed
 - Fix support of GenericForeignKey fields in combination with `_fill_optional`
