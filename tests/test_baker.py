@@ -1059,9 +1059,9 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
 @pytest.mark.django_db
 class TestCreateM2MWhenBulkCreate(TestCase):
     def test_create(self):
-        query_count = 12
-        with self.assertNumQueries(query_count):
-            person = baker.make(models.Person)
+        person = baker.make(models.Person)
+
+        with self.assertNumQueries(11):
             baker.make(
                 models.Classroom, students=[person], _quantity=10, _bulk_create=True
             )
@@ -1072,14 +1072,16 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         classroom = baker.make(models.Classroom)
 
         with self.assertNumQueries(21):
-            students = baker.make(
+            baker.make(
                 models.Person,
                 classroom_set=[classroom],
                 _quantity=10,
                 _bulk_create=True,
             )
-
-        assert students[0].classroom_set.count() == 1
+        s1, s2 = models.Person.objects.all()[:2]
+        assert (
+            list(s1.classroom_set.all()) == list(s2.classroom_set.all()) == [classroom]
+        )
 
 
 class TestBakerSeeded:
