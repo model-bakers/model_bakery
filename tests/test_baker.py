@@ -3,9 +3,8 @@ import itertools
 from decimal import Decimal
 from unittest.mock import patch
 
-from django import VERSION as DJANGO_VERSION
+from django.apps import apps
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
@@ -13,7 +12,7 @@ from django.test import TestCase, override_settings
 import pytest
 
 from model_bakery import baker, random_gen
-from model_bakery.baker import MAX_MANY_QUANTITY
+from model_bakery.baker import BAKER_CONTENTTYPES, MAX_MANY_QUANTITY
 from model_bakery.exceptions import (
     AmbiguousModelName,
     InvalidQuantityException,
@@ -153,7 +152,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             assert all(p.name == "George Washington" for p in people)
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
-        query_count = 2 if DJANGO_VERSION >= (4, 0) else 3
+        query_count = 1
         with self.assertNumQueries(query_count):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
         assert models.Person.objects.count() == 5
@@ -233,6 +232,11 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert num_2.value == 2
         assert num_3.value == 3
 
+    # skip if auth app is not installed
+    @pytest.mark.skipif(
+        not apps.is_installed("django.contrib.auth"),
+        reason="Django auth app is not installed",
+    )
     def test_generators_work_with_user_model(self):
         from django.contrib.auth import get_user_model
 
@@ -365,7 +369,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_one_to_one(self):
-        query_count = 7 if DJANGO_VERSION >= (4, 0) else 8
+        query_count = 6
         with self.assertNumQueries(query_count):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
@@ -373,7 +377,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_chaining_bulk_create_reduces_query_count(self):
-        query_count = 5 if DJANGO_VERSION >= (4, 0) else 7
+        query_count = 3
         with self.assertNumQueries(query_count):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
             person_iter = models.Person.objects.all().iterator()
@@ -389,7 +393,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_fk(self):
-        query_count = 7 if DJANGO_VERSION >= (4, 0) else 8
+        query_count = 6
         with self.assertNumQueries(query_count):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
@@ -603,6 +607,9 @@ class TestHandlingUnsupportedModels:
             assert "field unsupported_field" in repr(e)
 
 
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 @pytest.mark.django_db
 class TestHandlingModelsWithGenericRelationFields:
     def test_create_model_with_generic_relation(self):
@@ -610,16 +617,26 @@ class TestHandlingModelsWithGenericRelationFields:
         assert isinstance(dummy, models.DummyGenericRelationModel)
 
 
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 @pytest.mark.django_db
 class TestHandlingContentTypeField:
     def test_create_model_with_contenttype_field(self):
+        from django.contrib.contenttypes.models import ContentType
+
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
 
 
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 class TestHandlingContentTypeFieldNoQueries:
     def test_create_model_with_contenttype_field(self):
+        from django.contrib.contenttypes.models import ContentType
+
         # Clear ContentType's internal cache so that it *will* try to connect to
         # the database to fetch the corresponding ContentType model for
         # a randomly chosen model.
@@ -797,7 +814,7 @@ class TestBakerHandlesModelWithList:
         instance = baker.make(models.BaseModelForList, fk=["foo"])
 
         assert instance.id
-        assert ["foo"] == instance.fk
+        assert instance.fk == ["foo"]
 
 
 @pytest.mark.django_db
@@ -1042,7 +1059,7 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
 @pytest.mark.django_db
 class TestCreateM2MWhenBulkCreate(TestCase):
     def test_create(self):
-        query_count = 13 if DJANGO_VERSION >= (4, 0) else 14
+        query_count = 12
         with self.assertNumQueries(query_count):
             person = baker.make(models.Person)
             baker.make(

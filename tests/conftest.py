@@ -6,13 +6,17 @@ from django.conf import settings
 
 def pytest_configure():
     test_db = os.environ.get("TEST_DB", "sqlite")
+    use_contenttypes = os.environ.get("USE_CONTENTTYPES", False)
     installed_apps = [
-        "django.contrib.contenttypes",
-        "django.contrib.auth",
         "tests.generic",
         "tests.ambiguous",
         "tests.ambiguous2",
     ]
+
+    if use_contenttypes:
+        installed_apps.append("django.contrib.contenttypes")
+        # auth app depends on contenttypes
+        installed_apps.append("django.contrib.auth")
 
     using_postgres_flag = False
     postgis_version = ()
@@ -76,11 +80,11 @@ def pytest_configure():
         POSTGIS_VERSION=postgis_version,
     )
 
+    django.setup()
+
     from model_bakery import baker
 
     def gen_same_text():
         return "always the same text"
 
     baker.generators.add("tests.generic.fields.CustomFieldViaSettings", gen_same_text)
-
-    django.setup()

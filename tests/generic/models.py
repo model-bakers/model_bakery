@@ -8,11 +8,10 @@ from tempfile import gettempdir
 
 import django
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
 from django.utils.timezone import now
 
+from model_bakery.baker import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
 from model_bakery.timezone import tz_aware
 
@@ -36,6 +35,16 @@ if BAKER_GIS:
     from django.contrib.gis.db import models
 else:
     from django.db import models
+
+
+# check if the contenttypes app is installed
+if BAKER_CONTENTTYPES:
+    from django.contrib.contenttypes import models as contenttypes
+    from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+else:
+    contenttypes = None
+    GenericRelation = None
+    GenericForeignKey = None
 
 GENDER_CHOICES = [
     ("M", "male"),
@@ -87,24 +96,17 @@ class Person(models.Model):
     occupation = models.CharField(max_length=10, choices=OCCUPATION_CHOICES)
     uuid = models.UUIDField(primary_key=False)
     name_hash = models.BinaryField(max_length=16)
-    days_since_last_login = models.BigIntegerField()
+    days_since_last_login = models.SmallIntegerField()
+    days_since_account_creation = models.BigIntegerField()
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
-
-    try:
-        from django.db.models import JSONField
-
-        data = JSONField()
-    except ImportError:
-        # Skip JSONField-related fields
-        pass
+    data = models.JSONField()
 
     try:
         from django.contrib.postgres.fields import (
             ArrayField,
             HStoreField,
-            JSONField as PostgresJSONField,
         )
         from django.contrib.postgres.fields.citext import (
             CICharField,
@@ -123,7 +125,6 @@ class Person(models.Model):
             if django.VERSION >= (4, 2):
                 long_name = models.CharField()
             acquaintances = ArrayField(models.IntegerField())
-            postgres_data = PostgresJSONField()
             hstore_data = HStoreField()
             ci_char = CICharField(max_length=30)
             ci_email = CIEmailField()
@@ -258,6 +259,7 @@ class DummyIntModel(models.Model):
 class DummyPositiveIntModel(models.Model):
     positive_small_int_field = models.PositiveSmallIntegerField()
     positive_int_field = models.PositiveIntegerField()
+    positive_big_int_field = models.PositiveBigIntegerField()
 
 
 class DummyNumbersModel(models.Model):
@@ -279,14 +281,17 @@ class UnsupportedModel(models.Model):
     unsupported_field = UnsupportedField()
 
 
-class DummyGenericForeignKeyModel(models.Model):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
+if BAKER_CONTENTTYPES:
 
+    class DummyGenericForeignKeyModel(models.Model):
+        content_type = models.ForeignKey(
+            contenttypes.ContentType, on_delete=models.CASCADE
+        )
+        object_id = models.PositiveIntegerField()
+        content_object = GenericForeignKey("content_type", "object_id")
 
-class DummyGenericRelationModel(models.Model):
-    relation = GenericRelation(DummyGenericForeignKeyModel)
+    class DummyGenericRelationModel(models.Model):
+        relation = GenericRelation(DummyGenericForeignKeyModel)
 
 
 class DummyNullFieldsModel(models.Model):

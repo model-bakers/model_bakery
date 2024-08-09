@@ -33,7 +33,7 @@ To run `postgresql` and `postgis` specific tests:
 1. [Install `docker`](https://docs.docker.com/get-docker/).
 
 2. Install the `postgis` dependencies. Follow the
-[instructions from the Django docs](https://docs.djangoproject.com/en/3.1/ref/contrib/gis/install/geolibs/):
+[instructions from the Django docs](https://docs.djangoproject.com/en/stable/ref/contrib/gis/install/geolibs/):
 
 If you are on Ubuntu/Debian you run the following:
 

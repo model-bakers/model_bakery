@@ -52,7 +52,7 @@ class Recipe(Generic[M]):
                     m = finder.get_model(self._model)
                 else:
                     m = self._model
-                if k not in self._iterator_backups or m.objects.count() == 0:
+                if k not in self._iterator_backups or not m.objects.exists():
                     self._iterator_backups[k] = itertools.tee(
                         self._iterator_backups.get(k, [v])[0]
                     )
@@ -78,7 +78,8 @@ class Recipe(Generic[M]):
                 else:
                     mapping[k] = v.recipe.prepare(_using=_using, **recipe_attrs)
             elif isinstance(v, related):
-                mapping[k] = v.make()
+                mapping[k] = v.make
+
         mapping.update(new_attrs)
         mapping.update(rel_fields_attrs)
         return mapping
@@ -94,8 +95,7 @@ class Recipe(Generic[M]):
         _bulk_create: bool = False,
         _save_kwargs: Optional[Dict[str, Any]] = None,
         **attrs: Any,
-    ) -> M:
-        ...
+    ) -> M: ...
 
     @overload
     def make(
@@ -108,8 +108,7 @@ class Recipe(Generic[M]):
         _bulk_create: bool = False,
         _save_kwargs: Optional[Dict[str, Any]] = None,
         **attrs: Any,
-    ) -> List[M]:
-        ...
+    ) -> List[M]: ...
 
     def make(
         self,
@@ -146,8 +145,7 @@ class Recipe(Generic[M]):
         _save_related: bool = False,
         _using: str = "",
         **attrs: Any,
-    ) -> M:
-        ...
+    ) -> M: ...
 
     @overload
     def prepare(
@@ -156,8 +154,7 @@ class Recipe(Generic[M]):
         _save_related: bool = False,
         _using: str = "",
         **attrs: Any,
-    ) -> List[M]:
-        ...
+    ) -> List[M]: ...
 
     def prepare(
         self,

@@ -37,7 +37,7 @@ Model Bakery should handle fields that:
 
 ## Currently supported fields
 
-- `BooleanField`, `NullBooleanField`, `IntegerField`, `BigIntegerField`, `SmallIntegerField`, `PositiveIntegerField`, `PositiveSmallIntegerField`, `FloatField`, `DecimalField`
+- `BooleanField`, `IntegerField`, `BigIntegerField`, `SmallIntegerField`, `PositiveIntegerField`, `PositiveBigIntegerField`, `PositiveSmallIntegerField`, `FloatField`, `DecimalField`
 - `CharField`, `TextField`, `BinaryField`, `SlugField`, `URLField`, `EmailField`, `IPAddressField`, `GenericIPAddressField`, `ContentType`
 - `ForeignKey`, `OneToOneField`, `ManyToManyField` (even with through model)
 - `DateField`, `DateTimeField`, `TimeField`, `DurationField`
@@ -93,7 +93,7 @@ class CustomBaker(baker.Baker):
         return [
             field
             for field in super(CustomBaker, self).get_fields()
-            if not field isinstance CustomField
+            if not isinstance(field, CustomField)
         ]
 
 # in your settings.py file:
@@ -111,7 +111,7 @@ movie = baker.make(Movie, title='Old Boys', _from_manager='availables')  # This 
 If you have overwritten the `save` method for a model, you can pass custom parameters to it using Model Bakery. Example:
 
 ```python
-class ProjectWithCustomSave(models.Model)
+class ProjectWithCustomSave(models.Model):
     # some model fields
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL)
 

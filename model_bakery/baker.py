@@ -15,10 +15,8 @@ from typing import (
     overload,
 )
 
-from django import VERSION as DJANGO_VERSION
 from django.apps import apps
 from django.conf import settings
-from django.contrib import contenttypes
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -37,6 +35,7 @@ from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
 
 from . import generators, random_gen
 from ._types import M, NewM
+from .content_types import BAKER_CONTENTTYPES
 from .exceptions import (
     AmbiguousModelName,
     CustomBakerNotFound,
@@ -49,6 +48,13 @@ from .utils import (
     import_from_str,
     seq,  # noqa: F401 - Enable seq to be imported from recipes
 )
+
+if BAKER_CONTENTTYPES:
+    from django.contrib.contenttypes import models as contenttypes_models
+    from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+else:
+    contenttypes_models = None
+    GenericRelation = None
 
 recipes = None
 
@@ -78,8 +84,7 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     **attrs: Any,
-) -> M:
-    ...
+) -> M: ...
 
 
 @overload
@@ -94,8 +99,7 @@ def make(
     _bulk_create: bool = False,
     _fill_optional: Union[List[str], bool] = False,
     **attrs: Any,
-) -> List[M]:
-    ...
+) -> List[M]: ...
 
 
 def make(
@@ -147,8 +151,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     **attrs,
-) -> M:
-    ...
+) -> M: ...
 
 
 @overload
@@ -159,8 +162,7 @@ def prepare(
     _using: str = "",
     _fill_optional: Union[List[str], bool] = False,
     **attrs,
-) -> List[M]:
-    ...
+) -> List[M]: ...
 
 
 def prepare(
@@ -499,6 +501,7 @@ class Baker(Generic[M]):
     ) -> M:
         one_to_many_keys = {}
         auto_now_keys = {}
+        generic_foreign_keys = {}
 
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
@@ -515,12 +518,15 @@ class Baker(Generic[M]):
             ):
                 auto_now_keys[k] = attrs[k]
 
+            if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
+                generic_foreign_keys[k] = attrs.pop(k)
+
         instance = self.model(**attrs)
-        # m2m only works for persisted instances
         if _commit:
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
             self._handle_m2m(instance)
+            self._handle_generic_foreign_keys(instance, generic_foreign_keys)
             self._handle_auto_now(instance, auto_now_keys)
 
             if _from_manager:
@@ -569,9 +575,7 @@ class Baker(Generic[M]):
         self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
         self.rel_fields = [x.split("__")[0] for x in self.rel_attrs if is_rel_field(x)]
 
-    def _skip_field(self, field: Field) -> bool:
-        from django.contrib.contenttypes.fields import GenericRelation
-
+    def _skip_field(self, field: Field) -> bool:  # noqa: C901
         # check for fill optional argument
         if isinstance(self.fill_in_optional, bool):
             field.fill_optional = self.fill_in_optional
@@ -593,7 +597,15 @@ class Baker(Generic[M]):
         if isinstance(field, OneToOneField) and self._remote_field(field).parent_link:
             return True
 
-        if isinstance(field, (AutoField, GenericRelation, OrderWrt)):
+        other_fields_to_skip = [
+            AutoField,
+            OrderWrt,
+        ]
+
+        if BAKER_CONTENTTYPES:
+            other_fields_to_skip.append(GenericRelation)
+
+        if isinstance(field, tuple(other_fields_to_skip)):
             return True
 
         if all(  # noqa: SIM102
@@ -614,7 +626,7 @@ class Baker(Generic[M]):
 
         if field.name not in self.model_attrs:  # noqa: SIM102
             if field.name not in self.rel_fields and (
-                field.null and not field.fill_optional
+                not field.fill_optional and field.null
             ):
                 return True
 
@@ -629,6 +641,9 @@ class Baker(Generic[M]):
     def _handle_one_to_many(self, instance: Model, attrs: Dict[str, Any]):
         for key, values in attrs.items():
             manager = getattr(instance, key)
+
+            if callable(values):
+                values = values()
 
             for value in values:
                 # Django will handle any operation to persist nested non-persisted FK because
@@ -651,6 +666,9 @@ class Baker(Generic[M]):
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
+            if callable(values):
+                values = values()
+
             for value in values:
                 if not value.pk:
                     value.save()
@@ -667,6 +685,10 @@ class Baker(Generic[M]):
                         m2m_relation.target_field_name: value,
                     }
                     make(through_model, _using=self._using, **base_kwargs)
+
+    def _handle_generic_foreign_keys(self, instance: Model, attrs: Dict[str, Any]):
+        for key, value in attrs.items():
+            setattr(instance, key, value)
 
     def _remote_field(
         self, field: Union[ForeignKey, OneToOneField]
@@ -687,11 +709,17 @@ class Baker(Generic[M]):
         `attr_mapping` and `type_mapping` can be defined easily overwriting the
         model.
         """
-        is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
-            self._remote_field(field).model, contenttypes.models.ContentType
-        )
+        is_content_type_fk = False
+        is_generic_fk = False
+        if BAKER_CONTENTTYPES:
+            is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
+                self._remote_field(field).model, contenttypes_models.ContentType
+            )
+            is_generic_fk = isinstance(field, GenericForeignKey)
+        if is_generic_fk:
+            generator = self.type_mapping[GenericForeignKey]
         # we only use default unless the field is overwritten in `self.rel_fields`
-        if field.has_default() and field.name not in self.rel_fields:
+        elif field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
                 return field.default()
             return field.default
@@ -700,7 +728,7 @@ class Baker(Generic[M]):
         elif field.choices:
             generator = random_gen.gen_from_choices(field.choices)
         elif is_content_type_fk:
-            generator = self.type_mapping[contenttypes.models.ContentType]
+            generator = self.type_mapping[contenttypes_models.ContentType]
         elif generators.get(field.__class__):
             generator = generators.get(field.__class__)
         elif field.__class__ in self.type_mapping:
@@ -818,12 +846,7 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> List[M]:
     else:
         manager = baker.model._base_manager
 
-    existing_entries = list(manager.values_list("pk", flat=True))
     created_entries = manager.bulk_create(entries)
-    # bulk_create in Django < 4.0 does not return ids of created objects.
-    #  drop this after 01 Apr 2024 (Django 3.2 LTS end of life)
-    if DJANGO_VERSION < (4, 0):
-        created_entries = manager.exclude(pk__in=existing_entries)
 
     # set many-to-many relations from kwargs
     for entry in created_entries:

@@ -5,7 +5,6 @@ from os.path import abspath
 from tempfile import gettempdir
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.validators import (
     validate_ipv4_address,
     validate_ipv6_address,
@@ -17,6 +16,7 @@ from django.db.models import FileField, ImageField, fields
 import pytest
 
 from model_bakery import baker
+from model_bakery.content_types import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
 from model_bakery.random_gen import gen_related
 from tests.generic import generators, models
@@ -214,6 +214,15 @@ class TestFillingPositiveIntFields:
         assert isinstance(dummy_positive_int_model.positive_int_field, int)
         assert dummy_positive_int_model.positive_int_field > 0
 
+    def test_fill_PositiveBigIntegerField_with_a_random_number(self):
+        dummy_positive_int_model = baker.make(models.DummyPositiveIntModel)
+        positive_big_int_field = models.DummyPositiveIntModel._meta.get_field(
+            "positive_big_int_field"
+        )
+        assert isinstance(positive_big_int_field, fields.PositiveBigIntegerField)
+        assert isinstance(dummy_positive_int_model.positive_big_int_field, int)
+        assert dummy_positive_int_model.positive_big_int_field > 0
+
 
 @pytest.mark.django_db
 class TestFillingOthersNumericFields:
@@ -262,9 +271,15 @@ class TestFillingIPAddressField:
             validate_ipv46_address(obj.ipv46_field)
 
 
+# skipif
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 @pytest.mark.django_db
 class TestFillingGenericForeignKeyField:
     def test_filling_content_type_field(self):
+        from django.contrib.contenttypes.models import ContentType
+
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
@@ -276,6 +291,8 @@ class TestFillingGenericForeignKeyField:
         Otherwise, calling ``next()`` when a GFK is in ``iterator_attrs``
         would be bypassed.
         """
+        from django.contrib.contenttypes.models import ContentType
+
         objects = baker.make(models.Profile, _quantity=2)
         dummies = baker.make(
             models.DummyGenericForeignKeyModel,
@@ -292,6 +309,13 @@ class TestFillingGenericForeignKeyField:
         assert dummies[1].content_object == objects[1]
         assert dummies[1].content_type == expected_content_type
         assert dummies[1].object_id == objects[1].pk
+
+    def test_with_fill_optional(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        dummy = baker.make(models.DummyGenericForeignKeyModel, _fill_optional=True)
+        assert isinstance(dummy.content_type, ContentType)
+        assert dummy.content_type.model_class() is not None
 
 
 @pytest.mark.django_db
@@ -560,9 +584,6 @@ class TestPostgreSQLFieldsFilling:
     def test_fill_arrayfield_with_empty_array(self, person):
         assert person.acquaintances == []
 
-    def test_fill_jsonfield_with_empty_dict(self, person):
-        assert person.postgres_data == {}
-
     def test_fill_hstorefield_with_empty_dict(self, person):
         assert person.hstore_data == {}
 
@@ -573,7 +594,6 @@ class TestGisFieldsFilling:
         assert geom.valid is True, geom.valid_reason
 
     def test_fill_PointField_valid(self, person):
-        print(BAKER_GIS)
         self.assertGeomValid(person.point)
 
     def test_fill_LineStringField_valid(self, person):

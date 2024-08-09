@@ -13,6 +13,37 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+## [1.19.0](https://pypi.org/project/model-bakery/1.19.0/)
+
+### Added
+- Add Django 5.1 support
+
+## [1.18.3](https://pypi.org/project/model-bakery/1.18.3/)
+
+### Changed
+- Fix support of `GenericForeignKey` fields in combination with `_fill_optional`
+
+## [1.18.2](https://pypi.org/project/model-bakery/1.18.2/)
+
+### Changed
+- Fix `make_recipe` to work with `_quantity` (#28)
+
+## [1.18.1](https://pypi.org/project/model-bakery/1.18.1/)
+
+### Changed
+- Replace expensive `count()` with cheap `exists()`
+
+## [1.18.0](https://pypi.org/project/model-bakery/1.18.0/)
+
+### Added
+- Add Django 5.0 support
+
+### Changed
+- Allow baking without `contenttypes` framework
+
+### Removed
+- Drop Django 3.2 and 4.1 support (reached end of life)
+
 ## [1.17.0](https://pypi.org/project/model-bakery/1.17.0/)
 
 ### Added
