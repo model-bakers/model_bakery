@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Fix support of GenericForeignKey fields in combination with `_fill_optional`
 
 ### Removed
+
+## [1.18.3](https://pypi.org/project/model-bakery/1.18.3/)
+
+### Changed
+- Fix support of `GenericForeignKey` fields in combination with `_fill_optional`
 
 ## [1.18.2](https://pypi.org/project/model-bakery/1.18.2/)
 
