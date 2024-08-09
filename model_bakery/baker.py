@@ -501,6 +501,7 @@ class Baker(Generic[M]):
     ) -> M:
         one_to_many_keys = {}
         auto_now_keys = {}
+        generic_foreign_keys = {}
 
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
@@ -517,12 +518,15 @@ class Baker(Generic[M]):
             ):
                 auto_now_keys[k] = attrs[k]
 
+            if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
+                generic_foreign_keys[k] = attrs.pop(k)
+
         instance = self.model(**attrs)
-        # m2m only works for persisted instances
         if _commit:
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
             self._handle_m2m(instance)
+            self._handle_generic_foreign_keys(instance, generic_foreign_keys)
             self._handle_auto_now(instance, auto_now_keys)
 
             if _from_manager:
@@ -681,6 +685,10 @@ class Baker(Generic[M]):
                         m2m_relation.target_field_name: value,
                     }
                     make(through_model, _using=self._using, **base_kwargs)
+
+    def _handle_generic_foreign_keys(self, instance: Model, attrs: Dict[str, Any]):
+        for key, value in attrs.items():
+            setattr(instance, key, value)
 
     def _remote_field(
         self, field: Union[ForeignKey, OneToOneField]
