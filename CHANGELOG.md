@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Handle bulk creation when using reverse related name
 
 ### Removed
+
+## [1.19.1](https://pypi.org/project/model-bakery/1.19.1/)
+
+### Changed
+- Handle bulk creation when using reverse related name
 
 ## [1.19.0](https://pypi.org/project/model-bakery/1.19.0/)
 
