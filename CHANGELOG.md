@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Handle bulk creation when using reverse related name
 
 ### Removed
 

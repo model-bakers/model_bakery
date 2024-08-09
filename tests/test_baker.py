@@ -1069,11 +1069,17 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
 
     def test_make_should_create_objects_using_reverse_name(self):
-        detail = baker.make(models.HouseDetail)
-        houses = baker.make(
-            models.House, housedetail_set=[detail], _quantity=20, _bulk_create=True
-        )
-        assert houses[0].housedetail_set.count() == 1
+        classroom = baker.make(models.Classroom)
+
+        with self.assertNumQueries(21):
+            students = baker.make(
+                models.Person,
+                classroom_set=[classroom],
+                _quantity=10,
+                _bulk_create=True,
+            )
+
+        assert students[0].classroom_set.count() == 1
 
 
 class TestBakerSeeded:
