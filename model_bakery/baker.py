@@ -51,7 +51,7 @@ from .utils import (
 
 if BAKER_CONTENTTYPES:
     from django.contrib.contenttypes import models as contenttypes_models
-    from django.contrib.contenttypes.fields import GenericRelation
+    from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 else:
     contenttypes_models = None
     GenericRelation = None
@@ -501,6 +501,7 @@ class Baker(Generic[M]):
     ) -> M:
         one_to_many_keys = {}
         auto_now_keys = {}
+        generic_foreign_keys = {}
 
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
@@ -517,12 +518,15 @@ class Baker(Generic[M]):
             ):
                 auto_now_keys[k] = attrs[k]
 
+            if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
+                generic_foreign_keys[k] = attrs.pop(k)
+
         instance = self.model(**attrs)
-        # m2m only works for persisted instances
         if _commit:
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
             self._handle_m2m(instance)
+            self._handle_generic_foreign_keys(instance, generic_foreign_keys)
             self._handle_auto_now(instance, auto_now_keys)
 
             if _from_manager:
@@ -622,7 +626,7 @@ class Baker(Generic[M]):
 
         if field.name not in self.model_attrs:  # noqa: SIM102
             if field.name not in self.rel_fields and (
-                field.null and not field.fill_optional
+                not field.fill_optional and field.null
             ):
                 return True
 
@@ -682,6 +686,10 @@ class Baker(Generic[M]):
                     }
                     make(through_model, _using=self._using, **base_kwargs)
 
+    def _handle_generic_foreign_keys(self, instance: Model, attrs: Dict[str, Any]):
+        for key, value in attrs.items():
+            setattr(instance, key, value)
+
     def _remote_field(
         self, field: Union[ForeignKey, OneToOneField]
     ) -> Union[OneToOneRel, ManyToOneRel]:
@@ -702,12 +710,16 @@ class Baker(Generic[M]):
         model.
         """
         is_content_type_fk = False
+        is_generic_fk = False
         if BAKER_CONTENTTYPES:
             is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
                 self._remote_field(field).model, contenttypes_models.ContentType
             )
+            is_generic_fk = isinstance(field, GenericForeignKey)
+        if is_generic_fk:
+            generator = self.type_mapping[GenericForeignKey]
         # we only use default unless the field is overwritten in `self.rel_fields`
-        if field.has_default() and field.name not in self.rel_fields:
+        elif field.has_default() and field.name not in self.rel_fields:
             if callable(field.default):
                 return field.default()
             return field.default
