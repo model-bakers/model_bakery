@@ -8,11 +8,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
-- Add Django 5.1 support
 
 ### Changed
 
 ### Removed
+
+## [1.19.0](https://pypi.org/project/model-bakery/1.19.0/)
+
+### Added
+- Add Django 5.1 support
 
 ## [1.18.3](https://pypi.org/project/model-bakery/1.18.3/)
 
