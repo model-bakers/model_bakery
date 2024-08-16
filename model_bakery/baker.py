@@ -519,7 +519,11 @@ class Baker(Generic[M]):
                 auto_now_keys[k] = attrs[k]
 
             if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
-                generic_foreign_keys[k] = attrs.pop(k)
+                generic_foreign_keys[k] = {
+                    "value": attrs.pop(k),
+                    "content_type_field": field.ct_field,
+                    "object_id_field": field.fk_field,
+                }
 
         instance = self.model(**attrs)
         if _commit:
@@ -603,7 +607,7 @@ class Baker(Generic[M]):
         ]
 
         if BAKER_CONTENTTYPES:
-            other_fields_to_skip.append(GenericRelation)
+            other_fields_to_skip.extend([GenericRelation, GenericForeignKey])
 
         if isinstance(field, tuple(other_fields_to_skip)):
             return True
@@ -687,8 +691,20 @@ class Baker(Generic[M]):
                     make(through_model, _using=self._using, **base_kwargs)
 
     def _handle_generic_foreign_keys(self, instance: Model, attrs: Dict[str, Any]):
-        for key, value in attrs.items():
-            setattr(instance, key, value)
+        """Set content type and object id for GenericForeignKey fields."""
+        for _field_name, data in attrs.items():
+            content_type_field = data["content_type_field"]
+            object_id_field = data["object_id_field"]
+            value = data["value"]
+            if is_iterator(value):
+                value = next(value)
+
+            setattr(
+                instance,
+                content_type_field,
+                contenttypes_models.ContentType.objects.get_for_model(value),
+            )
+            setattr(instance, object_id_field, value.pk)
 
     def _remote_field(
         self, field: Union[ForeignKey, OneToOneField]
