@@ -18,7 +18,7 @@ import pytest
 from model_bakery import baker
 from model_bakery.content_types import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
-from model_bakery.random_gen import gen_related, MAX_LENGTH
+from model_bakery.random_gen import MAX_LENGTH, gen_related
 from tests.generic import generators, models
 
 try:
