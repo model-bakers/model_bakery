@@ -54,6 +54,7 @@ Require `django.contrib.gis` in `INSTALLED_APPS`:
 
 Model Bakery allows you to define generators methods for your custom fields or overrides its default generators.
 This can be achieved by specifying the field and generator function for the `generators.add` function.
+It can also be done by specifying the field and generator function in the `BAKER_CUSTOM_FIELDS_GEN` setting.
 Both can be the real python objects imported in settings or just specified as import path string.
 
 Examples:
@@ -76,6 +77,13 @@ def gen_func():
 from model_bakery import baker
 
 baker.generators.add('test.generic.fields.CustomField', 'code.path.gen_func')
+```
+
+```python
+# in your settings.py file:
+BAKER_CUSTOM_FIELDS_GEN = {
+    'test.generic.fields.CustomField': 'code.path.gen_func',
+}
 ```
 
 ## Customizing Baker
