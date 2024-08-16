@@ -284,6 +284,16 @@ class TestFillingGenericForeignKeyField:
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
 
+    def test_filling_from_content_object(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        dummy = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=baker.make(models.Profile),
+        )
+        assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
+        assert dummy.object_id == models.Profile.objects.get().pk
+
     def test_iteratively_filling_generic_foreign_key_field(self):
         """
         Ensures private_fields are included in ``Baker.get_fields()``.
