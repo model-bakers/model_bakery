@@ -18,7 +18,7 @@ import pytest
 from model_bakery import baker
 from model_bakery.content_types import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
-from model_bakery.random_gen import gen_related
+from model_bakery.random_gen import gen_related, MAX_LENGTH
 from tests.generic import generators, models
 
 try:
@@ -103,6 +103,14 @@ class TestStringFieldsFilling:
         assert isinstance(person_bio_field, fields.TextField)
 
         assert isinstance(person.bio, str)
+        assert len(person.bio) == MAX_LENGTH
+
+    def test_fill_TextField_with_max_length_str(self, person):
+        person_bio_summary_field = models.Person._meta.get_field("bio_summary")
+        assert isinstance(person_bio_summary_field, fields.TextField)
+
+        assert isinstance(person.bio_summary, str)
+        assert len(person.bio_summary) == person_bio_summary_field.max_length
 
 
 class TestBinaryFieldsFilling:
@@ -510,6 +518,13 @@ class TestCIStringFieldsFilling:
         ci_text_field = models.Person._meta.get_field("ci_text")
         assert isinstance(ci_text_field, CITextField)
         assert isinstance(person.ci_text, str)
+        assert len(person.ci_text) == MAX_LENGTH
+
+    def test_filling_citextfield_with_max_length(self, person):
+        ci_text_max_length_field = models.Person._meta.get_field("ci_text_max_length")
+        assert isinstance(ci_text_max_length_field, CITextField)
+        assert isinstance(person.ci_text, str)
+        assert len(person.ci_text) == ci_text_max_length_field.max_length
 
     def test_filling_decimal_range_field(self, person):
         try:

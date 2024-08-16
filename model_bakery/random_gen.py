@@ -133,10 +133,6 @@ def gen_slug(max_length: int) -> str:
 gen_slug.required = ["max_length"]  # type: ignore[attr-defined]
 
 
-def gen_text() -> str:
-    return gen_string(MAX_LENGTH)
-
-
 def gen_boolean() -> bool:
     return baker_random.choice((True, False))
 
