@@ -10,10 +10,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Align GFK and content type fields generation
-- Allow `prepare()` to be used with GFK
 
 ### Removed
+
+## [1.19.2](https://pypi.org/project/model-bakery/1.19.2/)
+
+### Changed
+- Align GFK and content type fields generation
+- Allow `prepare()` to be used with GFK
 
 ## [1.19.1](https://pypi.org/project/model-bakery/1.19.1/)
 
