@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.19.2](https://pypi.org/project/model-bakery/1.19.2/)
 
+### Added
+- docs: Add Django settings example for custom field generators
+
 ### Changed
 - Align GFK and content type fields generation
 - Allow `prepare()` to be used with GFK
