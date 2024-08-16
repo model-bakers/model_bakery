@@ -287,12 +287,26 @@ class TestFillingGenericForeignKeyField:
     def test_filling_from_content_object(self):
         from django.contrib.contenttypes.models import ContentType
 
+        profile = baker.make(models.Profile)
         dummy = baker.make(
             models.DummyGenericForeignKeyModel,
-            content_object=baker.make(models.Profile),
+            content_object=profile,
         )
+        assert dummy.content_object == profile
         assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
-        assert dummy.object_id == models.Profile.objects.get().pk
+        assert dummy.object_id == profile.pk
+
+    def test_filling_generic_foreign_key_field_with_prepare(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        profile = baker.prepare(models.Profile, id=1)
+        dummy = baker.prepare(
+            models.DummyGenericForeignKeyModel,
+            content_object=profile,
+        )
+        assert dummy.content_object == profile
+        assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
+        assert dummy.object_id == profile.pk == 1
 
     def test_iteratively_filling_generic_foreign_key_field(self):
         """

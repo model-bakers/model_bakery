@@ -526,11 +526,13 @@ class Baker(Generic[M]):
                 }
 
         instance = self.model(**attrs)
+
+        self._handle_generic_foreign_keys(instance, generic_foreign_keys)
+
         if _commit:
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
             self._handle_m2m(instance)
-            self._handle_generic_foreign_keys(instance, generic_foreign_keys)
             self._handle_auto_now(instance, auto_now_keys)
 
             if _from_manager:
@@ -692,13 +694,14 @@ class Baker(Generic[M]):
 
     def _handle_generic_foreign_keys(self, instance: Model, attrs: Dict[str, Any]):
         """Set content type and object id for GenericForeignKey fields."""
-        for _field_name, data in attrs.items():
+        for field_name, data in attrs.items():
             content_type_field = data["content_type_field"]
             object_id_field = data["object_id_field"]
             value = data["value"]
             if is_iterator(value):
                 value = next(value)
 
+            setattr(instance, field_name, value)
             setattr(
                 instance,
                 content_type_field,
