@@ -523,8 +523,8 @@ class TestCIStringFieldsFilling:
     def test_filling_citextfield_with_max_length(self, person):
         ci_text_max_length_field = models.Person._meta.get_field("ci_text_max_length")
         assert isinstance(ci_text_max_length_field, CITextField)
-        assert isinstance(person.ci_text, str)
-        assert len(person.ci_text) == ci_text_max_length_field.max_length
+        assert isinstance(person.ci_text_max_length, str)
+        assert len(person.ci_text_max_length) == ci_text_max_length_field.max_length
 
     def test_filling_decimal_range_field(self, person):
         try:
