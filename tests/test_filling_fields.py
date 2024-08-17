@@ -341,6 +341,24 @@ class TestFillingGenericForeignKeyField:
         assert dummies[1].content_type == expected_content_type
         assert dummies[1].object_id == objects[1].pk
 
+    def test_with_none_in_iter(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        profile = baker.make(models.Profile)
+        dummies = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=iter((None, profile)),
+            _quantity=2,
+        )
+
+        expected_content_type = ContentType.objects.get_for_model(models.Profile)
+
+        assert dummies[0].content_object is None
+
+        assert dummies[1].content_object == profile
+        assert dummies[1].content_type == expected_content_type
+        assert dummies[1].object_id == profile.pk
+
     def test_with_fill_optional(self):
         from django.contrib.contenttypes.models import ContentType
 
