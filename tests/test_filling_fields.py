@@ -277,14 +277,14 @@ class TestFillingIPAddressField:
 )
 @pytest.mark.django_db
 class TestFillingGenericForeignKeyField:
-    def test_filling_content_type_field(self):
+    def test_content_type_field(self):
         from django.contrib.contenttypes.models import ContentType
 
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
 
-    def test_filling_from_content_object(self):
+    def test_with_content_object(self):
         from django.contrib.contenttypes.models import ContentType
 
         profile = baker.make(models.Profile)
@@ -296,7 +296,14 @@ class TestFillingGenericForeignKeyField:
         assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
         assert dummy.object_id == profile.pk
 
-    def test_filling_generic_foreign_key_field_with_prepare(self):
+    def test_with_content_object_none(self):
+        dummy = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=None,
+        )
+        assert dummy.content_object is None
+
+    def test_with_prepare(self):
         from django.contrib.contenttypes.models import ContentType
 
         profile = baker.prepare(models.Profile, id=1)
@@ -308,7 +315,7 @@ class TestFillingGenericForeignKeyField:
         assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
         assert dummy.object_id == profile.pk == 1
 
-    def test_iteratively_filling_generic_foreign_key_field(self):
+    def test_with_iter(self):
         """
         Ensures private_fields are included in ``Baker.get_fields()``.
 
