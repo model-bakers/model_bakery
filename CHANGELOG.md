@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+## [1.19.3](https://pypi.org/project/model-bakery/1.19.3/)
+
+### Changed
+- Do not handle GFK fields when the object is None
+
 ## [1.19.2](https://pypi.org/project/model-bakery/1.19.2/)
 
 ### Added
