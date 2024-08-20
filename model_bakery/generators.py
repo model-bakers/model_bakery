@@ -108,7 +108,7 @@ default_mapping = {
     DecimalField: random_gen.gen_decimal,
     BinaryField: random_gen.gen_byte_string,
     CharField: random_gen.gen_string,
-    TextField: random_gen.gen_text,
+    TextField: random_gen.gen_string,
     SlugField: random_gen.gen_slug,
     UUIDField: random_gen.gen_uuid,
     DateField: random_gen.gen_date,
@@ -133,7 +133,7 @@ if CICharField:
 if CIEmailField:
     default_mapping[CIEmailField] = random_gen.gen_email
 if CITextField:
-    default_mapping[CITextField] = random_gen.gen_text
+    default_mapping[CITextField] = random_gen.gen_string
 if DecimalRangeField:
     default_mapping[DecimalRangeField] = random_gen.gen_pg_numbers_range(Decimal)
 if IntegerRangeField:
