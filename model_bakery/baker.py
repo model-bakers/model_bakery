@@ -698,10 +698,10 @@ class Baker(Generic[M]):
             content_type_field = data["content_type_field"]
             object_id_field = data["object_id_field"]
             value = data["value"]
-            if value is None:
-                continue
             if is_iterator(value):
                 value = next(value)
+            if value is None:
+                continue
 
             setattr(instance, field_name, value)
             setattr(
