@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+## [1.19.4](https://pypi.org/project/model-bakery/1.19.4/)
+### Changed
+- Allow `None` value for generic foreign keys within iterators
+- Make `TextField` generator respect `max_length`
+- Deprecate `model_bakery.random_gen.gen_text` in favor of `model_bakery.random_gen.gen_string`
+
 ## [1.19.3](https://pypi.org/project/model-bakery/1.19.3/)
 
 ### Changed
