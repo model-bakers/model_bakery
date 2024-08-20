@@ -135,7 +135,11 @@ gen_slug.required = ["max_length"]  # type: ignore[attr-defined]
 
 def gen_text() -> str:
     warnings.warn(
-        "gen_text is deprecated, use gen_string instead",
+        "\n"
+        "Accessing `model_bakery.random_gen.gen_text` is deprecated "
+        "and will be removed in a future major release. Please use "
+        "`model_bakery.random_gen.gen_string` instead."
+        "\n",
         DeprecationWarning,
         stacklevel=2,
     )
