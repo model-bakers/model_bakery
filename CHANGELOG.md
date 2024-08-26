@@ -10,11 +10,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Reset `content_type` and `object_id` fields when the content object is `None`
 
 ### Removed
 
+## [1.19.5](https://pypi.org/project/model-bakery/1.19.5/)
+
+### Changed
+- Reset `content_type` and `object_id` fields when the content object is `None`
+
 ## [1.19.4](https://pypi.org/project/model-bakery/1.19.4/)
+
 ### Changed
 - Allow `None` value for generic foreign keys within iterators
 - Make `TextField` generator respect `max_length`
