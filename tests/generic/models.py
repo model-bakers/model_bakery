@@ -287,7 +287,9 @@ if BAKER_CONTENTTYPES:
 
     class DummyGenericForeignKeyModel(models.Model):
         content_type = models.ForeignKey(
-            contenttypes.ContentType, on_delete=models.CASCADE
+            contenttypes.ContentType,
+            on_delete=models.CASCADE,
+            limit_choices_to={"model__in": ["person", "dog"]},
         )
         object_id = models.PositiveIntegerField()
         content_object = GenericForeignKey("content_type", "object_id")
@@ -297,7 +299,11 @@ if BAKER_CONTENTTYPES:
 
     class GenericForeignKeyModelWithOptionalData(models.Model):
         content_type = models.ForeignKey(
-            contenttypes.ContentType, on_delete=models.CASCADE, blank=True, null=True
+            contenttypes.ContentType,
+            on_delete=models.CASCADE,
+            blank=True,
+            null=True,
+            limit_choices_to={"model__in": ["person", "dog"]},
         )
         object_id = models.PositiveIntegerField(blank=True, null=True)
         content_object = GenericForeignKey("content_type", "object_id")
