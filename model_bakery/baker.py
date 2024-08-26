@@ -695,21 +695,27 @@ class Baker(Generic[M]):
     def _handle_generic_foreign_keys(self, instance: Model, attrs: Dict[str, Any]):
         """Set content type and object id for GenericForeignKey fields."""
         for field_name, data in attrs.items():
-            content_type_field = data["content_type_field"]
-            object_id_field = data["object_id_field"]
+            ct_field_name = data["content_type_field"]
+            oid_field_name = data["object_id_field"]
             value = data["value"]
             if is_iterator(value):
                 value = next(value)
             if value is None:
-                continue
-
-            setattr(instance, field_name, value)
-            setattr(
-                instance,
-                content_type_field,
-                contenttypes_models.ContentType.objects.get_for_model(value),
-            )
-            setattr(instance, object_id_field, value.pk)
+                # when GFK is None, we should try to set the content type and object id to None
+                content_type_field = instance._meta.get_field(ct_field_name)
+                object_id_field = instance._meta.get_field(oid_field_name)
+                if content_type_field.null:
+                    setattr(instance, ct_field_name, None)
+                if object_id_field.null:
+                    setattr(instance, oid_field_name, None)
+            else:
+                setattr(instance, field_name, value)
+                setattr(
+                    instance,
+                    ct_field_name,
+                    contenttypes_models.ContentType.objects.get_for_model(value),
+                )
+                setattr(instance, oid_field_name, value.pk)
 
     def _remote_field(
         self, field: Union[ForeignKey, OneToOneField]

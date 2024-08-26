@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Reset `content_type` and `object_id` fields when the content object is `None`
 
 ### Removed
 
