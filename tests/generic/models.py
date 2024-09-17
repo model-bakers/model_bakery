@@ -103,7 +103,8 @@ class Person(models.Model):
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
     data = models.JSONField()
-    retirement_age = models.IntegerField(db_default=20)
+    if django.VERSION >= (5, 0):
+        retirement_age = models.IntegerField(db_default=20)
 
     try:
         from django.contrib.postgres.fields import (

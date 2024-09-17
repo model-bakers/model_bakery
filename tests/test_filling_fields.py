@@ -4,6 +4,7 @@ from decimal import Decimal
 from os.path import abspath
 from tempfile import gettempdir
 
+import django
 from django.conf import settings
 from django.core.validators import (
     validate_ipv4_address,
@@ -202,6 +203,10 @@ class TestFillingIntFields:
         assert isinstance(small_int_field, fields.SmallIntegerField)
         assert isinstance(dummy_int_model.small_int_field, int)
 
+    @pytest.mark.skipif(
+        django.VERSION < (5, 0),
+        reason="The db_default field attribute was added after 5.0",
+    )
     def test_respects_db_default(self):
         person = baker.make(models.Person, age=10)
         assert person.age == 10
