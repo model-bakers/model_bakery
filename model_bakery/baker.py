@@ -27,6 +27,7 @@ from django.db.models import (
     Model,
     OneToOneField,
 )
+from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
@@ -727,6 +728,7 @@ class Baker(Generic[M]):
 
         Generator Resolution Precedence Order:
         -- `field.default` - model field default value, unless explicitly overwritten during baking
+        -- `field.db_default` - model field db default value, unless explicitly overwritten
         -- `attr_mapping` - mapping per attribute name
         -- `choices` -- mapping from available field choices
         -- `type_mapping` - mapping from user defined type associated generators
@@ -750,6 +752,8 @@ class Baker(Generic[M]):
             if callable(field.default):
                 return field.default()
             return field.default
+        elif field.db_default != NOT_PROVIDED:
+            return field.db_default
         elif field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
         elif field.choices:

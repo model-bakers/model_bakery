@@ -202,6 +202,11 @@ class TestFillingIntFields:
         assert isinstance(small_int_field, fields.SmallIntegerField)
         assert isinstance(dummy_int_model.small_int_field, int)
 
+    def test_respects_db_default(self):
+        person = baker.make(models.Person, age=10)
+        assert person.age == 10
+        assert person.retirement_age == 20
+
 
 @pytest.mark.django_db
 class TestFillingPositiveIntFields:
