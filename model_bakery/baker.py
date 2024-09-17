@@ -752,7 +752,7 @@ class Baker(Generic[M]):
             if callable(field.default):
                 return field.default()
             return field.default
-        elif field.db_default != NOT_PROVIDED:
+        elif getattr(field, "db_default", NOT_PROVIDED) != NOT_PROVIDED:
             return field.db_default
         elif field.name in self.attr_mapping:
             generator = self.attr_mapping[field.name]
