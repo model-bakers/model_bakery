@@ -82,6 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-${{ matrix.python-version }}
+          include-hidden-files: true
           path: '.coverage.*'
           if-no-files-found: ignore
 
