@@ -8,12 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
-- Support to Field `db_default` value
-- Support to python 3.13
 
 ### Changed
 
 ### Removed
+
+## [1.20.0](https://pypi.org/project/model-bakery/1.20.0/)
+
+### Added
+- Support to Field `db_default` value
+- Support to Python 3.13
 
 ## [1.19.5](https://pypi.org/project/model-bakery/1.19.5/)
 
