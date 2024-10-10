@@ -1124,3 +1124,17 @@ class TestAutoNowFields:
         assert instance.created == now
         assert instance.updated == now
         assert instance.sent_date == now
+
+    @pytest.mark.django_db
+    @pytest.mark.xfail
+    def test_make_with_auto_now_and_fill_optional(self):
+        instance = baker.make(
+            models.ModelWithAutoNowFields,
+            _fill_optional=True,
+        )
+        created, updated = instance.created, instance.updated
+
+        instance.refresh_from_db()
+
+        assert instance.created == created
+        assert instance.updated == updated
