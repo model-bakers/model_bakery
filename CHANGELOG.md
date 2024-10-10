@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Support to Field `db_default` value
+- Support to python 3.13
 
 ### Changed
 
