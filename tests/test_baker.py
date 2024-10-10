@@ -1126,7 +1126,6 @@ class TestAutoNowFields:
         assert instance.sent_date == now
 
     @pytest.mark.django_db
-    @pytest.mark.xfail
     def test_make_with_auto_now_and_fill_optional(self):
         instance = baker.make(
             models.ModelWithAutoNowFields,
