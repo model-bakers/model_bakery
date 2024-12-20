@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
+- Remove deprecation warning of `datetime.datetime.utcfromtimestamp`.
 
 ## [1.20.0](https://pypi.org/project/model-bakery/1.20.0/)
 
