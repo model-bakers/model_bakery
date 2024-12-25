@@ -20,7 +20,9 @@ from model_bakery.exceptions import (
 )
 from model_bakery.timezone import tz_aware
 from tests.generic import models
+from tests.generic.baker_recipes import lonely_person
 from tests.generic.forms import DummyGenericIPAddressFieldForm
+from tests.generic import baker_recipes
 
 
 def test_import_seq_from_baker():
@@ -282,6 +284,12 @@ class TestBakerPrepareSavingRelatedInstances:
 
     def test_create_one_to_one(self):
         lonely_person = baker.prepare(models.LonelyPerson, _save_related=True)
+
+        assert lonely_person.pk is None
+        assert lonely_person.only_friend.pk
+
+    def test_recipe_prepare_model_with_one_to_one_and_save_related(self):
+        lonely_person = baker_recipes.lonely_person.prepare(_save_related=True)
 
         assert lonely_person.pk is None
         assert lonely_person.only_friend.pk
