@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix `Recipe.prepare` without _quantity (on one-to-one relation)
 
 ### Removed
+- Remove deprecation warning of `datetime.datetime.utcfromtimestamp`.
 
 ## [1.20.0](https://pypi.org/project/model-bakery/1.20.0/)
 

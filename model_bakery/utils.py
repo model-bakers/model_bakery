@@ -86,7 +86,10 @@ def seq(value, increment_by=1, start=None, suffix=None):
         start = (date - epoch_datetime).total_seconds()
         increment_by = increment_by.total_seconds()
         for n in itertools.count(increment_by, increment_by):
-            series_date = tz_aware(datetime.datetime.utcfromtimestamp(start + n))
+            series_date = tz_aware(
+                datetime.datetime.fromtimestamp(start + n, tz=datetime.timezone.utc)
+            )
+
             if type(value) is datetime.time:
                 yield series_date.time()
             elif type(value) is datetime.date:
