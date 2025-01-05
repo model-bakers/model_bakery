@@ -1,4 +1,5 @@
 import collections
+import copy
 import itertools
 from typing import (
     Any,
@@ -79,6 +80,8 @@ class Recipe(Generic[M]):
                     mapping[k] = v.recipe.prepare(_using=_using, **recipe_attrs)
             elif isinstance(v, related):
                 mapping[k] = v.make
+            elif isinstance(v, collections.abc.Container):
+                mapping[k] = copy.deepcopy(v)
 
         mapping.update(new_attrs)
         mapping.update(rel_fields_attrs)
