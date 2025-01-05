@@ -19,10 +19,8 @@ from model_bakery.exceptions import (
     ModelNotFound,
 )
 from model_bakery.timezone import tz_aware
-from tests.generic import models
-from tests.generic.baker_recipes import lonely_person
+from tests.generic import baker_recipes, models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
-from tests.generic import baker_recipes
 
 
 def test_import_seq_from_baker():
