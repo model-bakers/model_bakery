@@ -164,9 +164,11 @@ class Recipe(Generic[M]):
         **attrs: Any,
     ) -> Union[M, List[M]]:
         defaults = {
-            "_quantity": _quantity,
             "_save_related": _save_related,
         }
+        if _quantity is not None:
+            defaults["_quantity"] = _quantity  # type: ignore[assignment]
+
         defaults.update(attrs)
         return baker.prepare(
             self._model, _using=_using, **self._mapping(_using, defaults)
