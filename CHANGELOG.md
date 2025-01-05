@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix `Recipe.prepare` without _quantity (on one-to-one relation)
 
 ### Removed
 
