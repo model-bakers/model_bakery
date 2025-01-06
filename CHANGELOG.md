@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- docs: Add missing doc on `_refresh_after_create` option
 
 ### Changed
 - Fix `Recipe.prepare` without _quantity (on one-to-one relation)

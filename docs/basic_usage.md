@@ -242,6 +242,24 @@ Model Bakery does not create files for FileField types. If you need to have the 
 
 **Important**: the lib does not do any kind of file clean up, so it's up to you to delete the files created by it.
 
+## Refreshing Instances After Creation
+
+By default, Model Bakery does not refresh the instance after it is created and saved.
+If you want to refresh the instance after it is created,
+you can pass the flag `_refresh_after_create=True` to either `baker.make` or `baker.make_recipe`.
+This ensures that any changes made by the database or signal handlers are reflected in the instance.
+
+```python
+from model_bakery import baker
+
+# default behavior
+customer = baker.make('shop.Customer', birthday='1990-01-01', _refresh_after_create=False)
+assert customer.birthday == '1990-01-01'
+
+customer = baker.make('shop.Customer', birthday='1990-01-01', _refresh_after_create=True)
+assert customer.birthday == datetime.date(1990, 1, 1)
+```
+
 ## Non persistent objects
 
 If you don't need a persisted object, Model Bakery can handle this for you as well with the **prepare** method:
