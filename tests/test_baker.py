@@ -635,6 +635,18 @@ class TestHandlingContentTypeField:
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
 
+    def test_create_model_with_contenttype_with_content_object(self):
+        """ Test creating model with contenttype field and populating that field by function """
+        from django.contrib.contenttypes.models import ContentType
+
+        def get_dummy_key():
+            return baker.make("Person")
+
+        dummy = baker.make(models.DummyGenericForeignKeyModel, content_object=get_dummy_key)
+        assert isinstance(dummy, models.DummyGenericForeignKeyModel)
+        assert isinstance(dummy.content_type, ContentType)
+        assert isinstance(dummy.content_object, models.Person)
+
 
 @pytest.mark.skipif(
     not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
