@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
+## [1.20.2](https://pypi.org/project/model-bakery/1.20.2/)
+
+### Changed
+
+- fix and test regression forbiding to use Proxy models as GFK
+
 ## [1.20.1](https://pypi.org/project/model-bakery/1.20.1/)
 
 ### Added
