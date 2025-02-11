@@ -699,6 +699,8 @@ class Baker(Generic[M]):
             ct_field_name = data["content_type_field"]
             oid_field_name = data["object_id_field"]
             value = data["value"]
+            if callable(value):
+                value = value()
             if is_iterator(value):
                 value = next(value)
             if value is None:
@@ -714,7 +716,9 @@ class Baker(Generic[M]):
                 setattr(
                     instance,
                     ct_field_name,
-                    contenttypes_models.ContentType.objects.get_for_model(value, for_concrete_model=False),
+                    contenttypes_models.ContentType.objects.get_for_model(
+                        value, for_concrete_model=False
+                    ),
                 )
                 setattr(instance, oid_field_name, value.pk)
 

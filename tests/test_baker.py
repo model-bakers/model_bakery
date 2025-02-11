@@ -635,14 +635,32 @@ class TestHandlingContentTypeField:
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
 
+    def test_create_model_with_contenttype_with_content_object(self):
+        """Test creating model with contenttype field and populating that field by function."""
+        from django.contrib.contenttypes.models import ContentType
+
+        def get_dummy_key():
+            return baker.make("Person")
+
+        dummy = baker.make(
+            models.DummyGenericForeignKeyModel, content_object=get_dummy_key
+        )
+        assert isinstance(dummy, models.DummyGenericForeignKeyModel)
+        assert isinstance(dummy.content_type, ContentType)
+        assert isinstance(dummy.content_object, models.Person)
+
     def test_create_model_with_contenttype_field_and_proxy_model(self):
         from django.contrib.contenttypes.models import ContentType
+
         class ProxyPerson(models.Person):
             class Meta:
                 proxy = True
                 app_label = "generic"
 
-        dummy = baker.make(models.DummyGenericForeignKeyModel, content_object=baker.make(ProxyPerson, name="John Doe"))
+        dummy = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=baker.make(ProxyPerson, name="John Doe"),
+        )
         dummy.refresh_from_db()
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
