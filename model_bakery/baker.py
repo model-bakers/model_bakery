@@ -70,6 +70,10 @@ def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
 
+def _is_auto_datetime_field(field: Field) -> bool:
+    return getattr(field, "auto_now_add", False) or getattr(field, "auto_now", False)
+
+
 def seed(seed: Union[int, float, str, bytes, bytearray, None]) -> None:
     Baker.seed(seed)
 
@@ -513,10 +517,7 @@ class Baker(Generic[M]):
             if isinstance(field, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[k] = attrs.pop(k)
 
-            if hasattr(field, "field") and (
-                getattr(field.field, "auto_now_add", False)
-                or getattr(field.field, "auto_now", False)
-            ):
+            if hasattr(field, "field") and _is_auto_datetime_field(field.field):
                 auto_now_keys[k] = attrs[k]
 
             if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
@@ -588,6 +589,9 @@ class Baker(Generic[M]):
             field.fill_optional = self.fill_in_optional
         else:
             field.fill_optional = field.name in self.fill_in_optional
+
+        if _is_auto_datetime_field(field):
+            return True
 
         if isinstance(field, FileField) and not self.create_files:
             return True

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix support of `auto_now` and `auto_now_add` fields in combination with `_fill_optional`
 
 ### Removed
 
