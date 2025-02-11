@@ -10,14 +10,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Fix support of `auto_now` and `auto_now_add` fields in combination with `_fill_optional`
 
 ### Removed
+
+## [1.20.3](https://pypi.org/project/model-bakery/1.20.3/)
+
+### Changed
+- Fix support of `auto_now` and `auto_now_add` fields in combination with `_fill_optional`
+- Isolate Recipe defaults to prevent modification via instances
 
 ## [1.20.2](https://pypi.org/project/model-bakery/1.20.2/)
 
 ### Changed
-
 - Fix setting GFK parameter by a callable
 - Fix regression forbidding using Proxy models as GFK
 
