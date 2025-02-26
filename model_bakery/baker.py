@@ -590,9 +590,6 @@ class Baker(Generic[M]):
         else:
             field.fill_optional = field.name in self.fill_in_optional
 
-        if _is_auto_datetime_field(field):
-            return True
-
         if isinstance(field, FileField) and not self.create_files:
             return True
 
@@ -647,7 +644,12 @@ class Baker(Generic[M]):
         if not attrs:
             return
 
+        # use .update() to force update auto_now fields
         instance.__class__.objects.filter(pk=instance.pk).update(**attrs)
+
+        # to make the resulting instance has the specified values
+        for k, v in attrs.items():
+            setattr(instance, k, v)
 
     def _handle_one_to_many(self, instance: Model, attrs: Dict[str, Any]):
         for key, values in attrs.items():

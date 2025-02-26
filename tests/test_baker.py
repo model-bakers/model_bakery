@@ -1157,8 +1157,12 @@ class TestAutoNowFields:
             sent_date=now,
         )
 
-        instance.refresh_from_db()
+        assert instance.created == now
+        assert instance.updated == now
+        assert instance.sent_date == now
 
+        # Should not update after refreshing from the db
+        instance.refresh_from_db()
         assert instance.created == now
         assert instance.updated == now
         assert instance.sent_date == now
@@ -1169,9 +1173,14 @@ class TestAutoNowFields:
             models.ModelWithAutoNowFields,
             _fill_optional=True,
         )
-        created, updated = instance.created, instance.updated
+        created, updated, sent_date = (
+            instance.created,
+            instance.updated,
+            instance.sent_date,
+        )
 
+        # Should not update after refreshing from the db
         instance.refresh_from_db()
-
         assert instance.created == created
         assert instance.updated == updated
+        assert instance.sent_date == sent_date

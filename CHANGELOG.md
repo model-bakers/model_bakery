@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix regression introduced in 1.20.3 that prevented using `auto_now` and `auto_now_add` fields with seq or callable.
 
 ### Removed
 
