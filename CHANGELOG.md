@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Improve documentation
+
 ### Removed
 
 ## [1.20.4](https://pypi.org/project/model-bakery/1.20.4/)
