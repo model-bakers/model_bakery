@@ -33,7 +33,8 @@ As an open-source project, Model Bakery welcomes contributions of many forms:
 - Documentation improvements
 - Bug reports
 
-Take a look at our [GitHub repo](https://github.com/model-bakers/model_bakery/blob/main/CONTRIBUTING.md) for instructions on how to set up your local environment to help Model Bakery to grow.
+Take a look at our [GitHub repo](https://github.com/model-bakers/model_bakery/blob/main/CONTRIBUTING.md) for instructions
+on how to set up your local environment.
 
 ## Support
 
