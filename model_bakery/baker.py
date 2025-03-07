@@ -83,7 +83,7 @@ def make(
     _model: Union[str, Type[M]],
     _quantity: None = None,
     make_m2m: bool = False,
-    _save_kwargs: Optional[Dict] = None,
+    _save_kwargs: Optional[Dict[str, Any]] = None,
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
@@ -97,7 +97,7 @@ def make(
     _model: Union[str, Type[M]],
     _quantity: int,
     make_m2m: bool = False,
-    _save_kwargs: Optional[Dict] = None,
+    _save_kwargs: Optional[Dict[str, Any]] = None,
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
@@ -111,7 +111,7 @@ def make(
     _model,
     _quantity: Optional[int] = None,
     make_m2m: bool = False,
-    _save_kwargs: Optional[Dict] = None,
+    _save_kwargs: Optional[Dict[str, Any]] = None,
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
@@ -155,7 +155,7 @@ def prepare(
     _quantity: None = None,
     _save_related: bool = False,
     _using: str = "",
-    **attrs,
+    **attrs: Any,
 ) -> M: ...
 
 
@@ -166,7 +166,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: Union[List[str], bool] = False,
-    **attrs,
+    **attrs: Any,
 ) -> List[M]: ...
 
 
@@ -176,7 +176,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: Union[List[str], bool] = False,
-    **attrs,
+    **attrs: Any,
 ):
     """Create but do not persist an instance from a given model.
 
