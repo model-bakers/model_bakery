@@ -155,7 +155,7 @@ def prepare(
     _quantity: None = None,
     _save_related: bool = False,
     _using: str = "",
-    **attrs,
+    **attrs: Any,
 ) -> M: ...
 
 
@@ -166,7 +166,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: Union[List[str], bool] = False,
-    **attrs,
+    **attrs: Any,
 ) -> List[M]: ...
 
 
@@ -176,7 +176,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: Union[List[str], bool] = False,
-    **attrs,
+    **attrs: Any,
 ):
     """Create but do not persist an instance from a given model.
 
