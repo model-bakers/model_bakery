@@ -293,8 +293,8 @@ class TestFillingIPAddressField:
 @pytest.mark.skipif(
     not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
 )
-@pytest.mark.django_db
 class TestFillingGenericForeignKeyField:
+    @pytest.mark.django_db
     def test_content_type_field(self):
         from django.contrib.contenttypes.models import ContentType
 
@@ -302,6 +302,7 @@ class TestFillingGenericForeignKeyField:
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
 
+    @pytest.mark.django_db
     def test_with_content_object(self):
         from django.contrib.contenttypes.models import ContentType
 
@@ -314,6 +315,7 @@ class TestFillingGenericForeignKeyField:
         assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
         assert dummy.object_id == profile.pk
 
+    @pytest.mark.django_db
     def test_with_content_object_none(self):
         dummy = baker.make(
             models.DummyGenericForeignKeyModel,
@@ -333,6 +335,7 @@ class TestFillingGenericForeignKeyField:
         assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
         assert dummy.object_id == profile.pk == 1
 
+    @pytest.mark.django_db
     def test_with_iter(self):
         """
         Ensures private_fields are included in ``Baker.get_fields()``.
@@ -359,6 +362,7 @@ class TestFillingGenericForeignKeyField:
         assert dummies[1].content_type == expected_content_type
         assert dummies[1].object_id == objects[1].pk
 
+    @pytest.mark.django_db
     def test_with_none_in_iter(self):
         from django.contrib.contenttypes.models import ContentType
 
@@ -377,6 +381,7 @@ class TestFillingGenericForeignKeyField:
         assert dummies[1].content_type == expected_content_type
         assert dummies[1].object_id == profile.pk
 
+    @pytest.mark.django_db
     def test_with_fill_optional(self):
         from django.contrib.contenttypes.models import ContentType
 
@@ -384,6 +389,7 @@ class TestFillingGenericForeignKeyField:
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
 
+    @pytest.mark.django_db
     def test_with_fill_optional_but_content_object_none(self):
         dummy = baker.make(
             models.GenericForeignKeyModelWithOptionalData,
