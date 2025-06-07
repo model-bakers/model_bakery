@@ -6,15 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
+### Added
+
+### Changed
+
+### Removed
+
+## [1.20.5](https://pypi.org/project/model-bakery/1.20.5/)
 
 ### Added
 - Add Django 5.2 support
 
 ### Changed
-
 - Improve documentation
-
-### Removed
 
 ## [1.20.4](https://pypi.org/project/model-bakery/1.20.4/)
 
