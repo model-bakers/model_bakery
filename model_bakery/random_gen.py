@@ -86,7 +86,85 @@ def gen_from_choices(
 
 
 def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
+    warnings.warn(
+        "gen_integer() may cause overflow errors with Django integer fields due to "
+        "large default MAX_INT value. Consider using field-specific generators instead:\n"
+        "- gen_positive_small_integer() for PositiveSmallIntegerField\n"
+        "- gen_small_integer() for SmallIntegerField\n"
+        "- gen_regular_integer() for IntegerField\n"
+        "- gen_positive_integer() for PositiveIntegerField\n"
+        "- gen_big_integer() for BigIntegerField\n"
+        "- gen_positive_big_integer() for PositiveBigIntegerField\n"
+        "See model_bakery.random_gen documentation for more details.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return baker_random.randint(min_int, max_int)
+
+
+def _get_field_range(field_name: str):
+    """Get field range from Django's BaseDatabaseOperations."""
+    from django.db.backends.base.operations import BaseDatabaseOperations
+
+    return BaseDatabaseOperations.integer_field_ranges.get(
+        field_name, (-MAX_INT, MAX_INT)
+    )
+
+
+def gen_small_integer(min_int: int = None, max_int: int = None) -> int:
+    """Generate integer for SmallIntegerField."""
+    field_min, field_max = _get_field_range("SmallIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_small_integer(min_int: int = None, max_int: int = None) -> int:
+    """Generate integer for PositiveSmallIntegerField."""
+    field_min, field_max = _get_field_range("PositiveSmallIntegerField")
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_integer(min_int: int = None, max_int: int = None) -> int:
+    """Generate integer for PositiveIntegerField."""
+    field_min, field_max = _get_field_range("PositiveIntegerField")
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_big_integer(min_int: int = None, max_int: int = None) -> int:
+    """Generate integer for BigIntegerField."""
+    field_min, field_max = _get_field_range("BigIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_big_integer(min_int: int = None, max_int: int = None) -> int:
+    """Generate integer for PositiveBigIntegerField."""
+    field_min, field_max = _get_field_range("PositiveBigIntegerField")
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_regular_integer(min_int: int = None, max_int: int = None) -> int:
+    """Generate integer for IntegerField."""
+    field_min, field_max = _get_field_range("IntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_auto_field(min_int: int = None, max_int: int = None) -> int:
+    """Generate integer for AutoField."""
+    field_min, field_max = _get_field_range("AutoField")
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
 
 
 def gen_float(min_float: float = -1000000.0, max_float: float = 1000000.0) -> float:

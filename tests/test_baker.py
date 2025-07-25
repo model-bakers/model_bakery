@@ -1186,3 +1186,47 @@ class TestAutoNowFields:
         assert instance.created == created
         assert instance.updated == updated
         assert instance.sent_date == sent_date
+
+
+class TestFieldSpecificIntegerGenerators:
+    @pytest.mark.django_db
+    def test_gen_positive_small_integer_works_safely(self):
+        obj = baker.make(
+            models.DummyPositiveIntModel,
+            positive_small_int_field=random_gen.gen_positive_small_integer(min_int=1),
+        )
+
+        assert 1 <= obj.positive_small_int_field <= 32767
+
+    def test_field_specific_generators_respect_constraints(self):
+        obj = baker.make(
+            models.DummyPositiveIntModel,
+            positive_small_int_field=random_gen.gen_positive_small_integer(
+                min_int=100, max_int=200
+            ),
+        )
+
+        assert 100 <= obj.positive_small_int_field <= 200
+
+    def test_gen_integer_shows_deprecation_warning(self):
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            # This should trigger the deprecation warning
+            value = random_gen.gen_integer(min_int=1, max_int=100)
+
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+            assert "gen_integer() may cause overflow errors" in str(w[0].message)
+            assert "gen_positive_small_integer()" in str(w[0].message)
+
+        assert 1 <= value <= 100
+
+    def test_automatic_generation_still_works(self):
+        obj = baker.make(models.DummyPositiveIntModel)
+
+        assert 1 <= obj.positive_small_int_field <= 32767
+        assert isinstance(obj.positive_int_field, int)
+        assert isinstance(obj.positive_big_int_field, int)

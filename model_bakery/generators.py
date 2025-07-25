@@ -2,7 +2,6 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
 
-from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
     AutoField,
     BigAutoField,
@@ -82,29 +81,20 @@ except ImportError:
     IntegerRangeField = None
 
 
-def _make_integer_gen_by_range(field_type: Any) -> Callable:
-    min_int, max_int = BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
-
-    def gen_integer():
-        return random_gen.gen_integer(min_int=min_int, max_int=max_int)
-
-    return gen_integer
-
-
 default_mapping = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
     BooleanField: random_gen.gen_boolean,
-    AutoField: _make_integer_gen_by_range(AutoField),
-    BigAutoField: _make_integer_gen_by_range(BigAutoField),
-    IntegerField: _make_integer_gen_by_range(IntegerField),
-    SmallAutoField: _make_integer_gen_by_range(SmallAutoField),
-    BigIntegerField: _make_integer_gen_by_range(BigIntegerField),
-    SmallIntegerField: _make_integer_gen_by_range(SmallIntegerField),
-    PositiveBigIntegerField: _make_integer_gen_by_range(PositiveBigIntegerField),
-    PositiveIntegerField: _make_integer_gen_by_range(PositiveIntegerField),
-    PositiveSmallIntegerField: _make_integer_gen_by_range(PositiveSmallIntegerField),
+    AutoField: random_gen.gen_auto_field,
+    BigAutoField: random_gen.gen_positive_big_integer,
+    IntegerField: random_gen.gen_regular_integer,
+    SmallAutoField: random_gen.gen_positive_small_integer,
+    BigIntegerField: random_gen.gen_big_integer,
+    SmallIntegerField: random_gen.gen_small_integer,
+    PositiveBigIntegerField: random_gen.gen_positive_big_integer,
+    PositiveIntegerField: random_gen.gen_positive_integer,
+    PositiveSmallIntegerField: random_gen.gen_positive_small_integer,
     FloatField: random_gen.gen_float,
     DecimalField: random_gen.gen_decimal,
     BinaryField: random_gen.gen_byte_string,
