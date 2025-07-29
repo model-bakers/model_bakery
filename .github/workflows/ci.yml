@@ -30,7 +30,6 @@ jobs:
 
   tests:
     name: Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, with ${{ matrix.database }}
-    needs: linters
     runs-on: ubuntu-22.04
     strategy:
       matrix:
