@@ -28,14 +28,63 @@ jobs:
       - run: python -m pip install .[test]
       - run: ${{ matrix.lint-command }}
 
-  tests:
-    name: Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, with ${{ matrix.database }}
+  test-sqlite:
+    name: SQLite - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
     runs-on: ubuntu-22.04
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
         django-version: ["4.2", "5.0", "5.1", "5.2"]
-        database: ["postgresql", "sqlite", "postgresql-psycopg3", "postgresql-contenttypes"]
+        exclude:
+          # Python 3.8 only supports Django 4.2
+          - python-version: "3.8"
+            django-version: "5.0"
+          - python-version: "3.8"
+            django-version: "5.1"
+          - python-version: "3.8"
+            django-version: "5.2"
+          # Python 3.9 only supports Django 4.2
+          - python-version: "3.9"
+            django-version: "5.0"
+          - python-version: "3.9"
+            django-version: "5.1"
+          - python-version: "3.9"
+            django-version: "5.2"
+
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set TOX_ENV
+        run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-sqlite" >> $GITHUB_ENV
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip setuptools wheel tox
+
+      - name: Run tox targets for ${{ matrix.python-version }}
+        run: tox run -e ${{ env.TOX_ENV }}
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-${{ env.TOX_ENV }}
+          include-hidden-files: true
+          path: '.coverage.*'
+          if-no-files-found: ignore
+
+  test-postgresql:
+    name: PostgreSQL - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, ${{ matrix.database }}
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        django-version: ["4.2", "5.0", "5.1", "5.2"]
+        database: ["postgresql", "postgresql-psycopg3", "postgresql-contenttypes"]
         exclude:
           # Python 3.8 only supports Django 4.2
           - python-version: "3.8"
@@ -87,7 +136,6 @@ jobs:
         run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-${{ matrix.database }}" >> $GITHUB_ENV
 
       - name: Set up PostgreSQL
-        if: matrix.database != 'sqlite'
         run: |
           sudo apt-get update
           sudo apt-get install -y gdal-bin
@@ -103,8 +151,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel tox
+        run: python -m pip install --upgrade pip setuptools wheel tox
 
       - name: Run tox targets for ${{ matrix.python-version }}
         run: tox run -e ${{ env.TOX_ENV }}
@@ -120,7 +167,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: tests
+    needs: [test-sqlite, test-postgresql]
     steps:
       - uses: actions/checkout@v5
 
