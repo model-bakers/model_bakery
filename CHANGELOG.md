@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- [dev] Various improvements to CI Python/Django matrices
 
 ### Removed
 - Drop fallbacks made for Django < 4.2
