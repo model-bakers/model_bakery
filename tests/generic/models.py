@@ -281,6 +281,11 @@ class UnsupportedField(models.Field):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def db_type(self, connection):
+        # Return a real database type so Django can create the column
+        # The field remains "unsupported" by Baker (no generator defined)
+        return "varchar(255)"
+
 
 class UnsupportedModel(models.Model):
     unsupported_field = UnsupportedField()
