@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
+- Drop fallbacks made for Django < 4.2
 
 ## [1.20.5](https://pypi.org/project/model-bakery/1.20.5/)
 
