@@ -125,8 +125,9 @@ class Person(models.Model):
         )
 
         if settings.USING_POSTGRES:
-            if django.VERSION >= (4, 2):
-                long_name = models.CharField()
+            long_name = (
+                models.CharField()
+            )  # max_length is not required as PostgresSQL supports unlimited VARCHAR
             acquaintances = ArrayField(models.IntegerField())
             hstore_data = HStoreField()
             ci_char = CICharField(max_length=30)
