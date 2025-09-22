@@ -79,14 +79,14 @@ jobs:
           if-no-files-found: ignore
 
   postgresql-tests:
-    name: PostgreSQL - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, ${{ matrix.database }}
+    name: PostgreSQL - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, ${{ matrix.variant }}
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
         django-version: ["4.2", "5.0", "5.1", "5.2"]
-        database: ["postgresql", "postgresql-psycopg3"]
+        variant: ["postgresql", "postgresql-psycopg3"]
         exclude:
           # Python 3.8/3.9 only supports Django 4.2
           - python-version: "3.8"
@@ -103,14 +103,14 @@ jobs:
             django-version: "5.2"
           # Python 3.8/3.9 doesn't support psycopg3
           - python-version: "3.8"
-            database: "postgresql-psycopg3"
+            variant: "postgresql-psycopg3"
           - python-version: "3.9"
-            database: "postgresql-psycopg3"
+            variant: "postgresql-psycopg3"
         include:
           # Latest Python/Django with contenttypes disabled
           - python-version: "3.13"
             django-version: "5.2"
-            database: "postgresql-no-contenttypes"
+            variant: "postgresql-no-contenttypes"
 
     env:
       PGUSER: postgres
@@ -130,7 +130,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Set TOX_ENV
-        run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-${{ matrix.database }}" >> $GITHUB_ENV
+        run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-${{ matrix.variant }}" >> $GITHUB_ENV
 
       - name: Set up PostgreSQL
         run: |
