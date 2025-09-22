@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Callable, Optional, Union
 
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
@@ -122,7 +122,7 @@ default_mapping = {
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
     JSONField: random_gen.gen_json,
-}  # type: Dict[Type, Callable]
+}  # type: dict[type, Callable]
 
 if ArrayField:
     default_mapping[ArrayField] = random_gen.gen_array
@@ -149,7 +149,7 @@ if DateTimeRangeField:
 # Add GIS fields
 
 
-def get_type_mapping() -> Dict[Type, Callable]:
+def get_type_mapping() -> dict[type, Callable]:
     from .content_types import default_contenttypes_mapping
     from .gis import default_gis_mapping
 

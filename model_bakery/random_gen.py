@@ -15,7 +15,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import Random
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 from uuid import UUID
 
 from django.core.files.base import ContentFile
@@ -48,7 +48,7 @@ def gen_image_field() -> ContentFile:
         return get_content_file(f.read(), name=name)
 
 
-def gen_from_list(a_list: Union[List[str], range]) -> Callable:
+def gen_from_list(a_list: Union[list[str], range]) -> Callable:
     """Make sure all values of the field are generated from a list.
 
     Examples:
@@ -65,7 +65,7 @@ def gen_from_list(a_list: Union[List[str], range]) -> Callable:
 # -- DEFAULT GENERATORS --
 
 
-def gen_from_choices(choices: List) -> Callable:
+def gen_from_choices(choices: list) -> Callable:
     choice_list = []
     for value, label in choices:
         if isinstance(label, (list, tuple)):
@@ -115,7 +115,7 @@ def gen_string(max_length: int) -> str:
     return "".join(baker_random.choice(string.ascii_letters) for _ in range(max_length))
 
 
-def _gen_string_get_max_length(field: Field) -> Tuple[str, int]:
+def _gen_string_get_max_length(field: Field) -> tuple[str, int]:
     max_length = getattr(field, "max_length", None)
     if max_length is None:
         max_length = MAX_LENGTH
@@ -175,7 +175,7 @@ def gen_ipv46() -> str:
     return ip_gen()
 
 
-def gen_ip(protocol: str, default_validators: List[Callable]) -> str:
+def gen_ip(protocol: str, default_validators: list[Callable]) -> str:
     from django.core.exceptions import ValidationError
 
     protocol = (protocol or "").lower()
@@ -253,7 +253,7 @@ def gen_hstore():
     return {}
 
 
-def _fk_model(field: Field) -> Tuple[str, Optional[Model]]:
+def _fk_model(field: Field) -> tuple[str, Optional[Model]]:
     try:
         return ("model", field.related_model)
     except AttributeError:
@@ -262,7 +262,7 @@ def _fk_model(field: Field) -> Tuple[str, Optional[Model]]:
 
 def _prepare_related(
     model: str, _create_files=False, **attrs: Any
-) -> Union[Model, List[Model]]:
+) -> Union[Model, list[Model]]:
     from .baker import prepare
 
     return prepare(model, **attrs)
