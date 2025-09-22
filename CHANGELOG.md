@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 - Drop fallbacks made for Django < 4.2
+- Drop Python 3.8 support (reached end of life)
 
 ## [1.20.5](https://pypi.org/project/model-bakery/1.20.5/)
 
