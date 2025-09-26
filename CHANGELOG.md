@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 ### Added
 - Add Python 3.14 support
+- Add Django 6.0 support
 
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
