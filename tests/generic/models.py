@@ -307,6 +307,18 @@ if BAKER_CONTENTTYPES:
         object_id = models.PositiveIntegerField()
         content_object = GenericForeignKey("content_type", "object_id")
 
+        proxy_content_type = models.ForeignKey(
+            contenttypes.ContentType,
+            on_delete=models.CASCADE,
+            blank=True,
+            null=True,
+            limit_choices_to={"model__in": ["person", "dog"]},
+        )
+        proxy_object_id = models.PositiveIntegerField()
+        proxy_content_object = GenericForeignKey(
+            "proxy_content_type", "proxy_object_id", for_concrete_model=False
+        )
+
     class DummyGenericRelationModel(models.Model):
         relation = GenericRelation(DummyGenericForeignKeyModel)
 

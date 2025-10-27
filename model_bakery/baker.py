@@ -521,6 +521,7 @@ class Baker(Generic[M]):
                     "value": attrs.pop(k),
                     "content_type_field": field.ct_field,
                     "object_id_field": field.fk_field,
+                    "for_concrete_model": field.for_concrete_model,
                 }
 
         instance = self.model(**attrs)
@@ -719,7 +720,7 @@ class Baker(Generic[M]):
                     instance,
                     ct_field_name,
                     contenttypes_models.ContentType.objects.get_for_model(
-                        value, for_concrete_model=True
+                        value, for_concrete_model=data["for_concrete_model"]
                     ),
                 )
                 setattr(instance, oid_field_name, value.pk)
