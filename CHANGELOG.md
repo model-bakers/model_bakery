@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add Python 3.14 support
 - Add Django 6.0 support
+### Changed
 
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
+- The creation of generic foreign key fields now respects their `for_concrete_model` configuration
 
 ### Removed
 - Drop fallbacks made for Django < 4.2
