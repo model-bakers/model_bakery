@@ -72,7 +72,7 @@ jobs:
         run: tox run -e ${{ env.TOX_ENV }}
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-data-${{ env.TOX_ENV }}
           include-hidden-files: true
@@ -155,7 +155,7 @@ jobs:
         run: tox run -e ${{ env.TOX_ENV }}
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-data-${{ env.TOX_ENV }}
           include-hidden-files: true
@@ -190,7 +190,7 @@ jobs:
 
       - name: Upload HTML report
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: html-report
           path: htmlcov
