@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add Python 3.14 support
 - Add Django 6.0 support
-### Changed
 
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
