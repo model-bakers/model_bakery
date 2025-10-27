@@ -719,7 +719,7 @@ class Baker(Generic[M]):
                     instance,
                     ct_field_name,
                     contenttypes_models.ContentType.objects.get_for_model(
-                        value, for_concrete_model=False
+                        value, for_concrete_model=True
                     ),
                 )
                 setattr(instance, oid_field_name, value.pk)

@@ -649,7 +649,9 @@ class TestHandlingContentTypeField:
         assert isinstance(dummy.content_type, ContentType)
         assert isinstance(dummy.content_object, models.Person)
 
-    def test_create_model_with_contenttype_field_and_proxy_model(self):
+    def test_create_model_with_contenttype_field_and_proxy_model_for_concret_model(
+        self,
+    ):
         from django.contrib.contenttypes.models import ContentType
 
         dummy = baker.make(
@@ -659,7 +661,7 @@ class TestHandlingContentTypeField:
         dummy.refresh_from_db()
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
-        assert isinstance(dummy.content_object, models.ProxyToPersonModel)
+        assert isinstance(dummy.content_object, models.Person)
         assert dummy.content_object.name == "John Doe"
 
 
