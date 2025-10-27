@@ -106,7 +106,7 @@ class PurchaseHistoryTestModel(TestCase):
 
 It will also create the Customer, automagically.
 
-**NOTE: ForeignKeys and OneToOneFields** - Since Django 1.8, ForeignKey and OneToOne fields don't accept unpersisted model instances anymore. This means that if you run:
+**NOTE: ForeignKeys and OneToOneFields** - Since Django 1.8, ForeignKey and OneToOne fields don't accept non persisted model instances anymore. This means that if you run:
 
 ```python
 baker.prepare('shop.PurchaseHistory')
