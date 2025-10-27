@@ -16,3 +16,4 @@ pyvenv.cfg
 dist/
 /.coverage
 /.coverage.*
+.envrc
