@@ -154,6 +154,11 @@ class Person(models.Model):
         geom_collection = models.GeometryCollectionField()
 
 
+class ProxyToPersonModel(Person):
+    class Meta:
+        proxy = True
+
+
 class Dog(models.Model):
     class Meta:
         order_with_respect_to = "owner"
