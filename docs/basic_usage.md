@@ -108,14 +108,14 @@ It will also create the Customer, automagically.
 
 **NOTE: ForeignKeys and OneToOneFields** - Since Django 1.8, ForeignKey and OneToOne fields don't accept non persisted model instances anymore. This means that if you run:
 
-**NOTE: GenericForeignKey** - `model-bakery` defines the content type for this relation based in how
-the relation configures their [`for_concrete_model` flag](https://docs.djangoproject.com/en/5.2/ref/contrib/contenttypes/#django.contrib.contenttypes.fields.GenericForeignKey.for_concrete_model).
-
 ```python
 baker.prepare('shop.PurchaseHistory')
 ```
 
 You'll end up with a persisted "Customer" instance.
+
+**NOTE: GenericForeignKey** - `model-bakery` defines the content type for this relation based in how
+the relation configures their [`for_concrete_model` flag](https://docs.djangoproject.com/en/5.2/ref/contrib/contenttypes/#django.contrib.contenttypes.fields.GenericForeignKey.for_concrete_model).
 
 ## M2M Relationships
 
