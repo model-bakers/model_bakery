@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add Python 3.14 support
 - Add Django 6.0 support
+- New flag `_full_clean` to run model validation at created instances (`False` by default)
 
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
