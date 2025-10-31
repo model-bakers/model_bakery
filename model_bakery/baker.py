@@ -84,6 +84,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> M: ...
 
@@ -98,6 +99,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _full_clean: bool = False,
     _fill_optional: Union[list[str], bool] = False,
     **attrs: Any,
 ) -> list[M]: ...
@@ -112,6 +114,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _full_clean: bool = False,
     _fill_optional: Union[list[str], bool] = False,
     **attrs: Any,
 ):
@@ -141,7 +144,10 @@ def make(
         ]
 
     return baker.make(
-        _save_kwargs=_save_kwargs, _refresh_after_create=_refresh_after_create, **attrs
+        _save_kwargs=_save_kwargs,
+        _refresh_after_create=_refresh_after_create,
+        _full_clean=_full_clean,
+        **attrs,
     )
 
 
@@ -428,6 +434,7 @@ class Baker(Generic[M]):
         _save_kwargs=None,
         _refresh_after_create=False,
         _from_manager=None,
+        _full_clean=False,
         **attrs: Any,
     ) -> M:
         _save_kwargs = _save_kwargs or {}
@@ -480,6 +487,7 @@ class Baker(Generic[M]):
             _commit=commit,
             _from_manager=_from_manager,
             _save_kwargs=_save_kwargs,
+            _full_clean=_full_clean,
         )
         if commit:
             for related in self.model._meta.related_objects:
@@ -498,7 +506,12 @@ class Baker(Generic[M]):
         return self.generate_value(field)
 
     def instance(
-        self, attrs: dict[str, Any], _commit, _save_kwargs, _from_manager
+        self,
+        attrs: dict[str, Any],
+        _commit,
+        _save_kwargs,
+        _from_manager,
+        _full_clean=False,
     ) -> M:
         one_to_many_keys = {}
         auto_now_keys = {}
@@ -526,6 +539,9 @@ class Baker(Generic[M]):
         instance = self.model(**attrs)
 
         self._handle_generic_foreign_keys(instance, generic_foreign_keys)
+
+        if _full_clean:
+            instance.full_clean()
 
         if _commit:
             instance.save(**_save_kwargs)

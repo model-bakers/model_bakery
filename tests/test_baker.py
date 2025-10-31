@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
@@ -247,6 +248,15 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert u1.username == "a"
         assert u2.username == "b"
         assert u3.username == "c"
+
+    def test_raise_validation_error_if_full_clean_and_invalid_data(self):
+        invalid_email = "this is not an email"
+
+        person = baker.make(models.Person, email=invalid_email)
+        assert person.email == invalid_email
+
+        with pytest.raises(ValidationError):
+            baker.make(models.Person, email=invalid_email, _full_clean=True)
 
 
 @pytest.mark.django_db
