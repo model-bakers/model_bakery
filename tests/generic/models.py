@@ -102,7 +102,7 @@ class Person(models.Model):
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
-    data = models.JSONField()
+    data = models.JSONField(default={}, blank=True)
     if django.VERSION >= (5, 0):
         retirement_age = models.IntegerField(db_default=20)
 
