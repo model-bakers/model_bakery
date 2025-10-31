@@ -416,6 +416,17 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.PaymentBill.objects.all().count() == 5
         assert models.User.objects.all().count() == 5
 
+    def test_bulk_create_with_full_clean(self):
+        invalid_email = "invalid email"
+        with pytest.raises(ValidationError):
+            baker.make(
+                models.Person,
+                email=invalid_email,
+                _quantity=5,
+                _bulk_create=True,
+                _full_clean=True,
+            )
+
     def test_create_many_to_many_if_flagged(self):
         store = baker.make(models.Store, make_m2m=True)
         assert store.employees.count() == 5

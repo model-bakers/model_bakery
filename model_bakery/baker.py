@@ -132,12 +132,19 @@ def make(
         raise InvalidQuantityException
 
     if _quantity and _bulk_create:
-        return bulk_create(baker, _quantity, _save_kwargs=_save_kwargs, **attrs)
+        return bulk_create(
+            baker,
+            _quantity,
+            _save_kwargs=_save_kwargs,
+            _full_clean=_full_clean,
+            **attrs,
+        )
     elif _quantity:
         return [
             baker.make(
                 _save_kwargs=_save_kwargs,
                 _refresh_after_create=_refresh_after_create,
+                _full_clean=_full_clean,
                 **attrs,
             )
             for _ in range(_quantity)
@@ -875,7 +882,9 @@ def _save_related_objs(model, objects, _using=None) -> None:
                 setattr(objects[i], fk.name, fk_obj)
 
 
-def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
+def bulk_create(
+    baker: Baker[M], quantity: int, _full_clean: bool = False, **kwargs
+) -> list[M]:
     """
     Bulk create entries and all related FKs as well.
 
@@ -930,5 +939,8 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
                     getattr(entry, reverse_relation_name).set(
                         kwargs[reverse_relation_name]
                     )
+
+        if _full_clean:
+            entry.full_clean()
 
     return created_entries
