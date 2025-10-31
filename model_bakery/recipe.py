@@ -94,6 +94,7 @@ class Recipe(Generic[M]):
         _using: str = "",
         _bulk_create: bool = False,
         _save_kwargs: Optional[dict[str, Any]] = None,
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> M: ...
 
@@ -107,6 +108,7 @@ class Recipe(Generic[M]):
         _using: str = "",
         _bulk_create: bool = False,
         _save_kwargs: Optional[dict[str, Any]] = None,
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> list[M]: ...
 
@@ -119,6 +121,7 @@ class Recipe(Generic[M]):
         _using: str = "",
         _bulk_create: Optional[bool] = None,
         _save_kwargs: Optional[dict[str, Any]] = None,
+        _full_clean: Optional[bool] = None,
         **attrs: Any,
     ) -> Union[M, list[M]]:
         defaults = {}
@@ -134,6 +137,8 @@ class Recipe(Generic[M]):
             defaults["_bulk_create"] = _bulk_create
         if _save_kwargs is not None:
             defaults["_save_kwargs"] = _save_kwargs  # type: ignore[assignment]
+        if _full_clean is not None:
+            defaults["_full_clean"] = _full_clean
 
         defaults.update(attrs)
         return baker.make(self._model, _using=_using, **self._mapping(_using, defaults))
@@ -144,6 +149,7 @@ class Recipe(Generic[M]):
         _quantity: None = None,
         _save_related: bool = False,
         _using: str = "",
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> M: ...
 
@@ -153,6 +159,7 @@ class Recipe(Generic[M]):
         _quantity: int,
         _save_related: bool = False,
         _using: str = "",
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> list[M]: ...
 
@@ -161,10 +168,12 @@ class Recipe(Generic[M]):
         _quantity: Optional[int] = None,
         _save_related: bool = False,
         _using: str = "",
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> Union[M, list[M]]:
         defaults = {
             "_save_related": _save_related,
+            "_full_clean": _full_clean,
         }
         if _quantity is not None:
             defaults["_quantity"] = _quantity  # type: ignore[assignment]
