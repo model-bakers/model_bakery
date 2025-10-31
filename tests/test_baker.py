@@ -649,23 +649,25 @@ class TestHandlingContentTypeField:
         assert isinstance(dummy.content_type, ContentType)
         assert isinstance(dummy.content_object, models.Person)
 
-    def test_create_model_with_contenttype_field_and_proxy_model(self):
+    def test_create_model_with_contenttype_field_and_proxy_model_respecting_generic_fK_config(
+        self,
+    ):
         from django.contrib.contenttypes.models import ContentType
 
-        class ProxyPerson(models.Person):
-            class Meta:
-                proxy = True
-                app_label = "generic"
-
+        proxy_person = baker.make(models.ProxyToPersonModel, name="John Doe")
         dummy = baker.make(
             models.DummyGenericForeignKeyModel,
-            content_object=baker.make(ProxyPerson, name="John Doe"),
+            content_object=proxy_person,
+            proxy_content_object=proxy_person,
         )
         dummy.refresh_from_db()
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
-        assert isinstance(dummy.content_object, ProxyPerson)
+        assert isinstance(dummy.content_object, models.Person)
         assert dummy.content_object.name == "John Doe"
+        assert isinstance(dummy.proxy_content_type, ContentType)
+        assert isinstance(dummy.proxy_content_object, models.ProxyToPersonModel)
+        assert dummy.proxy_content_object.name == "John Doe"
 
 
 @pytest.mark.skipif(

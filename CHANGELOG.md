@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
+- The creation of generic foreign key fields now respects their `for_concrete_model` configuration
 
 ### Removed
 - Drop fallbacks made for Django < 4.2
