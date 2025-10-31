@@ -302,6 +302,15 @@ class TestBakerPrepareSavingRelatedInstances:
         assert lonely_person.pk is None
         assert lonely_person.only_friend.pk
 
+    def test_raise_validation_error_if_full_clean_and_invalid_data(self):
+        invalid_email = "this is not an email"
+
+        person = baker.prepare(models.Person, email=invalid_email)
+        assert person.email == invalid_email
+
+        with pytest.raises(ValidationError):
+            baker.prepare(models.Person, email=invalid_email, _full_clean=True)
+
 
 @pytest.mark.django_db
 class TestBakerCreatesAssociatedModels(TestCase):

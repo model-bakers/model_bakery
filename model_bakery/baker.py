@@ -164,6 +164,7 @@ def prepare(
     _quantity: None = None,
     _save_related: bool = False,
     _using: str = "",
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> M: ...
 
@@ -174,6 +175,7 @@ def prepare(
     _quantity: int,
     _save_related: bool = False,
     _using: str = "",
+    _full_clean: bool = False,
     _fill_optional: Union[list[str], bool] = False,
     **attrs: Any,
 ) -> list[M]: ...
@@ -184,6 +186,7 @@ def prepare(
     _quantity: Optional[int] = None,
     _save_related: bool = False,
     _using: str = "",
+    _full_clean: bool = False,
     _fill_optional: Union[list[str], bool] = False,
     **attrs: Any,
 ):
@@ -199,11 +202,11 @@ def prepare(
 
     if _quantity:
         return [
-            baker.prepare(_save_related=_save_related, **attrs)
+            baker.prepare(_save_related=_save_related, _full_clean=_full_clean, **attrs)
             for i in range(_quantity)
         ]
 
-    return baker.prepare(_save_related=_save_related, **attrs)
+    return baker.prepare(_save_related=_save_related, _full_clean=_full_clean, **attrs)
 
 
 def _recipe(name: str) -> Any:
@@ -400,6 +403,7 @@ class Baker(Generic[M]):
         _refresh_after_create: bool = False,
         _from_manager=None,
         _fill_optional: Union[list[str], bool] = False,
+        _full_clean: bool = False,
         **attrs: Any,
     ):
         """Create and persist an instance of the model associated with Baker instance."""
@@ -410,6 +414,7 @@ class Baker(Generic[M]):
             "_refresh_after_create": _refresh_after_create,
             "_from_manager": _from_manager,
             "_fill_optional": _fill_optional,
+            "_full_clean": _full_clean,
         }
         params.update(attrs)
         return self._make(**params)
@@ -418,6 +423,7 @@ class Baker(Generic[M]):
         self,
         _save_related=False,
         _fill_optional: Union[list[str], bool] = False,
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> M:
         """Create, but do not persist, an instance of the associated model."""
@@ -425,6 +431,7 @@ class Baker(Generic[M]):
             "commit": False,
             "commit_related": _save_related,
             "_fill_optional": _fill_optional,
+            "_full_clean": _full_clean,
         }
         params.update(attrs)
         return self._make(**params)
