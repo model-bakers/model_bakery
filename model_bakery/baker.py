@@ -919,6 +919,9 @@ def bulk_create(
 
     # set many-to-many relations from kwargs
     for entry in created_entries:
+        if _full_clean:
+            entry.full_clean()
+
         for field in baker.model._meta.many_to_many:
             if field.name in kwargs:
                 through_model = getattr(entry, field.name).through
@@ -946,8 +949,5 @@ def bulk_create(
                     getattr(entry, reverse_relation_name).set(
                         kwargs[reverse_relation_name]
                     )
-
-        if _full_clean:
-            entry.full_clean()
 
     return created_entries
