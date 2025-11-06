@@ -231,6 +231,7 @@ class ModelWithSaveKwargs(Dog):
 class Classroom(models.Model):
     students = models.ManyToManyField(Person, null=True)
     active = models.BooleanField(null=True)
+    teacher_email = models.EmailField(default="", null=True)
 
 
 class ClassroomM2MRelated(models.Model):

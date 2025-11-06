@@ -13,6 +13,7 @@ from typing import (
 
 from django.apps import apps
 from django.conf import settings
+from django.db import transaction
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -907,47 +908,48 @@ def bulk_create(
         for _ in range(quantity)
     ]
 
-    _save_related_objs(baker.model, entries, _using=baker._using)
+    with transaction.atomic(using=baker._using if baker._using else None):
+        _save_related_objs(baker.model, entries, _using=baker._using)
 
-    # Use the desired database to create the entries
-    if baker._using:
-        manager = baker.model._base_manager.using(baker._using)
-    else:
-        manager = baker.model._base_manager
+        # Use the desired database to create the entries
+        if baker._using:
+            manager = baker.model._base_manager.using(baker._using)
+        else:
+            manager = baker.model._base_manager
 
-    created_entries = manager.bulk_create(entries)
+        created_entries = manager.bulk_create(entries)
 
-    # set many-to-many relations from kwargs
-    for entry in created_entries:
-        if _full_clean:
-            entry.full_clean()
+        # set many-to-many relations from kwargs
+        for entry in created_entries:
+            if _full_clean:
+                entry.full_clean()
 
-        for field in baker.model._meta.many_to_many:
-            if field.name in kwargs:
-                through_model = getattr(entry, field.name).through
-                through_model.objects.bulk_create(
-                    [
-                        through_model(
-                            **{
-                                field.remote_field.name: entry,
-                                field.related_model._meta.model_name: obj,
-                            }
-                        )
-                        for obj in kwargs[field.name]
-                    ]
-                )
-
-        # set many-to-many relations that are specified using related name from kwargs
-        for field in baker.model._meta.get_fields():
-            if field.many_to_many and hasattr(field, "related_model"):
-                reverse_relation_name = (
-                    field.related_query_name
-                    or field.related_name
-                    or f"{field.related_model._meta.model_name}_set"
-                )
-                if reverse_relation_name in kwargs:
-                    getattr(entry, reverse_relation_name).set(
-                        kwargs[reverse_relation_name]
+            for field in baker.model._meta.many_to_many:
+                if field.name in kwargs:
+                    through_model = getattr(entry, field.name).through
+                    through_model.objects.bulk_create(
+                        [
+                            through_model(
+                                **{
+                                    field.remote_field.name: entry,
+                                    field.related_model._meta.model_name: obj,
+                                }
+                            )
+                            for obj in kwargs[field.name]
+                        ]
                     )
+
+            # set many-to-many relations that are specified using related name from kwargs
+            for field in baker.model._meta.get_fields():
+                if field.many_to_many and hasattr(field, "related_model"):
+                    reverse_relation_name = (
+                        field.related_query_name
+                        or field.related_name
+                        or f"{field.related_model._meta.model_name}_set"
+                    )
+                    if reverse_relation_name in kwargs:
+                        getattr(entry, reverse_relation_name).set(
+                            kwargs[reverse_relation_name]
+                        )
 
     return created_entries

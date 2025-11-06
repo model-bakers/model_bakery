@@ -1136,6 +1136,19 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         c1, c2 = models.Classroom.objects.all()[:2]
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
 
+    def test_does_not_create_related_m2m_if_model_does_not_validate(self):
+        with pytest.raises(ValidationError):
+            baker.make(
+                models.Classroom,
+                _quantity=3,
+                _bulk_create=True,
+                make_m2m=True,
+                teacher_email="error",
+                _full_clean=True,
+            )
+        assert not models.Classroom.objects.exists()
+        assert not models.Person.objects.exists()
+
     def test_make_should_create_objects_using_reverse_name(self):
         classroom = baker.make(models.Classroom)
 
