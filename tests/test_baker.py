@@ -258,6 +258,8 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         with pytest.raises(ValidationError):
             baker.make(models.Person, email=invalid_email, _full_clean=True)
 
+        assert models.Person.objects.get() == person, "Only 1 person is expected in the DB"
+
 
 @pytest.mark.django_db
 class TestBakerPrepareSavingRelatedInstances:
