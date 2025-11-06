@@ -153,7 +153,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             assert all(p.name == "George Washington" for p in people)
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
-        query_count = 1
+        query_count = 3
         with self.assertNumQueries(query_count):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
         assert models.Person.objects.count() == 5
@@ -394,16 +394,14 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_one_to_one(self):
-        query_count = 6
-        with self.assertNumQueries(query_count):
+        with self.assertNumQueries(8):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
     def test_chaining_bulk_create_reduces_query_count(self):
-        query_count = 3
-        with self.assertNumQueries(query_count):
+        with self.assertNumQueries(7):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
             person_iter = models.Person.objects.all().iterator()
             baker.make(
@@ -412,14 +410,13 @@ class TestBakerCreatesAssociatedModels(TestCase):
                 _quantity=5,
                 _bulk_create=True,
             )
-            # 2 bulk create and 1 select on Person
+            # 2 bulk create and 1 select on Person + 2 pairs controlled by the transaction
 
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_fk(self):
-        query_count = 6
-        with self.assertNumQueries(query_count):
+        with self.assertNumQueries(8):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
         assert models.PaymentBill.objects.all().count() == 5
@@ -1129,7 +1126,7 @@ class TestCreateM2MWhenBulkCreate(TestCase):
     def test_create(self):
         person = baker.make(models.Person)
 
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(13):
             baker.make(
                 models.Classroom, students=[person], _quantity=10, _bulk_create=True
             )
@@ -1152,7 +1149,7 @@ class TestCreateM2MWhenBulkCreate(TestCase):
     def test_make_should_create_objects_using_reverse_name(self):
         classroom = baker.make(models.Classroom)
 
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(23):
             baker.make(
                 models.Person,
                 classroom_set=[classroom],
