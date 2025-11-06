@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - New flag `_full_clean` to run model validation at created instances (`False` by default)
 
 ### Changed
+- Bulk creation of models instances is now done within a Django transaction block
 - [dev] Various improvements to CI Python/Django matrices
 
 ### Removed
