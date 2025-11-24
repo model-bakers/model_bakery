@@ -20,7 +20,7 @@ jobs:
           - black --check --diff .
           - mypy model_bakery
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
@@ -53,7 +53,7 @@ jobs:
             django-version: "6.0"
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set TOX_ENV
         run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-sqlite" >> $GITHUB_ENV
 
@@ -128,7 +128,7 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set TOX_ENV
         run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-${{ matrix.variant }}" >> $GITHUB_ENV
 
@@ -167,7 +167,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [sqlite-tests, postgresql-tests]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
         with:
