@@ -79,5 +79,5 @@ on how to set up your local environment.
 
 ## License
 
-Model Bakery is licensed under the MIT License.
+Model Bakery is licensed under Apache License 2.0.
 See the [LICENSE](LICENSE) file for more information.

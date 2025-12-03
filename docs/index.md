@@ -42,7 +42,7 @@ Feel free to [open an issue](https://github.com/model-bakers/model_bakery/issues
 
 ## License
 
-Model Bakery is licensed under the MIT License.
+Model Bakery is licensed under Apache License 2.0.
 See the [LICENSE](https://github.com/model-bakers/model_bakery/blob/main/LICENSE) file for more information.
 
 ## Contents
