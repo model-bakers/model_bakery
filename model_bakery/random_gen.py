@@ -65,11 +65,17 @@ def gen_from_list(a_list: Union[list[str], range]) -> Callable:
 # -- DEFAULT GENERATORS --
 
 
-def gen_from_choices(choices: list) -> Callable:
+def gen_from_choices(
+    choices: list, nullable: bool = True, blankable: bool = True
+) -> Callable:
     choice_list = []
     for value, label in choices:
         if isinstance(label, (list, tuple)):
             for val, _lbl in label:
+                if not nullable and val is None:
+                    continue
+                if not blankable and val == "":
+                    continue
                 choice_list.append(val)
         else:
             choice_list.append(value)

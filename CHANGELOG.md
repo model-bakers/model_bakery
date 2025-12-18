@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
 - The creation of generic foreign key fields now respects their `for_concrete_model` configuration
+- The `gen_from_choices` generator now ignores `None` or `""` values in choices when the field doesn't allow null or blank values
 
 ### Removed
 - Drop fallbacks made for Django < 4.2
