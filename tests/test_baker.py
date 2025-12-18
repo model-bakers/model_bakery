@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models import Manager
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
@@ -152,7 +153,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             assert all(p.name == "George Washington" for p in people)
 
     def test_make_quantity_respecting_bulk_create_parameter(self):
-        query_count = 1
+        query_count = 3
         with self.assertNumQueries(query_count):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
         assert models.Person.objects.count() == 5
@@ -248,6 +249,19 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert u2.username == "b"
         assert u3.username == "c"
 
+    def test_raise_validation_error_if_full_clean_and_invalid_data(self):
+        invalid_email = "this is not an email"
+
+        person = baker.make(models.Person, email=invalid_email)
+        assert person.email == invalid_email
+
+        with pytest.raises(ValidationError):
+            baker.make(models.Person, email=invalid_email, _full_clean=True)
+
+        assert (
+            models.Person.objects.get() == person
+        ), "Only 1 person is expected in the DB"
+
 
 @pytest.mark.django_db
 class TestBakerPrepareSavingRelatedInstances:
@@ -291,6 +305,15 @@ class TestBakerPrepareSavingRelatedInstances:
 
         assert lonely_person.pk is None
         assert lonely_person.only_friend.pk
+
+    def test_raise_validation_error_if_full_clean_and_invalid_data(self):
+        invalid_email = "this is not an email"
+
+        person = baker.prepare(models.Person, email=invalid_email)
+        assert person.email == invalid_email
+
+        with pytest.raises(ValidationError):
+            baker.prepare(models.Person, email=invalid_email, _full_clean=True)
 
 
 @pytest.mark.django_db
@@ -375,16 +398,14 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_one_to_one(self):
-        query_count = 6
-        with self.assertNumQueries(query_count):
+        with self.assertNumQueries(8):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
     def test_chaining_bulk_create_reduces_query_count(self):
-        query_count = 3
-        with self.assertNumQueries(query_count):
+        with self.assertNumQueries(7):
             baker.make(models.Person, _quantity=5, _bulk_create=True)
             person_iter = models.Person.objects.all().iterator()
             baker.make(
@@ -393,18 +414,28 @@ class TestBakerCreatesAssociatedModels(TestCase):
                 _quantity=5,
                 _bulk_create=True,
             )
-            # 2 bulk create and 1 select on Person
+            # 2 bulk create and 1 select on Person + 2 pairs controlled by the transaction
 
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
     def test_bulk_create_multiple_fk(self):
-        query_count = 6
-        with self.assertNumQueries(query_count):
+        with self.assertNumQueries(8):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
         assert models.PaymentBill.objects.all().count() == 5
         assert models.User.objects.all().count() == 5
+
+    def test_bulk_create_with_full_clean(self):
+        invalid_email = "invalid email"
+        with pytest.raises(ValidationError):
+            baker.make(
+                models.Person,
+                email=invalid_email,
+                _quantity=5,
+                _bulk_create=True,
+                _full_clean=True,
+            )
 
     def test_create_many_to_many_if_flagged(self):
         store = baker.make(models.Store, make_m2m=True)
@@ -1101,17 +1132,30 @@ class TestCreateM2MWhenBulkCreate(TestCase):
     def test_create(self):
         person = baker.make(models.Person)
 
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(13):
             baker.make(
                 models.Classroom, students=[person], _quantity=10, _bulk_create=True
             )
         c1, c2 = models.Classroom.objects.all()[:2]
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
 
+    def test_does_not_create_related_m2m_if_model_does_not_validate(self):
+        with pytest.raises(ValidationError):
+            baker.make(
+                models.Classroom,
+                _quantity=3,
+                _bulk_create=True,
+                make_m2m=True,
+                teacher_email="error",
+                _full_clean=True,
+            )
+        assert not models.Classroom.objects.exists()
+        assert not models.Person.objects.exists()
+
     def test_make_should_create_objects_using_reverse_name(self):
         classroom = baker.make(models.Classroom)
 
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(23):
             baker.make(
                 models.Person,
                 classroom_set=[classroom],

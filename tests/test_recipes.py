@@ -4,6 +4,7 @@ from decimal import Decimal
 from random import choice  # noqa
 from unittest.mock import patch
 
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.utils.timezone import now
 
@@ -704,3 +705,8 @@ class TestAutoNowFields:
 
         assert r.make().created == tz_aware(TEST_TIME + 1 * delta)
         assert r.make().created == tz_aware(TEST_TIME + 2 * delta)
+
+    @pytest.mark.django_db
+    def test_recipe_make_with_full_clean_validates(self):
+        with pytest.raises(ValidationError):
+            person_recipe.make(email="invalid email", _full_clean=True)

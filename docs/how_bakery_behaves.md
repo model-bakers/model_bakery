@@ -25,6 +25,10 @@ customer = baker.make('shop.Customer', _fill_optional=['enjoy_jards_macale', 'bi
 customer = baker.make('shop.Customer', _fill_optional=True)
 ```
 
+By default, Model Bakery won't run validations on custom fields definitions. To enforce the returned
+object to be [fully validated](https://docs.djangoproject.com/en/5.2/ref/models/instances/#django.db.models.Model.full_clean),
+you can set `_full_clean=True` to any method in their API.
+
 ## When shouldn't you let Baker generate things for you?
 
 If you have fields with special validation, you should set their values by yourself.

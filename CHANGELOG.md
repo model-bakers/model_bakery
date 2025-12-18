@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add Python 3.14 support
 - Add Django 6.0 support
+- New flag `_full_clean` to run model validation at created instances (`False` by default)
 
 ### Changed
+- Bulk creation of models instances is now done within a Django transaction block
 - [dev] Various improvements to CI Python/Django matrices
 - The creation of generic foreign key fields now respects their `for_concrete_model` configuration
 
