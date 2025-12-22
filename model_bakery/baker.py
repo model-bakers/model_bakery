@@ -1,12 +1,9 @@
 import collections
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from os.path import dirname, join
 from typing import (
     Any,
-    Callable,
     Generic,
-    Optional,
-    Union,
     cast,
     overload,
 )
@@ -62,7 +59,7 @@ mock_file_txt = join(dirname(__file__), "mock_file.txt")
 MAX_MANY_QUANTITY = 5
 
 
-def _valid_quantity(quantity: Optional[Union[str, int]]) -> bool:
+def _valid_quantity(quantity: str | int | None) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
 
@@ -70,16 +67,16 @@ def _is_auto_datetime_field(field: Field) -> bool:
     return getattr(field, "auto_now_add", False) or getattr(field, "auto_now", False)
 
 
-def seed(seed: Union[int, float, str, bytes, bytearray, None]) -> None:
+def seed(seed: int | float | str | bytes | bytearray | None) -> None:
     Baker.seed(seed)
 
 
 @overload
 def make(
-    _model: Union[str, type[M]],
+    _model: str | type[M],
     _quantity: None = None,
     make_m2m: bool = False,
-    _save_kwargs: Optional[dict[str, Any]] = None,
+    _save_kwargs: dict[str, Any] | None = None,
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
@@ -90,29 +87,29 @@ def make(
 
 @overload
 def make(
-    _model: Union[str, type[M]],
+    _model: str | type[M],
     _quantity: int,
     make_m2m: bool = False,
-    _save_kwargs: Optional[dict[str, Any]] = None,
+    _save_kwargs: dict[str, Any] | None = None,
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
-    _fill_optional: Union[list[str], bool] = False,
+    _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ) -> list[M]: ...
 
 
 def make(
     _model,
-    _quantity: Optional[int] = None,
+    _quantity: int | None = None,
     make_m2m: bool = False,
-    _save_kwargs: Optional[dict[str, Any]] = None,
+    _save_kwargs: dict[str, Any] | None = None,
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
-    _fill_optional: Union[list[str], bool] = False,
+    _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ):
     """Create a persisted instance from a given model its associated models.
@@ -147,7 +144,7 @@ def make(
 
 @overload
 def prepare(
-    _model: Union[str, type[M]],
+    _model: str | type[M],
     _quantity: None = None,
     _save_related: bool = False,
     _using: str = "",
@@ -157,21 +154,21 @@ def prepare(
 
 @overload
 def prepare(
-    _model: Union[str, type[M]],
+    _model: str | type[M],
     _quantity: int,
     _save_related: bool = False,
     _using: str = "",
-    _fill_optional: Union[list[str], bool] = False,
+    _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ) -> list[M]: ...
 
 
 def prepare(
-    _model: Union[str, type[M]],
-    _quantity: Optional[int] = None,
+    _model: str | type[M],
+    _quantity: int | None = None,
     _save_related: bool = False,
     _using: str = "",
-    _fill_optional: Union[list[str], bool] = False,
+    _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ):
     """Create but do not persist an instance from a given model.
@@ -220,8 +217,8 @@ def prepare_recipe(
 class ModelFinder:
     """Encapsulates all the logic for finding a model to Baker."""
 
-    _unique_models: Optional[dict[str, type[Model]]] = None
-    _ambiguous_models: Optional[list[str]] = None
+    _unique_models: dict[str, type[Model]] | None = None
+    _ambiguous_models: list[str] | None = None
 
     def get_model(self, name: str) -> type[Model]:
         """Get a model.
@@ -247,7 +244,7 @@ class ModelFinder:
 
         return model
 
-    def get_model_by_name(self, name: str) -> Optional[type[Model]]:
+    def get_model_by_name(self, name: str) -> type[Model] | None:
         """Get a model by name.
 
         If a model with that name exists in more than one app, raises
@@ -291,7 +288,7 @@ def is_iterator(value: Any) -> bool:
     return isinstance(value, collections.abc.Iterator)
 
 
-def _custom_baker_class() -> Optional[type]:
+def _custom_baker_class() -> type | None:
     """Return the specified custom baker class.
 
     Returns:
@@ -325,21 +322,21 @@ class Baker(Generic[M]):
     attr_mapping: dict[str, Any] = {}
     type_mapping: dict = {}
 
-    _global_seed: Union[object, int, float, str, bytes, bytearray, None] = SENTINEL
+    _global_seed: object | int | float | str | bytes | bytearray | None = SENTINEL
 
     # Note: we're using one finder for all Baker instances to avoid
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
 
     @classmethod
-    def seed(cls, seed: Union[int, float, str, bytes, bytearray, None]) -> None:
+    def seed(cls, seed: int | float | str | bytes | bytearray | None) -> None:
         random_gen.baker_random.seed(seed)
         cls._global_seed = seed
 
     @classmethod
     def create(
         cls,
-        _model: Union[str, type[NewM]],
+        _model: str | type[NewM],
         make_m2m: bool = False,
         create_files: bool = False,
         _using: str = "",
@@ -352,7 +349,7 @@ class Baker(Generic[M]):
 
     def __init__(
         self,
-        _model: Union[str, type[M]],
+        _model: str | type[M],
         make_m2m: bool = False,
         create_files: bool = False,
         _using: str = "",
@@ -383,10 +380,10 @@ class Baker(Generic[M]):
 
     def make(
         self,
-        _save_kwargs: Optional[dict[str, Any]] = None,
+        _save_kwargs: dict[str, Any] | None = None,
         _refresh_after_create: bool = False,
         _from_manager=None,
-        _fill_optional: Union[list[str], bool] = False,
+        _fill_optional: list[str] | bool = False,
         **attrs: Any,
     ):
         """Create and persist an instance of the model associated with Baker instance."""
@@ -404,7 +401,7 @@ class Baker(Generic[M]):
     def prepare(
         self,
         _save_related=False,
-        _fill_optional: Union[list[str], bool] = False,
+        _fill_optional: list[str] | bool = False,
         **attrs: Any,
     ) -> M:
         """Create, but do not persist, an instance of the associated model."""
@@ -545,7 +542,7 @@ class Baker(Generic[M]):
         return instance
 
     def create_by_related_name(
-        self, instance: Model, related: Union[ManyToOneRel, OneToOneRel]
+        self, instance: Model, related: ManyToOneRel | OneToOneRel
     ) -> None:
         rel_name = related.get_accessor_name()
         if not rel_name or rel_name not in self.rel_fields:
@@ -726,8 +723,8 @@ class Baker(Generic[M]):
                 setattr(instance, oid_field_name, value.pk)
 
     def _remote_field(
-        self, field: Union[ForeignKey, OneToOneField]
-    ) -> Union[OneToOneRel, ManyToOneRel]:
+        self, field: ForeignKey | OneToOneField
+    ) -> OneToOneRel | ManyToOneRel:
         return field.remote_field
 
     def generate_value(self, field: Field, commit: bool = True) -> Any:  # noqa: C901
@@ -799,7 +796,7 @@ class Baker(Generic[M]):
 
 def get_required_values(
     generator: Callable, field: Field
-) -> dict[str, Union[bool, int, str, list[Callable]]]:
+) -> dict[str, bool | int | str | list[Callable]]:
     """Get required values for a generator from the field.
 
     If required value is a function, calls it with field as argument. If

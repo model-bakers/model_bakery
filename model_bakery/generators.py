@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from decimal import Decimal
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
@@ -162,9 +163,9 @@ def get_type_mapping() -> dict[type, Callable]:
 user_mapping = {}
 
 
-def add(field: str, func: Optional[Union[Callable, str]]) -> None:
+def add(field: str, func: Callable | str | None) -> None:
     user_mapping[import_from_str(field)] = import_from_str(func)
 
 
-def get(field: Any) -> Optional[Callable]:
+def get(field: Any) -> Callable | None:
     return user_mapping.get(field)
