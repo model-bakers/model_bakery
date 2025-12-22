@@ -49,7 +49,6 @@ else:
 GENDER_CHOICES = [
     (None, ""),
     ("M", "male"),
-    ("M", "male"),
     ("F", "female"),
     ("N", "non-binary"),
 ]
