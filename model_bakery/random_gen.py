@@ -70,15 +70,17 @@ def gen_from_choices(
 ) -> Callable:
     choice_list = []
     for value, label in choices:
+        if not nullable and value is None:
+            continue
+        if not blankable and value == "":
+            continue
+
         if isinstance(label, (list, tuple)):
             for val, _lbl in label:
-                if not nullable and val is None:
-                    continue
-                if not blankable and val == "":
-                    continue
                 choice_list.append(val)
         else:
             choice_list.append(value)
+
     return gen_from_list(choice_list)
 
 
