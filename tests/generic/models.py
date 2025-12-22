@@ -46,11 +46,14 @@ else:
     GenericRelation = None
     GenericForeignKey = None
 
-GENDER_CHOICES = [
-    ("M", "male"),
-    ("F", "female"),
-    ("N", "non-binary"),
-]
+
+class Gender(models.TextChoices):
+    MALE = "M", "male"
+    FEMALE = "F", "female"
+    NON_BINARY = "N", "non-binary"
+
+    __empty__ = ""
+
 
 OCCUPATION_CHOICES = (
     ("Service Industry", (("waitress", "Waitress"), ("bartender", "Bartender"))),
@@ -81,7 +84,7 @@ class PaymentBill(models.Model):
 
 
 class Person(models.Model):
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=1, choices=Gender.choices)
     #  Jards Macalé is an amazing brazilian musician! =]
     enjoy_jards_macale = models.BooleanField(default=True)
     like_metal_music = models.BooleanField(default=False)

@@ -73,9 +73,9 @@ def custom_cfg():
 
 class TestFillingFromChoice:
     def test_if_gender_is_populated_from_choices(self, person):
-        from tests.generic.models import GENDER_CHOICES
+        from tests.generic.models import Gender
 
-        assert person.gender in (x[0] for x in GENDER_CHOICES)
+        assert person.gender in Gender.values
 
     def test_if_occupation_populated_from_choices(self, person):
         from tests.generic.models import OCCUPATION_CHOICES
