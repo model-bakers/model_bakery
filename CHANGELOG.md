@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
 - The creation of generic foreign key fields now respects their `for_concrete_model` configuration
+- Refactor `gen_float()` to use `uniform()` with configurable `min_float`/`max_float` bounds instead of `random() * gen_integer()` which produced skewed distribution
+- Refactor `gen_interval()` to use `min_interval`/`max_interval` instead of `offset` parameter which never worked as intended due to huge `MAX_INT` range
+- Fix `gen_date_range()` and `gen_datetime_range()` to prevent empty ranges by enforcing a minimum interval of 1 day
+- Use `baker_random.randint()` directly in `gen_pg_numbers_range()` instead of `gen_integer()`
 
 ### Removed
 - Drop fallbacks made for Django < 4.2
