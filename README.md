@@ -7,8 +7,6 @@
 
 *Model Bakery* offers you a smart way to create fixtures for testing in Django. With a simple and powerful API, you can create many objects with a single line of code.
 
-> **Note:** Model Bakery is a rename of the legacy [Model Mommy project](https://pypi.org/project/model_mommy/).
-
 ## Installation
 
 ```bash

@@ -4,9 +4,6 @@ Model Bakery offers you a smart way to create fixtures for testing in Django.
 
 With a simple and powerful API, you can create many objects with a single line of code.
 
-Model Bakery is a rename of the legacy [model_mommy's project](https://pypi.org/project/model_mommy/). This change was made to avoid reinforcing gender stereotypes in technology.
-You can read more about this subject [here](https://witi.com/articles/1017/How-Gender-Stereotypes-are-Still-Affecting-Women-in-Tech/).
-
 Documentation: [https://model-bakery.readthedocs.io](https://model-bakery.readthedocs.io)
 
 Source code: [https://github.com/model-bakers/model_bakery/](https://github.com/model-bakers/model_bakery/)
