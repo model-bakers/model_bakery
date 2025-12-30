@@ -765,7 +765,7 @@ class Baker(Generic[M]):
             generator = self.attr_mapping[field.name]
         elif field.choices:
             generator = random_gen.gen_from_choices(
-                field.choices, field.null, field.blank
+                field.choices, nullable=field.null, blankable=field.blank
             )
         elif is_content_type_fk:
             generator = self.type_mapping[contenttypes_models.ContentType]
