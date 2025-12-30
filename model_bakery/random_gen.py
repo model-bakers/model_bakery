@@ -11,11 +11,12 @@ argument.
 
 import string
 import warnings
+from collections.abc import Callable
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import Random
-from typing import Any, Callable, Optional, Union
+from typing import Any
 from uuid import UUID
 
 from django.core.files.base import ContentFile
@@ -48,7 +49,7 @@ def gen_image_field() -> ContentFile:
         return get_content_file(f.read(), name=name)
 
 
-def gen_from_list(a_list: Union[list[str], range]) -> Callable:
+def gen_from_list(a_list: list[str] | range) -> Callable:
     """Make sure all values of the field are generated from a list.
 
     Examples:
@@ -88,8 +89,13 @@ def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
     return baker_random.randint(min_int, max_int)
 
 
-def gen_float() -> float:
-    return baker_random.random() * gen_integer()
+def gen_float(min_float: float = -1000000.0, max_float: float = 1000000.0) -> float:
+    """
+    Generate a random float uniformly distributed between `min_float` and `max_float`.
+
+    Defaults to ±1,000,000.0 which is suitable for most test data scenarios.
+    """
+    return baker_random.uniform(min_float, max_float)
 
 
 def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
@@ -220,9 +226,18 @@ def gen_byte_string(max_length: int = 16) -> bytes:
     return bytes(generator)
 
 
-def gen_interval(interval_key: str = "milliseconds", offset: int = 0) -> timedelta:
-    interval = gen_integer() + offset
-    kwargs = {interval_key: interval}
+def gen_interval(
+    interval_key: str = "milliseconds",
+    min_interval: int = -365 * 24 * 60 * 60 * 1000,
+    max_interval: int = 365 * 24 * 60 * 60 * 1000,
+) -> timedelta:
+    """
+    Generate a random timedelta for `DurationField` or date range calculations.
+
+    Defaults to ±1 year in milliseconds, suitable for most test scenarios.
+    The `interval_key` determines which timedelta argument is set (e.g., 'seconds', 'days').
+    """
+    kwargs = {interval_key: baker_random.randint(min_interval, max_interval)}
     return timedelta(**kwargs)
 
 
@@ -261,7 +276,7 @@ def gen_hstore():
     return {}
 
 
-def _fk_model(field: Field) -> tuple[str, Optional[Model]]:
+def _fk_model(field: Field) -> tuple[str, Model | None]:
     try:
         return ("model", field.related_model)
     except AttributeError:
@@ -270,7 +285,7 @@ def _fk_model(field: Field) -> tuple[str, Optional[Model]]:
 
 def _prepare_related(
     model: str, _create_files=False, **attrs: Any
-) -> Union[Model, list[Model]]:
+) -> Model | list[Model]:
     from .baker import prepare
 
     return prepare(model, **attrs)
@@ -350,37 +365,56 @@ def gen_geometry_collection() -> str:
 
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
+    """
+    Factory that returns a generator for PostgreSQL numeric range fields.
+
+    The returned generator creates ranges like [-N, N] where N is a random value
+    between 1 and 100,000, cast to the appropriate numeric type (int, float, etc).
+    """
+
     def gen_range():
         try:
             from psycopg.types.range import Range
         except ImportError:
             from psycopg2._range import NumericRange as Range
 
-        base_num = gen_integer(1, 100000)
+        base_num = baker_random.randint(1, 100000)
         return Range(number_cast(-1 * base_num), number_cast(base_num))
 
     return gen_range
 
 
 def gen_date_range():
+    """
+    Generate random `DateRange` for PostgreSQL `DateRangeField`.
+
+    The range spans a random date with a minimum interval of 1 day
+    to avoid empty ranges in tests.
+    """
     try:
         from psycopg.types.range import DateRange
     except ImportError:
         from psycopg2.extras import DateRange
 
     base_date = gen_date()
-    interval = gen_interval(offset=24 * 60 * 60 * 1000)  # force at least 1 day interval
+    interval = gen_interval(min_interval=24 * 60 * 60 * 1000)
     args = sorted([base_date - interval, base_date + interval])
     return DateRange(*args)
 
 
 def gen_datetime_range():
+    """
+    Generate random `TimestamptzRange` for PostgreSQL DateTimeRangeField.
+
+    The range spans a random datetime with a minimum interval of 1 day
+    to avoid empty ranges in tests.
+    """
     try:
         from psycopg.types.range import TimestamptzRange
     except ImportError:
         from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
     base_datetime = gen_datetime()
-    interval = gen_interval()
+    interval = gen_interval(min_interval=24 * 60 * 60 * 1000)
     args = sorted([base_datetime - interval, base_datetime + interval])
     return TimestamptzRange(*args)

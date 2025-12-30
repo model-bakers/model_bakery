@@ -25,6 +25,10 @@ Source code: [https://github.com/model-bakers/model_bakery/](https://github.com/
 $ pip install model-bakery
 ```
 
+## Supported Versions
+
+Model Bakery follows the [Python](https://devguide.python.org/versions/) and [Django](https://docs.djangoproject.com/en/stable/internals/release-process/#supported-versions) release and support cycles. We drop support for Python and Django versions when they reach end-of-life.
+
 ## Contributing to Model Bakery
 
 As an open-source project, Model Bakery welcomes contributions of many forms:

@@ -13,11 +13,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - [dev] Various improvements to CI Python/Django matrices
 - The creation of generic foreign key fields now respects their `for_concrete_model` configuration
+- Refactor `gen_float()` to use `uniform()` with configurable `min_float`/`max_float` bounds instead of `random() * gen_integer()` which produced skewed distribution
+- Refactor `gen_interval()` to use `min_interval`/`max_interval` instead of `offset` parameter which never worked as intended due to huge `MAX_INT` range
+- Fix `gen_date_range()` and `gen_datetime_range()` to prevent empty ranges by enforcing a minimum interval of 1 day
+- Use `baker_random.randint()` directly in `gen_pg_numbers_range()` instead of `gen_integer()`
 - The `gen_from_choices` generator now ignores `None` or `""` values in choices when the field doesn't allow null or blank values
 
 ### Removed
 - Drop fallbacks made for Django < 4.2
-- Drop Python 3.8 support (reached end of life)
+- Drop Python 3.8 and 3.9 support (reached end of life)
 
 ## [1.20.5](https://pypi.org/project/model-bakery/1.20.5/)
 

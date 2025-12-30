@@ -3,8 +3,9 @@ import importlib
 import inspect
 import itertools
 import warnings
+from collections.abc import Callable
 from types import ModuleType
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 from django.apps import apps
 
@@ -13,7 +14,7 @@ from .timezone import tz_aware
 __all__ = ["import_from_str", "get_calling_module", "seq"]
 
 
-def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
+def import_from_str(import_string: Callable | str | None) -> Any:
     """Import an object defined as import if it is an string.
 
     If `import_string` follows the format `path.to.module.object_name`,
@@ -33,7 +34,7 @@ def import_from_str(import_string: Optional[Union[Callable, str]]) -> Any:
     return import_string
 
 
-def get_calling_module(levels_back: int) -> Optional[ModuleType]:
+def get_calling_module(levels_back: int) -> ModuleType | None:
     """Get the module some number of stack frames back from the current one.
 
     Make sure to account for the number of frames between the "calling" code
