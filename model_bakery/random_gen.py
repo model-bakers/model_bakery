@@ -11,11 +11,12 @@ argument.
 
 import string
 import warnings
+from collections.abc import Callable
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import Random
-from typing import Any, Callable, Optional, Union
+from typing import Any
 from uuid import UUID
 
 from django.core.files.base import ContentFile
@@ -48,7 +49,7 @@ def gen_image_field() -> ContentFile:
         return get_content_file(f.read(), name=name)
 
 
-def gen_from_list(a_list: Union[list[str], range]) -> Callable:
+def gen_from_list(a_list: list[str] | range) -> Callable:
     """Make sure all values of the field are generated from a list.
 
     Examples:
@@ -253,7 +254,7 @@ def gen_hstore():
     return {}
 
 
-def _fk_model(field: Field) -> tuple[str, Optional[Model]]:
+def _fk_model(field: Field) -> tuple[str, Model | None]:
     try:
         return ("model", field.related_model)
     except AttributeError:
@@ -262,7 +263,7 @@ def _fk_model(field: Field) -> tuple[str, Optional[Model]]:
 
 def _prepare_related(
     model: str, _create_files=False, **attrs: Any
-) -> Union[Model, list[Model]]:
+) -> Model | list[Model]:
     from .baker import prepare
 
     return prepare(model, **attrs)
