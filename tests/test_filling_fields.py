@@ -19,7 +19,7 @@ import pytest
 from model_bakery import baker
 from model_bakery.content_types import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
-from model_bakery.random_gen import MAX_LENGTH, gen_related
+from model_bakery.random_gen import MAX_LENGTH, gen_from_choices, gen_related
 from tests.generic import generators, models
 
 try:
@@ -73,15 +73,41 @@ def custom_cfg():
 
 class TestFillingFromChoice:
     def test_if_gender_is_populated_from_choices(self, person):
-        from tests.generic.models import GENDER_CHOICES
+        from tests.generic.models import Gender
 
-        assert person.gender in (x[0] for x in GENDER_CHOICES)
+        assert person.gender in Gender.values
 
     def test_if_occupation_populated_from_choices(self, person):
         from tests.generic.models import OCCUPATION_CHOICES
 
         occupations = [item[0] for lst in OCCUPATION_CHOICES for item in lst[1]]
         assert person.occupation in occupations
+
+
+class TestGenFromChoices:
+    def test_excludes_blank_when_not_blankable(self):
+        choices = [("", "empty"), ("A", "a"), ("B", "b")]
+        gen = gen_from_choices(choices, nullable=True, blankable=False)
+        for _ in range(100):
+            assert gen() != ""
+
+    def test_excludes_none_when_not_nullable(self):
+        choices = [(None, "none"), ("A", "a"), ("B", "b")]
+        gen = gen_from_choices(choices, nullable=False, blankable=True)
+        for _ in range(100):
+            assert gen() is not None
+
+    def test_includes_blank_when_blankable(self):
+        choices = [("", "empty"), ("A", "a")]
+        gen = gen_from_choices(choices, nullable=True, blankable=True)
+        values = {gen() for _ in range(100)}
+        assert "" in values
+
+    def test_includes_none_when_nullable(self):
+        choices = [(None, "none"), ("A", "a")]
+        gen = gen_from_choices(choices, nullable=True, blankable=True)
+        values = {gen() for _ in range(100)}
+        assert None in values
 
 
 class TestStringFieldsFilling:

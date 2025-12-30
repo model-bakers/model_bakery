@@ -66,14 +66,22 @@ def gen_from_list(a_list: list[str] | range) -> Callable:
 # -- DEFAULT GENERATORS --
 
 
-def gen_from_choices(choices: list) -> Callable:
+def gen_from_choices(
+    choices: list, nullable: bool = True, blankable: bool = True
+) -> Callable:
     choice_list = []
     for value, label in choices:
+        if not nullable and value is None:
+            continue
+        if not blankable and value == "":
+            continue
+
         if isinstance(label, (list, tuple)):
             for val, _lbl in label:
                 choice_list.append(val)
         else:
             choice_list.append(value)
+
     return gen_from_list(choice_list)
 
 
