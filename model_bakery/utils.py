@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import importlib
 import inspect
 import itertools
@@ -50,7 +51,12 @@ def get_calling_module(levels_back: int) -> ModuleType | None:
     return inspect.getmodule(frame)
 
 
-def seq(value, increment_by=1, start=None, suffix=None):
+def seq(
+    value,
+    increment_by: int | float | decimal.Decimal | datetime.timedelta = 1,
+    start=None,
+    suffix=None,
+):
     """Generate a sequence of values based on a running count.
 
     This function can be used to generate sequences of `int`, `float`,
@@ -60,8 +66,8 @@ def seq(value, increment_by=1, start=None, suffix=None):
     Args:
         value (object): the value at which to begin generation (this will
             be ignored for types `datetime`, `date`, and `time`)
-        increment_by (`int` or `float`, optional): the amount by which to
-            increment for each generated value (defaults to `1`)
+        increment_by (`int` or `float` or `decimal.Decimal` or `datetime.timedelta`, optional):
+            the amount by which to increment for each generated value (defaults to `1`)
         start (`int` or `float`, optional): the value at which the sequence
             will begin to add to `value` (if `value` is a `str`, `start` will
             be appended to it)
