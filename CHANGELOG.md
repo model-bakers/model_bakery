@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- docs: Update seq import in basic usage
 
 ### Removed
 - Drop mentions of model_mommy from the project. The old migration script is available in [the GitHub gist](https://gist.github.com/amureki/168b545105cb3e71f824351ffff507dc).
