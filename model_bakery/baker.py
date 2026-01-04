@@ -40,7 +40,7 @@ from .exceptions import (
 )
 from .utils import (
     import_from_str,
-    seq,  # noqa: F401 - Enable seq to be imported from recipes
+    seq,  # noqa: F401 - Enable seq to be imported from baker
 )
 
 if BAKER_CONTENTTYPES:
@@ -57,6 +57,16 @@ mock_file_jpeg = join(dirname(__file__), "mock_img.jpeg")
 mock_file_txt = join(dirname(__file__), "mock_file.txt")
 
 MAX_MANY_QUANTITY = 5
+
+__all__ = [
+    "Baker",
+    "make",
+    "prepare",
+    "make_recipe",
+    "prepare_recipe",
+    "seed",
+    "seq",
+]
 
 
 def _valid_quantity(quantity: str | int | None) -> bool:

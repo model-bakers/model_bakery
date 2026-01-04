@@ -212,14 +212,12 @@ from django.test import TestCase
 
 from model_bakery import baker
 
-from model_bakery.utils import seq
-
 class CustomerTestModel(TestCase):
     def setUp(self):
         self.customer = baker.make(
             'shop.Customer',
             age=21,
-            name = seq('Joe')
+            name = baker.seq('Joe')
         )
 ```
 
