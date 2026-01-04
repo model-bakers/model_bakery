@@ -40,7 +40,7 @@ from .exceptions import (
 )
 from .utils import (
     import_from_str,
-    seq,  # noqa: F401 - Enable seq to be imported from baker
+    seq,
 )
 
 if BAKER_CONTENTTYPES:
