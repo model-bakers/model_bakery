@@ -212,7 +212,7 @@ from django.test import TestCase
 
 from model_bakery import baker
 
-from model_bakery.recipe import seq
+from model_bakery.utils import seq
 
 class CustomerTestModel(TestCase):
     def setUp(self):
