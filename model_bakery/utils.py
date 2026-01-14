@@ -51,10 +51,43 @@ def get_calling_module(levels_back: int) -> ModuleType | None:
     return inspect.getmodule(frame)
 
 
+def _seq_datetime(
+    value: datetime.datetime | datetime.date | datetime.time,
+    increment_by: int | float | decimal.Decimal | datetime.timedelta,
+):
+    if not isinstance(increment_by, datetime.timedelta):
+        raise TypeError("datetime values require a timedelta increment_by")
+    if type(value) is datetime.date:
+        date: datetime.datetime = datetime.datetime.combine(
+            value, datetime.datetime.now().time()
+        )
+    elif type(value) is datetime.time:
+        date = datetime.datetime.combine(datetime.date.today(), value)
+    elif isinstance(value, datetime.datetime):
+        date = value
+    else:
+        raise TypeError("Unexpected value type")
+
+    epoch_datetime = datetime.datetime(1970, 1, 1, tzinfo=date.tzinfo)
+    start_seconds = (date - epoch_datetime).total_seconds()
+    increment_seconds = increment_by.total_seconds()
+    for n in itertools.count(increment_seconds, increment_seconds):
+        series_date = tz_aware(
+            datetime.datetime.fromtimestamp(start_seconds + n, tz=datetime.timezone.utc)
+        )
+
+        if type(value) is datetime.time:
+            yield series_date.time()
+        elif type(value) is datetime.date:
+            yield series_date.date()
+        else:
+            yield series_date
+
+
 def seq(
     value,
     increment_by: int | float | decimal.Decimal | datetime.timedelta = 1,
-    start=None,
+    start: int | float | None = None,
     suffix=None,
 ):
     """Generate a sequence of values based on a running count.
@@ -81,29 +114,10 @@ def seq(
     _validate_sequence_parameters(value, increment_by, start, suffix)
 
     if isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
-        if type(value) is datetime.date:
-            date = datetime.datetime.combine(value, datetime.datetime.now().time())
-        elif type(value) is datetime.time:
-            date = datetime.datetime.combine(datetime.date.today(), value)
-        else:
-            date = value
-
-        # convert to epoch time
-        epoch_datetime = datetime.datetime(1970, 1, 1, tzinfo=date.tzinfo)
-        start = (date - epoch_datetime).total_seconds()
-        increment_by = increment_by.total_seconds()
-        for n in itertools.count(increment_by, increment_by):
-            series_date = tz_aware(
-                datetime.datetime.fromtimestamp(start + n, tz=datetime.timezone.utc)
-            )
-
-            if type(value) is datetime.time:
-                yield series_date.time()
-            elif type(value) is datetime.date:
-                yield series_date.date()
-            else:
-                yield series_date
+        yield from _seq_datetime(value, increment_by)
     else:
+        if isinstance(increment_by, datetime.timedelta):
+            raise TypeError("non-datetime values do not support timedelta increment_by")
         for n in itertools.count(
             increment_by if start is None else start, increment_by
         ):
