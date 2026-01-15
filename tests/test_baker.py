@@ -249,16 +249,25 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert u3.username == "c"
 
 
-@pytest.mark.django_db
 class TestBakerPrepareSavingRelatedInstances:
-    def test_default_behaviour_for_and_fk(self):
+    def test_default_behaviour_for_fk(self):
         dog = baker.prepare(models.Dog)
 
         assert dog.pk is None
+        assert dog.owner is not None
         assert dog.owner.pk is None
-        with pytest.raises(ValueError):
-            assert dog.friends_with
 
+    def test_access_reverse_fk_on_unsaved_instance(self):
+        """Reverse FK and M2M access on unsaved instances raises ValueError."""
+        dog = baker.prepare(models.Dog)
+
+        with pytest.raises(ValueError):
+            dog.owner.dog_set.all()
+
+        with pytest.raises(ValueError):
+            dog.friends_with.all()
+
+    @pytest.mark.django_db
     def test_create_fk_instances(self):
         dog = baker.prepare(models.Dog, _save_related=True)
 
@@ -267,6 +276,7 @@ class TestBakerPrepareSavingRelatedInstances:
         with pytest.raises(ValueError):
             assert dog.friends_with
 
+    @pytest.mark.django_db
     def test_create_fk_instances_with_quantity(self):
         dog1, dog2 = baker.prepare(models.Dog, _save_related=True, _quantity=2)
 
@@ -280,12 +290,14 @@ class TestBakerPrepareSavingRelatedInstances:
         with pytest.raises(ValueError):
             assert dog2.friends_with
 
+    @pytest.mark.django_db
     def test_create_one_to_one(self):
         lonely_person = baker.prepare(models.LonelyPerson, _save_related=True)
 
         assert lonely_person.pk is None
         assert lonely_person.only_friend.pk
 
+    @pytest.mark.django_db
     def test_recipe_prepare_model_with_one_to_one_and_save_related(self):
         lonely_person = baker_recipes.lonely_person.prepare(_save_related=True)
 

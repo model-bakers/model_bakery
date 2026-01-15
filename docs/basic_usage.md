@@ -275,7 +275,23 @@ customer = baker.prepare('shop.Customer')
 It works like `make` method, but it doesn't persist the instance neither the related instances.
 
 ```{note}
-When using `prepare` with models that have a `GenericForeignKey`, the `content_object` attribute will not be accessible. This is because Django's `GenericForeignKey` descriptor requires database access to resolve the content type. You can still access `content_type.app_label`, `content_type.model`, and `object_id`. If you need full `content_object` support, use `make` instead.
+When using `prepare` with models that have a `GenericForeignKey`, the `content_object` attribute will not be accessible.
+This is because Django's `GenericForeignKey` descriptor requires database access to resolve the content type.
+You can still access `content_type.app_label`, `content_type.model`, and `object_id`.
+If you need full `content_object` support, use `make` instead.
+```
+
+```{warning}
+Accessing reverse foreign key relationships on unsaved model instances raises `ValueError`:
+
+    customer = baker.prepare('shop.Customer')
+    customer.purchasehistory_set.all()  # Raises ValueError
+
+This also affects Django REST Framework serializers that include reverse relationships in their output.
+
+**Solutions:**
+- Use `baker.make()` instead of `prepare()` when you need to access reverse relationships
+- Use `_save_related=True` to save related FK instances while keeping the main instance unsaved
 ```
 
 If you want to persist only the related instances but not your model, you can use the `_save_related` parameter for it:
