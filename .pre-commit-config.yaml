@@ -1,30 +1,21 @@
 repos:
-  - repo: git@github.com:pre-commit/pre-commit-hooks
-    rev: v3.2.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
     hooks:
       - id: check-added-large-files
       - id: debug-statements
       - id: end-of-file-fixer
       - id: requirements-txt-fixer
       - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: check-yaml
   - repo: local
     hooks:
-      - id: flake8
-        name: flake8
-        entry: flake8
+      - id: ruff
+        name: ruff
+        entry: ruff check
         language: system
-        types:
-          - python
-      - id: isort
-        name: isort
-        entry: isort
-        language: system
-        types:
-          - python
-      - id: pydocstyle
-        name: pydocstyle
-        entry: pydocstyle
-        language: system
+        args: [ --fix, --exit-non-zero-on-fix ]
         types:
           - python
       - id: black

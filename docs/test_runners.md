@@ -1,16 +1,14 @@
-Test Runners
-============
+# Test Runners
 
-Most of the code examples shown so far have used the `Django TestCase <https://docs.djangoproject.com/en/3.1/topics/testing/tools/#testcase>`_ to explain how Model Bakery is used.
+Most of the code examples shown so far have used the [Django TestCase](https://docs.djangoproject.com/en/dev/topics/testing/tools/#testcase) to explain how Model Bakery is used.
 
-However `pytest <https://docs.pytest.org/en/stable/>`_ (with the `pytest-django <https://pytest-django.readthedocs.io/en/latest/>`_ plugin) is often preferred for it's simplicity and other benefits. See `here <https://realpython.com/django-pytest-fixtures/>`_.
+However, [pytest](https://docs.pytest.org/en/stable/) (with the [pytest-django](https://pytest-django.readthedocs.io/en/latest/) plugin) is often preferred for it\'s simplicity and other benefits. See [here](https://realpython.com/django-pytest-fixtures/).
 
 The following examples show Model Bakery usage with different test runners.
 
-Django
-------
-::
+## Django
 
+```python
     # Core Django imports
     from django.test import TestCase
 
@@ -31,11 +29,11 @@ Django
         def test_using_customer(self):
             """Test function using baked model."""
             self.assertIsInstance(self.customer, Customer)
+```
 
-pytest
-------
-::
+## pytest
 
+```python
     # pytest import
     import pytest
 
@@ -52,3 +50,4 @@ pytest
     def test_using_customer(customer):
         """Test function using fixture of baked model."""
         assert isinstance(customer, Customer)
+```

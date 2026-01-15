@@ -1,17 +1,17 @@
-#######################################
-# TESTING PURPOSE ONLY MODELS!!       #
-# DO NOT ADD THE APP TO INSTALLED_APPS#
-#######################################
+########################################
+# TESTING PURPOSE ONLY MODELS!!        #
+# DO NOT ADD THE APP TO INSTALLED_APPS #
+########################################
 import datetime
 from decimal import Decimal
 from tempfile import gettempdir
 
+import django
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
 from django.utils.timezone import now
 
+from model_bakery.baker import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
 from model_bakery.timezone import tz_aware
 
@@ -23,7 +23,7 @@ from .fields import (
     FakeListField,
 )
 
-# check whether or not PIL is installed
+# check whether PIL is installed
 try:
     from PIL import ImageFile as PilImageFile  # NoQA
 except ImportError:
@@ -36,11 +36,24 @@ if BAKER_GIS:
 else:
     from django.db import models
 
-GENDER_CHOICES = [
-    ("M", "male"),
-    ("F", "female"),
-    ("N", "non-binary"),
-]
+
+# check if the contenttypes app is installed
+if BAKER_CONTENTTYPES:
+    from django.contrib.contenttypes import models as contenttypes
+    from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+else:
+    contenttypes = None
+    GenericRelation = None
+    GenericForeignKey = None
+
+
+class Gender(models.TextChoices):
+    MALE = "M", "male"
+    FEMALE = "F", "female"
+    NON_BINARY = "N", "non-binary"
+
+    __empty__ = ""
+
 
 OCCUPATION_CHOICES = (
     ("Service Industry", (("waitress", "Waitress"), ("bartender", "Bartender"))),
@@ -71,13 +84,14 @@ class PaymentBill(models.Model):
 
 
 class Person(models.Model):
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=1, choices=Gender.choices)
     #  Jards Macalé is an amazing brazilian musician! =]
     enjoy_jards_macale = models.BooleanField(default=True)
     like_metal_music = models.BooleanField(default=False)
     name = models.CharField(max_length=30)
     nickname = models.SlugField(max_length=36)
     age = models.IntegerField()
+    bio_summary = models.TextField(max_length=120)
     bio = models.TextField()
     birthday = models.DateField()
     birth_time = models.TimeField()
@@ -86,22 +100,20 @@ class Person(models.Model):
     occupation = models.CharField(max_length=10, choices=OCCUPATION_CHOICES)
     uuid = models.UUIDField(primary_key=False)
     name_hash = models.BinaryField(max_length=16)
-    days_since_last_login = models.BigIntegerField()
+    days_since_last_login = models.SmallIntegerField()
+    days_since_account_creation = models.BigIntegerField()
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
+    data = models.JSONField()
+    if django.VERSION >= (5, 0):
+        retirement_age = models.IntegerField(db_default=20)
 
     try:
-        from django.db.models import JSONField
-
-        data = JSONField()
-    except ImportError:
-        # Skip JSONField-related fields
-        pass
-
-    try:
-        from django.contrib.postgres.fields import ArrayField, HStoreField
-        from django.contrib.postgres.fields import JSONField as PostgresJSONField
+        from django.contrib.postgres.fields import (
+            ArrayField,
+            HStoreField,
+        )
         from django.contrib.postgres.fields.citext import (
             CICharField,
             CIEmailField,
@@ -111,40 +123,27 @@ class Person(models.Model):
             BigIntegerRangeField,
             DateRangeField,
             DateTimeRangeField,
+            DecimalRangeField,
             IntegerRangeField,
         )
 
         if settings.USING_POSTGRES:
+            long_name = (
+                models.CharField()
+            )  # max_length is not required as PostgresSQL supports unlimited VARCHAR
             acquaintances = ArrayField(models.IntegerField())
-            postgres_data = PostgresJSONField()
             hstore_data = HStoreField()
             ci_char = CICharField(max_length=30)
             ci_email = CIEmailField()
             ci_text = CITextField()
+            ci_text_max_length = CITextField(max_length=120)
             int_range = IntegerRangeField()
             bigint_range = BigIntegerRangeField()
             date_range = DateRangeField()
             datetime_range = DateTimeRangeField()
-    except ImportError:
-        # Skip PostgreSQL-related fields
-        pass
-
-    try:
-        from django.contrib.postgres.fields.ranges import FloatRangeField
-
-        if settings.USING_POSTGRES:
-            float_range = FloatRangeField()
-    except ImportError:
-        # Django version greater or equal than 3.1
-        pass
-
-    try:
-        from django.contrib.postgres.fields.ranges import DecimalRangeField
-
-        if settings.USING_POSTGRES:
             decimal_range = DecimalRangeField()
     except ImportError:
-        # Django version lower than 2.2
+        # Skip PostgreSQL-related fields
         pass
 
     if BAKER_GIS:
@@ -156,6 +155,11 @@ class Person(models.Model):
         multi_line_string = models.MultiLineStringField()
         multi_polygon = models.MultiPolygonField()
         geom_collection = models.GeometryCollectionField()
+
+
+class ProxyToPersonModel(Person):
+    class Meta:
+        proxy = True
 
 
 class Dog(models.Model):
@@ -220,7 +224,7 @@ class RelatedNamesWithEmptyDefaultsModel(models.Model):
     )
 
 
-class ModelWithOverridedSave(Dog):
+class ModelWithOverwrittenSave(Dog):
     def save(self, *args, **kwargs):
         self.owner = kwargs.pop("owner")
         return super().save(*args, **kwargs)
@@ -239,9 +243,9 @@ class Classroom(models.Model):
 
 class ClassroomM2MRelated(models.Model):
     """
-    This model was created in order to reproduce the scenario described
-    at issue 248 that is: a model with a M2M field (Classroom) being also used
-    as a M2M field from another model (ClassroomM2MRelated)
+    Regression test for #248.
+
+    A model with an M2M field (Classroom) being also used as an M2M field from another model (ClassroomM2MRelated).
     """
 
     related_classrooms = models.ManyToManyField(Classroom)
@@ -268,6 +272,7 @@ class DummyIntModel(models.Model):
 class DummyPositiveIntModel(models.Model):
     positive_small_int_field = models.PositiveSmallIntegerField()
     positive_int_field = models.PositiveIntegerField()
+    positive_big_int_field = models.PositiveBigIntegerField()
 
 
 class DummyNumbersModel(models.Model):
@@ -282,21 +287,57 @@ class UnsupportedField(models.Field):
     description = "I'm bad company, baker doesn't know me"
 
     def __init__(self, *args, **kwargs):
-        super(UnsupportedField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+    def db_type(self, connection):
+        # Return a real database type so Django can create the column
+        # The field remains "unsupported" by Baker (no generator defined)
+        return "varchar(255)"
 
 
 class UnsupportedModel(models.Model):
     unsupported_field = UnsupportedField()
 
 
-class DummyGenericForeignKeyModel(models.Model):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
+if BAKER_CONTENTTYPES:
 
+    class DummyGenericForeignKeyModel(models.Model):
+        content_type = models.ForeignKey(
+            contenttypes.ContentType,
+            on_delete=models.CASCADE,
+            limit_choices_to={"model__in": ["person", "dog"]},
+        )
+        object_id = models.PositiveIntegerField()
+        content_object = GenericForeignKey("content_type", "object_id")
 
-class DummyGenericRelationModel(models.Model):
-    relation = GenericRelation(DummyGenericForeignKeyModel)
+        proxy_content_type = models.ForeignKey(
+            contenttypes.ContentType,
+            on_delete=models.CASCADE,
+            blank=True,
+            null=True,
+            limit_choices_to={"model__in": ["person", "dog"]},
+        )
+        proxy_object_id = models.PositiveIntegerField()
+        proxy_content_object = GenericForeignKey(
+            "proxy_content_type", "proxy_object_id", for_concrete_model=False
+        )
+
+    class DummyGenericRelationModel(models.Model):
+        relation = GenericRelation(DummyGenericForeignKeyModel)
+
+    class GenericForeignKeyModelWithOptionalData(models.Model):
+        content_type = models.ForeignKey(
+            contenttypes.ContentType,
+            on_delete=models.CASCADE,
+            blank=True,
+            null=True,
+            limit_choices_to={"model__in": ["person", "dog"]},
+        )
+        object_id = models.PositiveIntegerField(blank=True, null=True)
+        content_object = GenericForeignKey("content_type", "object_id")
+
+    class GenericRelationModelWithOptionalData(models.Model):
+        relation = GenericRelation(GenericForeignKeyModelWithOptionalData)
 
 
 class DummyNullFieldsModel(models.Model):
@@ -351,6 +392,10 @@ else:
     # doesn't matter, won't be using
     class DummyImageFieldModel(models.Model):
         pass
+
+
+class NestedFileFieldModel(models.Model):
+    attached_file = models.ForeignKey(DummyFileFieldModel, on_delete=models.CASCADE)
 
 
 class DummyMultipleInheritanceModel(DummyDefaultFieldsModel, Person):
@@ -426,7 +471,7 @@ class MovieManager(models.Manager):
         We want to test whether this annotation has been run after
         calling `baker.make()`.
         """
-        return super(MovieManager, self).get_queryset().annotate(name=models.F("title"))
+        return super().get_queryset().annotate(name=models.F("title"))
 
 
 class MovieWithAnnotation(Movie):
@@ -447,7 +492,7 @@ class DummyGenericIPAddressFieldModel(models.Model):
 
 
 class AbstractModel(models.Model):
-    class Meta(object):
+    class Meta:
         abstract = True
 
     name = models.CharField(max_length=30)
@@ -478,3 +523,9 @@ class Issue291Model3(models.Model):
         Issue291Model2, related_name="bazs", on_delete=models.CASCADE
     )
     name = models.CharField(max_length=32)
+
+
+class ModelWithAutoNowFields(models.Model):
+    sent_date = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)

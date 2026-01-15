@@ -8,11 +8,254 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Add explicit field-specific generators for `AutoField`, `BigAutoField`, and `SmallAutoField` ([#61](https://github.com/model-bakers/model_bakery/issues/61))
+- Add dedicated generators for each integer field type that use Django's actual field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
+
+### Changed
+- Deprecate `gen_integer()` in favor of field-specific generators that respect Django's field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
+- `prepare()` with `GenericForeignKey` no longer accesses the database; `content_object` attribute is unavailable in this mode
+- Add type hints to `seq()`'s `increment_by` argument
+- docs: Update `seq()` import in basic usage
+
+### Removed
+- Drop mentions of model_mommy from the project. The old migration script is available in [the GitHub gist](https://gist.github.com/amureki/168b545105cb3e71f824351ffff507dc).
+
+## [1.21.0](https://pypi.org/project/model-bakery/1.21.0/)
+
+### Added
+- Add Python 3.14 support
+- Add Django 6.0 support
+
+### Changed
+- The creation of generic foreign key fields now respects their `for_concrete_model` configuration
+- Refactor `gen_float()` to use `uniform()` with configurable `min_float`/`max_float` bounds instead of `random() * gen_integer()` which produced skewed distribution
+- Refactor `gen_interval()` to use `min_interval`/`max_interval` instead of `offset` parameter which never worked as intended due to huge `MAX_INT` range
+- Fix `gen_date_range()` and `gen_datetime_range()` to prevent empty ranges by enforcing a minimum interval of 1 day
+- Use `baker_random.randint()` directly in `gen_pg_numbers_range()` instead of `gen_integer()`
+- The `gen_from_choices` generator now ignores `None` or `""` values in choices when the field doesn't allow null or blank values
+- [dev] Various improvements to CI Python/Django matrices
+
+### Removed
+- Drop fallbacks made for Django < 4.2
+- Drop Python 3.8 and 3.9 support (reached end of life)
+
+## [1.20.5](https://pypi.org/project/model-bakery/1.20.5/)
+
+### Added
+- Add Django 5.2 support
+
+### Changed
+- Improve documentation
+
+## [1.20.4](https://pypi.org/project/model-bakery/1.20.4/)
+
+### Changed
+- Fix regression introduced in 1.20.3 that prevented using `auto_now` and `auto_now_add` fields with seq or callable.
+
+## [1.20.3](https://pypi.org/project/model-bakery/1.20.3/)
+
+### Changed
+- Fix support of `auto_now` and `auto_now_add` fields in combination with `_fill_optional`
+- Isolate Recipe defaults to prevent modification via instances
+
+## [1.20.2](https://pypi.org/project/model-bakery/1.20.2/)
+
+### Changed
+- Fix setting GFK parameter by a callable
+- Fix regression forbidding using Proxy models as GFK
+
+## [1.20.1](https://pypi.org/project/model-bakery/1.20.1/)
+
+### Added
+- docs: Add missing doc on `_refresh_after_create` option
+
+### Changed
+- Fix `Recipe.prepare` without `_quantity` (on one-to-one relation)
+
+### Removed
+- Remove deprecation warning of `datetime.datetime.utcfromtimestamp`.
+
+## [1.20.0](https://pypi.org/project/model-bakery/1.20.0/)
+
+### Added
+- Support to Field `db_default` value
+- Support to Python 3.13
+
+## [1.19.5](https://pypi.org/project/model-bakery/1.19.5/)
+
+### Changed
+- Reset `content_type` and `object_id` fields when the content object is `None`
+
+## [1.19.4](https://pypi.org/project/model-bakery/1.19.4/)
+
+### Changed
+- Allow `None` value for generic foreign keys within iterators
+- Make `TextField` generator respect `max_length`
+- Deprecate `model_bakery.random_gen.gen_text` in favor of `model_bakery.random_gen.gen_string`
+
+## [1.19.3](https://pypi.org/project/model-bakery/1.19.3/)
+
+### Changed
+- Do not handle GFK fields when the object is None
+
+## [1.19.2](https://pypi.org/project/model-bakery/1.19.2/)
+
+### Added
+- docs: Add Django settings example for custom field generators
+
+### Changed
+- Align GFK and content type fields generation
+- Allow `prepare()` to be used with GFK
+
+## [1.19.1](https://pypi.org/project/model-bakery/1.19.1/)
+
+### Changed
+- Handle bulk creation when using reverse related name
+
+## [1.19.0](https://pypi.org/project/model-bakery/1.19.0/)
+
+### Added
+- Add Django 5.1 support
+
+## [1.18.3](https://pypi.org/project/model-bakery/1.18.3/)
+
+### Changed
+- Fix support of `GenericForeignKey` fields in combination with `_fill_optional`
+
+## [1.18.2](https://pypi.org/project/model-bakery/1.18.2/)
+
+### Changed
+- Fix `make_recipe` to work with `_quantity` (#28)
+
+## [1.18.1](https://pypi.org/project/model-bakery/1.18.1/)
+
+### Changed
+- Replace expensive `count()` with cheap `exists()`
+
+## [1.18.0](https://pypi.org/project/model-bakery/1.18.0/)
+
+### Added
+- Add Django 5.0 support
+
+### Changed
+- Allow baking without `contenttypes` framework
+
+### Removed
+- Drop Django 3.2 and 4.1 support (reached end of life)
+
+## [1.17.0](https://pypi.org/project/model-bakery/1.17.0/)
+
+### Added
+- Add support to `auto_now` and `auto_now_add` fields.
+
+### Changed
+- Remove unnecessary casting to string methods `random_gen.gen_slug` and `random_gen.gen_string`
+- [doc] Update installation command
+
+## [1.16.0](https://pypi.org/project/model-bakery/1.16.0/)
+
+### Added
+- [dev] Test coverage report
+
+### Changed
+- Improved performance of `Baker.get_fields()`
+- [dev] Cleanup Sphinx documentation config
+- [dev] Update `pre-commit` config
+- [dev] CI: remove hard requirement on linters for tests to run
+
+## [1.15.0](https://pypi.org/project/model-bakery/1.15.0/)
+
+### Added
+- Add Python 3.12 support
+
+### Changed
+- Revert erroneous optimisation of related logic (fix #439)
+- [dev] Bring tox back
+
+### Removed
+
+## [1.14.0](https://pypi.org/project/model-bakery/1.14.0/)
+
+### Added
+- forward "_create_files" flag to child generators for relational fields
+
+### Changed
+- Small improvements to `recipe.py::_mapping`
+- Improvements to `baker.py::bulk_create`
+- [dev] Replaced `pycodestyle`, `pydocstyle`, `flake8` and `isort` with `ruff`
+- [dev] Drop tox in favor of using GitHub Actions matrix
+
+### Removed
+- Drop `baker.py::is_iterator`
+- Drop Python 3.7 support (reached end of life)
+
+## [1.13.0](https://pypi.org/project/model-bakery/1.13.0/)
+
+### Added
+- Add support for global seeding to baker random generation
+
+## [1.12.0](https://pypi.org/project/model-bakery/1.12.0/)
+
+### Added
+- Add support for CharField with max_length=None
+
+### Changed
+- Fix utils.seq with start=0
+
+## [1.11.0](https://pypi.org/project/model-bakery/1.11.0/)
+
+### Added
+- Add psycopg3 support for Django 4.2
+
+## [1.10.3](https://pypi.org/project/model-bakery/1.10.3/)
+
+### Changed
+- Enforce Python 3.7 as a minimum version in project metadata
+
+### Removed
+- dropped support for `FloatRangeField` as it was removed in Django 3.1
+- [dev] Temporary drop Django 4.2 to package classifiers (waiting for build backend support)
+
+## [1.10.2](https://pypi.org/project/model-bakery/1.10.2/)
+
+### Changed
+- [dev] Test Python 3.11 with Django 4.2
+- [dev] Add Django 4.2 to package classifiers
+
+## [1.10.1](https://pypi.org/project/model-bakery/1.10.1/)
+
+### Changed
+- [dev] Fix GitHub Action for publishing to PyPI
+
+## [1.10.0](https://pypi.org/project/model-bakery/1.10.0/)
+
+### Added
+- Django 4.2 support
+
+### Changed
+- [dev] Switch to Python 3.11 release in CI
+- [dev] Unify and simplify tox config with tox-py
+- [dev] `pre-commit autoupdate && pre-commit run --all-files`
+- [dev] Run `pyupgrade` with Python 3.7 as a base
+- [dev] PEP 621: Migrate from setup.py and setup.cfg to pyproject.toml
+- [dev] Convert `format` and some string interpolations to `fstring`
+
+## [1.9.0](https://pypi.org/project/model-bakery/1.9.0/)
+
+### Changed
+- Fixed a bug with `seq` being passed a tz-aware start value [PR #353](https://github.com/model-bakers/model_bakery/pull/353)
+- Create m2m when using `_bulk_create=True` [PR #354](https://github.com/model-bakers/model_bakery/pull/354)
+- [dev] Use official postgis docker image in CI [PR #355](https://github.com/model-bakers/model_bakery/pull/355)
+
+## [1.8.0](https://pypi.org/project/model-bakery/1.8.0/)
+
+### Changed
+- Improve `Baker.get_fields()` to subtract lists instead of extra set cast [PR #352](https://github.com/model-bakers/model_bakery/pull/352)
+
+## [1.7.1](https://pypi.org/project/model-bakery/1.7.1/)
 
 ### Changed
 - Remove warning for future Django deprecation [PR #339](https://github.com/model-bakers/model_bakery/pull/339)
-
-### Removed
 
 ## [1.7.0](https://pypi.org/project/model-bakery/1.7.0/)
 

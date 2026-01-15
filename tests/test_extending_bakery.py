@@ -98,7 +98,7 @@ class BakerDuck:
 
 class TestCustomizeBakerClassViaSettings:
     def class_to_import_string(self, class_to_convert):
-        return "%s.%s" % (self.__module__, class_to_convert.__name__)
+        return f"{self.__module__}.{class_to_convert.__name__}"
 
     def test_create_vanilla_baker_used_by_default(self):
         baker_instance = baker.Baker.create(Person)

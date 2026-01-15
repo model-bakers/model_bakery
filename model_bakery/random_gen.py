@@ -11,14 +11,16 @@ argument.
 
 import string
 import warnings
+from collections.abc import Callable
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
-from random import choice, randint, random, uniform
-from typing import Any, Callable, List, Optional, Tuple, Union
+from random import Random
+from typing import Any
 from uuid import UUID
 
 from django.core.files.base import ContentFile
+from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import Field, Model
 from django.utils.timezone import now
 
@@ -26,6 +28,8 @@ MAX_LENGTH = 300
 # Using sys.maxint here breaks a bunch of tests when running against a
 # Postgres database.
 MAX_INT = 100000000000
+
+baker_random = Random()  # noqa: S311
 
 
 def get_content_file(content: bytes, name: str) -> ContentFile:
@@ -46,7 +50,7 @@ def gen_image_field() -> ContentFile:
         return get_content_file(f.read(), name=name)
 
 
-def gen_from_list(a_list: Union[List[str], range]) -> Callable:
+def gen_from_list(a_list: list[str] | range) -> Callable:
     """Make sure all values of the field are generated from a list.
 
     Examples:
@@ -57,40 +61,193 @@ def gen_from_list(a_list: Union[List[str], range]) -> Callable:
         >>>     attr_mapping = {'some_field': gen_from_list(['A', 'B', 'C'])}
 
     """
-    return lambda: choice(list(a_list))
+    return lambda: baker_random.choice(list(a_list))
 
 
 # -- DEFAULT GENERATORS --
 
 
-def gen_from_choices(choices: List) -> Callable:
+def gen_from_choices(
+    choices: list, nullable: bool = True, blankable: bool = True
+) -> Callable:
     choice_list = []
     for value, label in choices:
+        if not nullable and value is None:
+            continue
+        if not blankable and value == "":
+            continue
+
         if isinstance(label, (list, tuple)):
-            for val, lbl in label:
+            for val, _lbl in label:
                 choice_list.append(val)
         else:
             choice_list.append(value)
+
     return gen_from_list(choice_list)
 
 
 def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
-    return randint(min_int, max_int)
+    # Only warn when using default bounds that could cause overflow
+    if min_int == -MAX_INT or max_int == MAX_INT:
+        warnings.warn(
+            "gen_integer() may cause overflow errors with Django integer fields due to "
+            "large default MAX_INT value. Consider using field-specific generators instead:\n"
+            "- gen_positive_small_integer() for PositiveSmallIntegerField\n"
+            "- gen_small_integer() for SmallIntegerField\n"
+            "- gen_regular_integer() for IntegerField\n"
+            "- gen_positive_integer() for PositiveIntegerField\n"
+            "- gen_big_integer() for BigIntegerField\n"
+            "- gen_positive_big_integer() for PositiveBigIntegerField\n"
+            "See model_bakery.random_gen documentation for more details.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    return baker_random.randint(min_int, max_int)
 
 
-def gen_float() -> float:
-    return random() * gen_integer()
+def _get_field_range(field_name: str) -> tuple[int, int]:
+    """Get field range from Django's BaseDatabaseOperations."""
+    return BaseDatabaseOperations.integer_field_ranges.get(
+        field_name, (-MAX_INT, MAX_INT)
+    )
+
+
+def gen_small_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for SmallIntegerField.
+
+    Defaults to Django's SmallIntegerField range (-32768 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("SmallIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_small_integer(
+    min_int: int | None = None, max_int: int | None = None
+) -> int:
+    """Generate integer for PositiveSmallIntegerField.
+
+    Defaults to Django's PositiveSmallIntegerField range (0 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveSmallIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for PositiveIntegerField.
+
+    Defaults to Django's PositiveIntegerField range (0 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_big_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for BigIntegerField.
+
+    Defaults to Django's BigIntegerField range (-9223372036854775808 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("BigIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_big_integer(
+    min_int: int | None = None, max_int: int | None = None
+) -> int:
+    """Generate integer for PositiveBigIntegerField.
+
+    Defaults to Django's PositiveBigIntegerField range (0 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveBigIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_regular_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for IntegerField.
+
+    Defaults to Django's IntegerField range (-2147483648 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("IntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for AutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("AutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_big_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for BigAutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("BigAutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_small_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for SmallAutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("SmallAutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_float(min_float: float = -1000000.0, max_float: float = 1000000.0) -> float:
+    """
+    Generate a random float uniformly distributed between `min_float` and `max_float`.
+
+    Defaults to ±1,000,000.0 which is suitable for most test data scenarios.
+    """
+    return baker_random.uniform(min_float, max_float)
 
 
 def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
-    def num_as_str(x: int):
-        return "".join([str(randint(0, 9)) for _ in range(x)])
+    def num_as_str(x: int) -> str:
+        return "".join([str(baker_random.randint(0, 9)) for _ in range(x)])
 
     if decimal_places:
         return Decimal(
-            "%s.%s"
-            % (num_as_str(max_digits - decimal_places - 1), num_as_str(decimal_places))
+            f"{num_as_str(max_digits - decimal_places - 1)}.{num_as_str(decimal_places)}"
         )
+
     return Decimal(num_as_str(max_digits))
 
 
@@ -110,54 +267,70 @@ def gen_time() -> time:
 
 
 def gen_string(max_length: int) -> str:
-    return str("".join(choice(string.ascii_letters) for _ in range(max_length)))
+    return "".join(baker_random.choice(string.ascii_letters) for _ in range(max_length))
 
 
-gen_string.required = ["max_length"]  # type: ignore[attr-defined]
+def _gen_string_get_max_length(field: Field) -> tuple[str, int]:
+    max_length = getattr(field, "max_length", None)
+    if max_length is None:
+        max_length = MAX_LENGTH
+    return "max_length", max_length
+
+
+gen_string.required = [_gen_string_get_max_length]  # type: ignore[attr-defined]
 
 
 def gen_slug(max_length: int) -> str:
     valid_chars = string.ascii_letters + string.digits + "_-"
-    return str("".join(choice(valid_chars) for _ in range(max_length)))
+    return "".join(baker_random.choice(valid_chars) for _ in range(max_length))
 
 
 gen_slug.required = ["max_length"]  # type: ignore[attr-defined]
 
 
 def gen_text() -> str:
+    warnings.warn(
+        "\n"
+        "Accessing `model_bakery.random_gen.gen_text` is deprecated "
+        "and will be removed in a future major release. Please use "
+        "`model_bakery.random_gen.gen_string` instead."
+        "\n",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return gen_string(MAX_LENGTH)
 
 
 def gen_boolean() -> bool:
-    return choice((True, False))
+    return baker_random.choice((True, False))
 
 
 def gen_null_boolean():
-    return choice((True, False, None))
+    return baker_random.choice((True, False, None))
 
 
 def gen_url() -> str:
-    return str("http://www.%s.com/" % gen_string(30))
+    return f"http://www.{gen_string(30)}.com/"
 
 
 def gen_email() -> str:
-    return "%s@example.com" % gen_string(10)
+    return f"{gen_string(10)}@example.com"
 
 
 def gen_ipv6() -> str:
-    return ":".join(format(randint(1, 65535), "x") for _ in range(8))
+    return ":".join(format(baker_random.randint(1, 65535), "x") for _ in range(8))
 
 
 def gen_ipv4() -> str:
-    return ".".join(str(randint(1, 255)) for _ in range(4))
+    return ".".join(str(baker_random.randint(1, 255)) for _ in range(4))
 
 
 def gen_ipv46() -> str:
-    ip_gen = choice([gen_ipv4, gen_ipv6])
+    ip_gen = baker_random.choice([gen_ipv4, gen_ipv6])
     return ip_gen()
 
 
-def gen_ip(protocol: str, default_validators: List[Callable]) -> str:
+def gen_ip(protocol: str, default_validators: list[Callable]) -> str:
     from django.core.exceptions import ValidationError
 
     protocol = (protocol or "").lower()
@@ -190,13 +363,22 @@ gen_ip.required = ["protocol", "default_validators"]  # type: ignore[attr-define
 
 
 def gen_byte_string(max_length: int = 16) -> bytes:
-    generator = (randint(0, 255) for x in range(max_length))
+    generator = (baker_random.randint(0, 255) for x in range(max_length))
     return bytes(generator)
 
 
-def gen_interval(interval_key: str = "milliseconds", offset: int = 0) -> timedelta:
-    interval = gen_integer() + offset
-    kwargs = {interval_key: interval}
+def gen_interval(
+    interval_key: str = "milliseconds",
+    min_interval: int = -365 * 24 * 60 * 60 * 1000,
+    max_interval: int = 365 * 24 * 60 * 60 * 1000,
+) -> timedelta:
+    """
+    Generate a random timedelta for `DurationField` or date range calculations.
+
+    Defaults to ±1 year in milliseconds, suitable for most test scenarios.
+    The `interval_key` determines which timedelta argument is set (e.g., 'seconds', 'days').
+    """
+    kwargs = {interval_key: baker_random.randint(min_interval, max_interval)}
     return timedelta(**kwargs)
 
 
@@ -205,13 +387,15 @@ def gen_content_type():
     from django.contrib.contenttypes.models import ContentType
 
     try:
-        return ContentType.objects.get_for_model(choice(apps.get_models()))
+        return ContentType.objects.get_for_model(baker_random.choice(apps.get_models()))
     except (AssertionError, RuntimeError):
         # AssertionError is raised by Django's test framework when db access is not available:
         # https://github.com/django/django/blob/stable/4.0.x/django/test/testcases.py#L150
         # RuntimeError is raised by pytest-django when db access is not available:
         # https://github.com/pytest-dev/pytest-django/blob/v4.5.2/pytest_django/plugin.py#L709
-        warnings.warn("Database access disabled, returning ContentType raw instance")
+        warnings.warn(
+            "Database access disabled, returning ContentType raw instance", stacklevel=1
+        )
         return ContentType()
 
 
@@ -233,33 +417,37 @@ def gen_hstore():
     return {}
 
 
-def _fk_model(field: Field) -> Tuple[str, Optional[Model]]:
+def _fk_model(field: Field) -> tuple[str, Model | None]:
     try:
         return ("model", field.related_model)
     except AttributeError:
         return ("model", field.related.parent_model)
 
 
-def _prepare_related(model: str, **attrs: Any) -> Union[Model, List[Model]]:
+def _prepare_related(
+    model: str, _create_files=False, **attrs: Any
+) -> Model | list[Model]:
     from .baker import prepare
 
     return prepare(model, **attrs)
 
 
-def gen_related(model, **attrs):
+def gen_related(model, _create_files=False, **attrs):
     from .baker import make
 
-    return make(model, **attrs)
+    return make(model, _create_files=_create_files, **attrs)
 
 
 gen_related.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 gen_related.prepare = _prepare_related  # type: ignore[attr-defined]
 
 
-def gen_m2m(model, **attrs):
+def gen_m2m(model, _create_files=False, **attrs):
     from .baker import MAX_MANY_QUANTITY, make
 
-    return make(model, _quantity=MAX_MANY_QUANTITY, **attrs)
+    return make(
+        model, _create_files=_create_files, _quantity=MAX_MANY_QUANTITY, **attrs
+    )
 
 
 gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
@@ -268,93 +456,106 @@ gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 # GIS generators
 
 
-def gen_coord():
-    return uniform(0, 1)
+def gen_coord() -> float:
+    return baker_random.uniform(0, 1)
 
 
-def gen_coords():
-    return "{x} {y}".format(x=gen_coord(), y=gen_coord())
+def gen_coords() -> str:
+    return f"{gen_coord()} {gen_coord()}"
 
 
-def gen_point():
-    return "POINT ({})".format(
-        gen_coords(),
-    )
+def gen_point() -> str:
+    return f"POINT ({gen_coords()})"
 
 
-def _gen_line_string_without_prefix():
-    return "({}, {})".format(
-        gen_coords(),
-        gen_coords(),
-    )
+def _gen_line_string_without_prefix() -> str:
+    return f"({gen_coords()}, {gen_coords()})"
 
 
-def gen_line_string():
-    return "LINESTRING {}".format(_gen_line_string_without_prefix())
+def gen_line_string() -> str:
+    return f"LINESTRING {_gen_line_string_without_prefix()}"
 
 
-def _gen_polygon_without_prefix():
+def _gen_polygon_without_prefix() -> str:
     start = gen_coords()
-    return "(({}, {}, {}, {}))".format(start, gen_coords(), gen_coords(), start)
+    return f"(({start}, {gen_coords()}, {gen_coords()}, {start}))"
 
 
-def gen_polygon():
-    return "POLYGON {}".format(
-        _gen_polygon_without_prefix(),
-    )
+def gen_polygon() -> str:
+    return f"POLYGON {_gen_polygon_without_prefix()}"
 
 
-def gen_multi_point():
-    return "MULTIPOINT (({}))".format(
-        gen_coords(),
-    )
+def gen_multi_point() -> str:
+    return f"MULTIPOINT (({gen_coords()}))"
 
 
-def gen_multi_line_string():
-    return "MULTILINESTRING ({})".format(
-        _gen_line_string_without_prefix(),
-    )
+def gen_multi_line_string() -> str:
+    return f"MULTILINESTRING ({_gen_line_string_without_prefix()})"
 
 
-def gen_multi_polygon():
-    return "MULTIPOLYGON ({})".format(
-        _gen_polygon_without_prefix(),
-    )
+def gen_multi_polygon() -> str:
+    return f"MULTIPOLYGON ({_gen_polygon_without_prefix()})"
 
 
 def gen_geometry():
     return gen_point()
 
 
-def gen_geometry_collection():
-    return "GEOMETRYCOLLECTION ({})".format(
-        gen_point(),
-    )
+def gen_geometry_collection() -> str:
+    return f"GEOMETRYCOLLECTION ({gen_point()})"
 
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
-    def gen_range():
-        from psycopg2._range import NumericRange
+    """
+    Factory that returns a generator for PostgreSQL numeric range fields.
 
-        base_num = gen_integer(1, 100000)
-        return NumericRange(number_cast(-1 * base_num), number_cast(base_num))
+    The returned generator creates ranges like [-N, N] where N is a random value
+    between 1 and 100,000, cast to the appropriate numeric type (int, float, etc).
+    """
+
+    def gen_range():
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
+
+        base_num = baker_random.randint(1, 100000)
+        return Range(number_cast(-1 * base_num), number_cast(base_num))
 
     return gen_range
 
 
 def gen_date_range():
-    from psycopg2.extras import DateRange
+    """
+    Generate random `DateRange` for PostgreSQL `DateRangeField`.
+
+    The range spans a random date with a minimum interval of 1 day
+    to avoid empty ranges in tests.
+    """
+    try:
+        from psycopg.types.range import DateRange
+    except ImportError:
+        from psycopg2.extras import DateRange
 
     base_date = gen_date()
-    interval = gen_interval(offset=24 * 60 * 60 * 1000)  # force at least 1 day interval
+    interval = gen_interval(min_interval=24 * 60 * 60 * 1000)
     args = sorted([base_date - interval, base_date + interval])
     return DateRange(*args)
 
 
 def gen_datetime_range():
-    from psycopg2.extras import DateTimeTZRange
+    """
+    Generate random `TimestamptzRange` for PostgreSQL DateTimeRangeField.
+
+    The range spans a random datetime with a minimum interval of 1 day
+    to avoid empty ranges in tests.
+    """
+    try:
+        from psycopg.types.range import TimestamptzRange
+    except ImportError:
+        from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
     base_datetime = gen_datetime()
-    interval = gen_interval()
+    interval = gen_interval(min_interval=24 * 60 * 60 * 1000)
     args = sorted([base_datetime - interval, base_datetime + interval])
-    return DateTimeTZRange(*args)
+    return TimestamptzRange(*args)

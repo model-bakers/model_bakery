@@ -4,8 +4,6 @@ include LICENSE
 include README.md
 include CHANGELOG.md
 include CONTRIBUTING.md
-include requirements.txt requirements_dev.txt
-include tox.ini
 recursive-include tests *.py
 recursive-include docs *.rst
 recursive-include utils *.py

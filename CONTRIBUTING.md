@@ -11,7 +11,7 @@ git clone git@github.com:YOUR_USER/model_bakery.git
 2. Install the dev dependencies:
 
 ```
-pip install -r requirements_dev.txt
+pip install .[test]
 ```
 
 3. Change the code and run your tests with:
@@ -26,14 +26,14 @@ make test
 make lint
 ```
 
-If you don't follow the step 4, your PR may fail due to `black`, `isort`, `flake8` or `pydocstyle` warnings.
+If you don't follow the step 4, your PR may fail due to `black` or `ruff` warnings.
 
 To run `postgresql` and `postgis` specific tests:
 
 1. [Install `docker`](https://docs.docker.com/get-docker/).
 
 2. Install the `postgis` dependencies. Follow the
-[instructions from the Django docs](https://docs.djangoproject.com/en/3.1/ref/contrib/gis/install/geolibs/):
+[instructions from the Django docs](https://docs.djangoproject.com/en/stable/ref/contrib/gis/install/geolibs/):
 
 If you are on Ubuntu/Debian you run the following:
 

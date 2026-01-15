@@ -4,9 +4,8 @@ from decimal import Decimal
 from os.path import abspath
 from tempfile import gettempdir
 
-import pytest
+import django
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.validators import (
     validate_ipv4_address,
     validate_ipv6_address,
@@ -15,9 +14,12 @@ from django.core.validators import (
 from django.db import connection
 from django.db.models import FileField, ImageField, fields
 
+import pytest
+
 from model_bakery import baker
+from model_bakery.content_types import BAKER_CONTENTTYPES
 from model_bakery.gis import BAKER_GIS
-from model_bakery.random_gen import gen_related
+from model_bakery.random_gen import MAX_LENGTH, gen_from_choices, gen_related
 from tests.generic import generators, models
 
 try:
@@ -32,12 +34,13 @@ try:
         CIEmailField,
         CITextField,
         HStoreField,
+        JSONField as PostgresJSONField,
     )
-    from django.contrib.postgres.fields import JSONField as PostgresJSONField
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
         DateRangeField,
         DateTimeRangeField,
+        DecimalRangeField,
         IntegerRangeField,
     )
 except ImportError:
@@ -51,14 +54,6 @@ except ImportError:
     BigIntegerRangeField = None
     DateRangeField = None
     DateTimeRangeField = None
-
-try:
-    from django.contrib.postgres.fields.ranges import FloatRangeField
-except ImportError:
-    FloatRangeField = None
-try:
-    from django.contrib.postgres.fields.ranges import DecimalRangeField
-except ImportError:
     DecimalRangeField = None
 
 
@@ -78,15 +73,41 @@ def custom_cfg():
 
 class TestFillingFromChoice:
     def test_if_gender_is_populated_from_choices(self, person):
-        from tests.generic.models import GENDER_CHOICES
+        from tests.generic.models import Gender
 
-        assert person.gender in map(lambda x: x[0], GENDER_CHOICES)
+        assert person.gender in Gender.values
 
     def test_if_occupation_populated_from_choices(self, person):
         from tests.generic.models import OCCUPATION_CHOICES
 
         occupations = [item[0] for lst in OCCUPATION_CHOICES for item in lst[1]]
         assert person.occupation in occupations
+
+
+class TestGenFromChoices:
+    def test_excludes_blank_when_not_blankable(self):
+        choices = [("", "empty"), ("A", "a"), ("B", "b")]
+        gen = gen_from_choices(choices, nullable=True, blankable=False)
+        for _ in range(100):
+            assert gen() != ""
+
+    def test_excludes_none_when_not_nullable(self):
+        choices = [(None, "none"), ("A", "a"), ("B", "b")]
+        gen = gen_from_choices(choices, nullable=False, blankable=True)
+        for _ in range(100):
+            assert gen() is not None
+
+    def test_includes_blank_when_blankable(self):
+        choices = [("", "empty"), ("A", "a")]
+        gen = gen_from_choices(choices, nullable=True, blankable=True)
+        values = {gen() for _ in range(100)}
+        assert "" in values
+
+    def test_includes_none_when_nullable(self):
+        choices = [(None, "none"), ("A", "a")]
+        gen = gen_from_choices(choices, nullable=True, blankable=True)
+        values = {gen() for _ in range(100)}
+        assert None in values
 
 
 class TestStringFieldsFilling:
@@ -109,6 +130,14 @@ class TestStringFieldsFilling:
         assert isinstance(person_bio_field, fields.TextField)
 
         assert isinstance(person.bio, str)
+        assert len(person.bio) == MAX_LENGTH
+
+    def test_fill_TextField_with_max_length_str(self, person):
+        person_bio_summary_field = models.Person._meta.get_field("bio_summary")
+        assert isinstance(person_bio_summary_field, fields.TextField)
+
+        assert isinstance(person.bio_summary, str)
+        assert len(person.bio_summary) == person_bio_summary_field.max_length
 
 
 class TestBinaryFieldsFilling:
@@ -200,6 +229,15 @@ class TestFillingIntFields:
         assert isinstance(small_int_field, fields.SmallIntegerField)
         assert isinstance(dummy_int_model.small_int_field, int)
 
+    @pytest.mark.skipif(
+        django.VERSION < (5, 0),
+        reason="The db_default field attribute was added after 5.0",
+    )
+    def test_respects_db_default(self):
+        person = baker.make(models.Person, age=10)
+        assert person.age == 10
+        assert person.retirement_age == 20
+
 
 @pytest.mark.django_db
 class TestFillingPositiveIntFields:
@@ -219,6 +257,15 @@ class TestFillingPositiveIntFields:
         assert isinstance(positive_int_field, fields.PositiveIntegerField)
         assert isinstance(dummy_positive_int_model.positive_int_field, int)
         assert dummy_positive_int_model.positive_int_field > 0
+
+    def test_fill_PositiveBigIntegerField_with_a_random_number(self):
+        dummy_positive_int_model = baker.make(models.DummyPositiveIntModel)
+        positive_big_int_field = models.DummyPositiveIntModel._meta.get_field(
+            "positive_big_int_field"
+        )
+        assert isinstance(positive_big_int_field, fields.PositiveBigIntegerField)
+        assert isinstance(dummy_positive_int_model.positive_big_int_field, int)
+        assert dummy_positive_int_model.positive_big_int_field > 0
 
 
 @pytest.mark.django_db
@@ -268,20 +315,70 @@ class TestFillingIPAddressField:
             validate_ipv46_address(obj.ipv46_field)
 
 
-@pytest.mark.django_db
+# skipif
+@pytest.mark.skipif(
+    not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
+)
 class TestFillingGenericForeignKeyField:
-    def test_filling_content_type_field(self):
+    @pytest.mark.django_db
+    def test_content_type_field(self):
+        from django.contrib.contenttypes.models import ContentType
+
         dummy = baker.make(models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
         assert dummy.content_type.model_class() is not None
 
-    def test_iteratively_filling_generic_foreign_key_field(self):
+    @pytest.mark.django_db
+    def test_with_content_object(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        profile = baker.make(models.Profile)
+        dummy = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=profile,
+        )
+        assert dummy.content_object == profile
+        assert dummy.content_type == ContentType.objects.get_for_model(models.Profile)
+        assert dummy.object_id == profile.pk
+
+    @pytest.mark.django_db
+    def test_with_content_object_none(self):
+        dummy = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=None,
+        )
+        assert dummy.content_object is None
+
+    def test_with_prepare(self):
+        """Test that prepare() with GFK works without database access.
+
+        This test intentionally lacks @pytest.mark.django_db to verify
+        that no queries are executed. If any DB access occurs, pytest-django
+        will raise "Database access not allowed".
+
+        Note: content_object is not set in prepare mode because
+        GenericForeignKey's descriptor would trigger DB access.
+        We can only verify content_type fields and object_id.
+        """
+        profile = baker.prepare(models.Profile, id=1)
+        dummy = baker.prepare(
+            models.DummyGenericForeignKeyModel,
+            content_object=profile,
+        )
+        assert dummy.content_type.app_label == "generic"
+        assert dummy.content_type.model == "profile"
+        assert dummy.object_id == profile.pk == 1
+
+    @pytest.mark.django_db
+    def test_with_iter(self):
         """
         Ensures private_fields are included in ``Baker.get_fields()``.
 
         Otherwise, calling ``next()`` when a GFK is in ``iterator_attrs``
         would be bypassed.
         """
+        from django.contrib.contenttypes.models import ContentType
+
         objects = baker.make(models.Profile, _quantity=2)
         dummies = baker.make(
             models.DummyGenericForeignKeyModel,
@@ -298,6 +395,44 @@ class TestFillingGenericForeignKeyField:
         assert dummies[1].content_object == objects[1]
         assert dummies[1].content_type == expected_content_type
         assert dummies[1].object_id == objects[1].pk
+
+    @pytest.mark.django_db
+    def test_with_none_in_iter(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        profile = baker.make(models.Profile)
+        dummies = baker.make(
+            models.DummyGenericForeignKeyModel,
+            content_object=iter((None, profile)),
+            _quantity=2,
+        )
+
+        expected_content_type = ContentType.objects.get_for_model(models.Profile)
+
+        assert dummies[0].content_object is None
+
+        assert dummies[1].content_object == profile
+        assert dummies[1].content_type == expected_content_type
+        assert dummies[1].object_id == profile.pk
+
+    @pytest.mark.django_db
+    def test_with_fill_optional(self):
+        from django.contrib.contenttypes.models import ContentType
+
+        dummy = baker.make(models.DummyGenericForeignKeyModel, _fill_optional=True)
+        assert isinstance(dummy.content_type, ContentType)
+        assert dummy.content_type.model_class() is not None
+
+    @pytest.mark.django_db
+    def test_with_fill_optional_but_content_object_none(self):
+        dummy = baker.make(
+            models.GenericForeignKeyModelWithOptionalData,
+            content_object=None,
+            _fill_optional=True,
+        )
+        assert dummy.content_object is None
+        assert dummy.content_type is None
+        assert dummy.object_id is None
 
 
 @pytest.mark.django_db
@@ -339,16 +474,32 @@ class TestsFillingFileField:
         assert isinstance(field, FileField)
         import time
 
-        path = "%s/%s/mock_file.txt" % (gettempdir(), time.strftime("%Y/%m/%d"))
+        path = f"{gettempdir()}/{time.strftime('%Y/%m/%d')}/mock_file.txt"
 
         assert abspath(path) == abspath(dummy.file_field.path)
         dummy.file_field.delete()
+        dummy.delete()
 
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyFileFieldModel)
         with pytest.raises(ValueError):
             # Django raises ValueError if file does not exist
             assert dummy.file_field.path
+
+    def test_filling_nested_file_fields(self):
+        dummy = baker.make(models.NestedFileFieldModel, _create_files=True)
+
+        assert dummy.attached_file.file_field.path
+        dummy.attached_file.file_field.delete()
+        dummy.delete()
+
+    def test_does_not_fill_nested_file_fields_unflagged(self):
+        dummy = baker.make(models.NestedFileFieldModel)
+
+        with pytest.raises(ValueError):
+            assert dummy.attached_file.file_field.path
+
+        dummy.delete()
 
 
 @pytest.mark.django_db
@@ -363,9 +514,9 @@ class TestFillingCustomFields:
         generator_dict = {
             "tests.generic.fields.CustomFieldWithGenerator": generators.gen_value_string
         }
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
-        assert "value" == obj.custom_value
+        assert obj.custom_value == "value"
 
     def test_uses_generator_defined_as_string_on_settings_for_custom_field(
         self, custom_cfg
@@ -377,20 +528,20 @@ class TestFillingCustomFields:
             "tests.generic.generators.gen_value_string"
         }
         # fmt: on
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(models.CustomFieldWithGeneratorModel)
-        assert "value" == obj.custom_value
+        assert obj.custom_value == "value"
 
     def test_uses_generator_defined_on_settings_for_custom_foreignkey(self, custom_cfg):
         """Should use the function defined in the import path for a foreign key field."""
         generator_dict = {
             "tests.generic.fields.CustomForeignKey": "model_bakery.random_gen.gen_related"
         }
-        setattr(settings, "BAKER_CUSTOM_FIELDS_GEN", generator_dict)
+        settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
         obj = baker.make(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )
-        assert "a@b.com" == obj.custom_fk.email
+        assert obj.custom_fk.email == "a@b.com"
 
     def test_uses_generator_defined_as_string_for_custom_field(self, custom_cfg):
         """Should import and use the generator function used in the add method."""
@@ -399,7 +550,7 @@ class TestFillingCustomFields:
             "tests.generic.generators.gen_value_string",
         )
         obj = baker.make(models.CustomFieldWithGeneratorModel)
-        assert "value" == obj.custom_value
+        assert obj.custom_value == "value"
 
     def test_uses_generator_function_for_custom_foreignkey(self, custom_cfg):
         """Should use the generator function passed as a value for the add method."""
@@ -407,7 +558,7 @@ class TestFillingCustomFields:
         obj = baker.make(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )
-        assert "a@b.com" == obj.custom_fk.email
+        assert obj.custom_fk.email == "a@b.com"
 
     def test_can_override_django_default_field_functions_generator(self, custom_cfg):
         def gen_char():
@@ -417,11 +568,11 @@ class TestFillingCustomFields:
 
         person = baker.make(models.Person)
 
-        assert "Some value" == person.name
+        assert person.name == "Some value"
 
     def test_ensure_adding_generators_via_settings_works(self):
         obj = baker.make(models.CustomFieldViaSettingsModel)
-        assert "always the same text" == obj.custom_value
+        assert obj.custom_value == "always the same text"
 
 
 @pytest.mark.django_db
@@ -442,7 +593,7 @@ class TestFillingImageFileField:
         assert isinstance(field, ImageField)
         import time
 
-        path = "%s/%s/mock_img.jpeg" % (gettempdir(), time.strftime("%Y/%m/%d"))
+        path = f"{gettempdir()}/{time.strftime('%Y/%m/%d')}/mock_img.jpeg"
 
         # These require the file to exist in earlier versions of Django
         assert abspath(path) == abspath(dummy.image_field.path)
@@ -476,53 +627,58 @@ class TestCIStringFieldsFilling:
         ci_text_field = models.Person._meta.get_field("ci_text")
         assert isinstance(ci_text_field, CITextField)
         assert isinstance(person.ci_text, str)
+        assert len(person.ci_text) == MAX_LENGTH
+
+    def test_filling_citextfield_with_max_length(self, person):
+        ci_text_max_length_field = models.Person._meta.get_field("ci_text_max_length")
+        assert isinstance(ci_text_max_length_field, CITextField)
+        assert isinstance(person.ci_text_max_length, str)
+        assert len(person.ci_text_max_length) == ci_text_max_length_field.max_length
 
     def test_filling_decimal_range_field(self, person):
-        from psycopg2._range import NumericRange
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
 
         decimal_range_field = models.Person._meta.get_field("decimal_range")
         assert isinstance(decimal_range_field, DecimalRangeField)
-        assert isinstance(person.decimal_range, NumericRange)
+        assert isinstance(person.decimal_range, Range)
         assert isinstance(person.decimal_range.lower, Decimal)
         assert isinstance(person.decimal_range.upper, Decimal)
         assert person.decimal_range.lower < person.decimal_range.upper
 
     def test_filling_integer_range_field(self, person):
-        from psycopg2._range import NumericRange
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
 
         int_range_field = models.Person._meta.get_field("int_range")
         assert isinstance(int_range_field, IntegerRangeField)
-        assert isinstance(person.int_range, NumericRange)
+        assert isinstance(person.int_range, Range)
         assert isinstance(person.int_range.lower, int)
         assert isinstance(person.int_range.upper, int)
         assert person.int_range.lower < person.int_range.upper
 
     def test_filling_integer_range_field_for_big_int(self, person):
-        from psycopg2._range import NumericRange
+        try:
+            from psycopg.types.range import Range
+        except ImportError:
+            from psycopg2._range import NumericRange as Range
 
         bigint_range_field = models.Person._meta.get_field("bigint_range")
         assert isinstance(bigint_range_field, BigIntegerRangeField)
-        assert isinstance(person.bigint_range, NumericRange)
+        assert isinstance(person.bigint_range, Range)
         assert isinstance(person.bigint_range.lower, int)
         assert isinstance(person.bigint_range.upper, int)
         assert person.bigint_range.lower < person.bigint_range.upper
 
-    @pytest.mark.skipif(
-        FloatRangeField is None,
-        reason="FloatRangeField is deprecated since Django 2.2",
-    )
-    def test_filling_float_range_field(self, person):
-        from psycopg2._range import NumericRange
-
-        float_range_field = models.Person._meta.get_field("float_range")
-        assert isinstance(float_range_field, FloatRangeField)
-        assert isinstance(person.float_range, NumericRange)
-        assert isinstance(person.float_range.lower, float)
-        assert isinstance(person.float_range.upper, float)
-        assert person.float_range.lower < person.float_range.upper
-
     def test_filling_date_range_field(self, person):
-        from psycopg2.extras import DateRange
+        try:
+            from psycopg.types.range import DateRange
+        except ImportError:
+            from psycopg2.extras import DateRange
 
         date_range_field = models.Person._meta.get_field("date_range")
         assert isinstance(date_range_field, DateRangeField)
@@ -532,11 +688,14 @@ class TestCIStringFieldsFilling:
         assert person.date_range.lower < person.date_range.upper
 
     def test_filling_datetime_range_field(self, person):
-        from psycopg2.extras import DateTimeTZRange
+        try:
+            from psycopg.types.range import TimestamptzRange
+        except ImportError:
+            from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
         datetime_range_field = models.Person._meta.get_field("datetime_range")
         assert isinstance(datetime_range_field, DateTimeRangeField)
-        assert isinstance(person.datetime_range, DateTimeTZRange)
+        assert isinstance(person.datetime_range, TimestamptzRange)
         assert isinstance(person.datetime_range.lower, datetime)
         assert isinstance(person.datetime_range.upper, datetime)
         assert person.datetime_range.lower < person.datetime_range.upper
@@ -549,9 +708,6 @@ class TestPostgreSQLFieldsFilling:
     def test_fill_arrayfield_with_empty_array(self, person):
         assert person.acquaintances == []
 
-    def test_fill_jsonfield_with_empty_dict(self, person):
-        assert person.postgres_data == {}
-
     def test_fill_hstorefield_with_empty_dict(self, person):
         assert person.hstore_data == {}
 
@@ -562,7 +718,6 @@ class TestGisFieldsFilling:
         assert geom.valid is True, geom.valid_reason
 
     def test_fill_PointField_valid(self, person):
-        print(BAKER_GIS)
         self.assertGeomValid(person.point)
 
     def test_fill_LineStringField_valid(self, person):

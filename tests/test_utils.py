@@ -116,6 +116,12 @@ class TestSeq:
         assert next(sequence) == pytest.approx(4.83)
         assert next(sequence) == pytest.approx(6.63)
 
+    def test_numbers_start_from_zero(self):
+        sequence = seq(0, start=0)
+        assert next(sequence) == 0
+        assert next(sequence) == 1
+        assert next(sequence) == 2
+
     def test_numbers_with_suffix(self):
         with pytest.raises(TypeError) as exc:
             next(seq(1, suffix="iamnotanumber"))
@@ -146,6 +152,7 @@ class TestSeq:
         settings.USE_TZ = use_tz
         tzinfo = datetime.timezone.utc if use_tz else None
 
+        # Starting with tz-unaware (naive) datetime
         sequence = seq(
             datetime.datetime(2021, 2, 11, 15, 39, 58, 457698),
             increment_by=datetime.timedelta(hours=3),
@@ -158,6 +165,15 @@ class TestSeq:
         ).replace(tzinfo=tzinfo)
         assert next(sequence) == datetime.datetime(
             2021, 2, 12, 00, 39, 58, 457698
+        ).replace(tzinfo=tzinfo)
+
+        # Starting with tz-aware datetime
+        sequence = seq(
+            datetime.datetime(2021, 2, 11, 15, 39, 58, 457698, tzinfo=tzinfo),
+            increment_by=datetime.timedelta(hours=3),
+        )
+        assert next(sequence) == datetime.datetime(
+            2021, 2, 11, 18, 39, 58, 457698
         ).replace(tzinfo=tzinfo)
 
     @pytest.mark.parametrize(
