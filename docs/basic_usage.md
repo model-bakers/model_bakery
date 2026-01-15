@@ -116,6 +116,7 @@ You'll end up with a persisted "Customer" instance.
 
 **NOTE: GenericForeignKey** - `model-bakery` defines the content type for this relation based in how
 the relation configures their [`for_concrete_model` flag](https://docs.djangoproject.com/en/5.2/ref/contrib/contenttypes/#django.contrib.contenttypes.fields.GenericForeignKey.for_concrete_model).
+Also note that when using `prepare` with `GenericForeignKey`, the `content_object` attribute will not be accessible (see [Non persistent objects](#non-persistent-objects) for details).
 
 ## M2M Relationships
 
@@ -272,6 +273,10 @@ customer = baker.prepare('shop.Customer')
 ```
 
 It works like `make` method, but it doesn't persist the instance neither the related instances.
+
+```{note}
+When using `prepare` with models that have a `GenericForeignKey`, the `content_object` attribute will not be accessible. This is because Django's `GenericForeignKey` descriptor requires database access to resolve the content type. You can still access `content_type.app_label`, `content_type.model`, and `object_id`. If you need full `content_object` support, use `make` instead.
+```
 
 If you want to persist only the related instances but not your model, you can use the `_save_related` parameter for it:
 

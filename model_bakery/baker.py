@@ -533,7 +533,9 @@ class Baker(Generic[M]):
 
         instance = self.model(**attrs)
 
-        self._handle_generic_foreign_keys(instance, generic_foreign_keys)
+        self._handle_generic_foreign_keys(
+            instance, generic_foreign_keys, commit=_commit
+        )
 
         if _commit:
             instance.save(**_save_kwargs)
@@ -703,7 +705,9 @@ class Baker(Generic[M]):
                     }
                     make(through_model, _using=self._using, **base_kwargs)
 
-    def _handle_generic_foreign_keys(self, instance: Model, attrs: dict[str, Any]):
+    def _handle_generic_foreign_keys(
+        self, instance: Model, attrs: dict[str, Any], commit: bool = True
+    ):
         """Set content type and object id for GenericForeignKey fields."""
         for field_name, data in attrs.items():
             ct_field_name = data["content_type_field"]
@@ -722,14 +726,26 @@ class Baker(Generic[M]):
                 if object_id_field.null:
                     setattr(instance, oid_field_name, None)
             else:
-                setattr(instance, field_name, value)
-                setattr(
-                    instance,
-                    ct_field_name,
-                    contenttypes_models.ContentType.objects.get_for_model(
-                        value, for_concrete_model=data["for_concrete_model"]
-                    ),
-                )
+                if commit:
+                    setattr(instance, field_name, value)
+                    setattr(
+                        instance,
+                        ct_field_name,
+                        contenttypes_models.ContentType.objects.get_for_model(
+                            value, for_concrete_model=data["for_concrete_model"]
+                        ),
+                    )
+                else:
+                    # prepare mode - create unsaved ContentType to avoid DB access.
+                    # We deliberately skip setting content_object via the GFK descriptor
+                    # because GenericForeignKey.__set__ calls ContentType.objects.get_for_model().
+                    # As a result, instance.content_object will return None (the GFK descriptor
+                    # requires a saved ContentType with pk to resolve the related object).
+                    ct = contenttypes_models.ContentType(
+                        app_label=value._meta.app_label,
+                        model=value._meta.model_name,
+                    )
+                    setattr(instance, ct_field_name, ct)
                 setattr(instance, oid_field_name, value.pk)
 
     def _remote_field(
