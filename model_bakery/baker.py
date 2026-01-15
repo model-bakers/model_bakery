@@ -741,9 +741,14 @@ class Baker(Generic[M]):
                     # because GenericForeignKey.__set__ calls ContentType.objects.get_for_model().
                     # As a result, instance.content_object will return None (the GFK descriptor
                     # requires a saved ContentType with pk to resolve the related object).
+                    model_for_ct = (
+                        value._meta.concrete_model
+                        if data["for_concrete_model"]
+                        else value.__class__
+                    )
                     ct = contenttypes_models.ContentType(
-                        app_label=value._meta.app_label,
-                        model=value._meta.model_name,
+                        app_label=model_for_ct._meta.app_label,
+                        model=model_for_ct._meta.model_name,
                     )
                     setattr(instance, ct_field_name, ct)
                 setattr(instance, oid_field_name, value.pk)

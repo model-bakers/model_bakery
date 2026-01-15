@@ -350,14 +350,21 @@ class TestFillingGenericForeignKeyField:
         assert dummy.content_object is None
 
     def test_with_prepare(self):
+        """Test that prepare() with GFK works without database access.
+
+        This test intentionally lacks @pytest.mark.django_db to verify
+        that no queries are executed. If any DB access occurs, pytest-django
+        will raise "Database access not allowed".
+
+        Note: content_object is not set in prepare mode because
+        GenericForeignKey's descriptor would trigger DB access.
+        We can only verify content_type fields and object_id.
+        """
         profile = baker.prepare(models.Profile, id=1)
         dummy = baker.prepare(
             models.DummyGenericForeignKeyModel,
             content_object=profile,
         )
-        # Note: content_object is not set in prepare mode because
-        # GenericForeignKey's descriptor would trigger DB access.
-        # We can only verify content_type fields and object_id.
         assert dummy.content_type.app_label == "generic"
         assert dummy.content_type.model == "profile"
         assert dummy.object_id == profile.pk == 1
