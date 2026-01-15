@@ -4,6 +4,7 @@ from decimal import Decimal
 from random import choice  # noqa
 from unittest.mock import patch
 
+from django.db import connection
 from django.utils.timezone import now
 
 import pytest
@@ -19,6 +20,7 @@ from tests.generic.models import (
     DummyBlankFieldsModel,
     DummyNumbersModel,
     LonelyPerson,
+    ModelWithAutoNowFields,
     Person,
     Profile,
     User,
@@ -34,6 +36,7 @@ recipe_attrs = {
     "blog": "https://joe.example.com",
     "days_since_last_login": 4,
     "birth_time": now(),
+    "data": {"one": 1},
 }
 person_recipe = Recipe(Person, **recipe_attrs)
 user_recipe = Recipe(User)
@@ -68,6 +71,8 @@ class TestDefiningRecipes:
         assert person.appointment == recipe_attrs["appointment"]
         assert person.blog == recipe_attrs["blog"]
         assert person.days_since_last_login == recipe_attrs["days_since_last_login"]
+        assert person.data is not recipe_attrs["data"]
+        assert person.data == recipe_attrs["data"]
         assert person.id is not None
 
     def test_flat_model_prepare_recipe_with_the_correct_attributes(self):
@@ -80,6 +85,8 @@ class TestDefiningRecipes:
         assert person.appointment == recipe_attrs["appointment"]
         assert person.blog == recipe_attrs["blog"]
         assert person.days_since_last_login == recipe_attrs["days_since_last_login"]
+        assert person.data is not recipe_attrs["data"]
+        assert person.data == recipe_attrs["data"]
         assert person.id is None
 
     def test_accepts_callable(self):
@@ -170,6 +177,34 @@ class TestDefiningRecipes:
             p.make(_quantity=5)
         except AttributeError as e:
             pytest.fail(f"{e}")
+
+    def test_recipe_dict_attribute_isolation(self):
+        person1 = person_recipe.make()
+        person2 = person_recipe.make()
+        person2.data["two"] = 2
+        person3 = person_recipe.make()
+
+        # Mutation on instances must have no side effect on their recipe definition,
+        # or on other instances of the same recipe.
+        assert person1.data == {"one": 1}
+        assert person2.data == {"one": 1, "two": 2}
+        assert person3.data == {"one": 1}
+
+    @pytest.mark.skipif(
+        connection.vendor != "postgresql", reason="PostgreSQL specific tests"
+    )
+    def test_recipe_list_attribute_isolation(self):
+        pg_person_recipe = person_recipe.extend(acquaintances=[1, 2, 3])
+        person1 = pg_person_recipe.make()
+        person2 = pg_person_recipe.make()
+        person2.acquaintances.append(4)
+        person3 = pg_person_recipe.make()
+
+        # Mutation on instances must have no side effect on their recipe definition,
+        # or on other instances of the same recipe.
+        assert person1.acquaintances == [1, 2, 3]
+        assert person2.acquaintances == [1, 2, 3, 4]
+        assert person3.acquaintances == [1, 2, 3]
 
 
 @pytest.mark.django_db
@@ -635,3 +670,37 @@ class TestIterators:
             DummyBlankFieldsModel, blank_text_field="not an iterator, so don't iterate!"
         )
         assert r.make().blank_text_field == "not an iterator, so don't iterate!"
+
+
+class TestAutoNowFields:
+    @pytest.mark.django_db
+    def test_make_with_auto_now_using_datetime_generator(self):
+        delta = timedelta(minutes=1)
+
+        def gen():
+            idx = 0
+            while True:
+                idx += 1
+                yield tz_aware(TEST_TIME) + idx * delta
+
+        r = Recipe(
+            ModelWithAutoNowFields,
+            created=gen(),
+        )
+
+        assert r.make().created == tz_aware(TEST_TIME + 1 * delta)
+        assert r.make().created == tz_aware(TEST_TIME + 2 * delta)
+
+    @pytest.mark.django_db
+    def test_make_with_auto_now_using_datetime_seq(self):
+        delta = timedelta(minutes=1)
+        r = Recipe(
+            ModelWithAutoNowFields,
+            created=seq(
+                tz_aware(TEST_TIME),
+                increment_by=delta,
+            ),
+        )
+
+        assert r.make().created == tz_aware(TEST_TIME + 1 * delta)
+        assert r.make().created == tz_aware(TEST_TIME + 2 * delta)

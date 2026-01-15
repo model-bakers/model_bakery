@@ -20,28 +20,81 @@ jobs:
           - black --check --diff .
           - mypy model_bakery
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.13"
           cache: pip
       - run: python -m pip install .[test]
       - run: ${{ matrix.lint-command }}
 
-  tests:
-    name: Python ${{ matrix.python-version }}
+  sqlite-tests:
+    name: SQLite - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
-        python-version:
-          - "3.8"
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        django-version: ["4.2", "5.0", "5.1", "5.2", "6.0"]
+        exclude:
+          # Django 6.0 supports Python 3.12+
+          - python-version: "3.10"
+            django-version: "6.0"
+          - python-version: "3.11"
+            django-version: "6.0"
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set TOX_ENV
+        run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-sqlite" >> $GITHUB_ENV
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel tox
+
+      - name: Run tox targets for ${{ matrix.python-version }}
+        run: tox run -e ${{ env.TOX_ENV }}
+
+      - name: Upload coverage data
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-data-${{ env.TOX_ENV }}
+          include-hidden-files: true
+          path: '.coverage.*'
+          if-no-files-found: ignore
+
+  postgresql-tests:
+    name: PostgreSQL - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, ${{ matrix.variant }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        django-version: ["4.2", "5.0", "5.1", "5.2", "6.0"]
+        variant: ["postgresql", "postgresql-psycopg3"]
+        exclude:
+          # Django 6.0 supports Python 3.12+
+          - python-version: "3.10"
+            django-version: "6.0"
+          - python-version: "3.11"
+            django-version: "6.0"
+        include:
+          # Latest Python/Django with contenttypes disabled
+          - python-version: "3.14"
+            django-version: "6.0"
+            variant: "postgresql-no-contenttypes"
+
     env:
       PGUSER: postgres
       PGPASSWORD: postgres
+
     services:
       postgis:
         image: postgis/postgis
@@ -54,7 +107,9 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - name: Set TOX_ENV
+        run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-${{ matrix.variant }}" >> $GITHUB_ENV
 
       - name: Set up PostgreSQL
         run: |
@@ -65,7 +120,7 @@ jobs:
           psql template1 -c "CREATE EXTENSION postgis;" -U postgres -h localhost -p 5432
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
@@ -76,23 +131,24 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel tox
 
       - name: Run tox targets for ${{ matrix.python-version }}
-        run: tox run -f py$(echo ${{ matrix.python-version }} | tr -d .)
+        run: tox run -e ${{ env.TOX_ENV }}
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: coverage-data-${{ matrix.python-version }}
+          name: coverage-data-${{ env.TOX_ENV }}
+          include-hidden-files: true
           path: '.coverage.*'
           if-no-files-found: ignore
 
   coverage:
     name: Coverage
     runs-on: ubuntu-22.04
-    needs: tests
+    needs: [sqlite-tests, postgresql-tests]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -100,7 +156,7 @@ jobs:
         run: python -m pip install --upgrade coverage[toml]
 
       - name: Download data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: coverage-data-*
           merge-multiple: true
@@ -113,7 +169,7 @@ jobs:
 
       - name: Upload HTML report
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: html-report
           path: htmlcov

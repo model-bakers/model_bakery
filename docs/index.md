@@ -4,33 +4,47 @@ Model Bakery offers you a smart way to create fixtures for testing in Django.
 
 With a simple and powerful API, you can create many objects with a single line of code.
 
-Model Bakery is a rename of the legacy [model_mommy\'s project](https://pypi.org/project/model_mommy/). This is because the project\'s creator and maintainers decided to not reinforce gender stereotypes for women in technology. You can read more about this subject[here](https://witi.com/articles/1017/How-Gender-Stereotypes-are-Still-Affecting-Women-in-Tech/).
+Documentation: [https://model-bakery.readthedocs.io](https://model-bakery.readthedocs.io)
 
-# Compatibility
+Source code: [https://github.com/model-bakers/model_bakery/](https://github.com/model-bakers/model_bakery/)
 
-Model Bakery supports Django \>= 4.2.
+## Key Features
 
-# Install
+- Automatically generates test data for Django models
+- Provides sensible defaults for all field types
+- Supports custom field overrides and "recipes" for reusable patterns
+- Handles related models and complex relationships
+- Works with currently maintained versions of Python and Django
 
-Install it with `pip`
+## Installation
 
 ```console
 $ pip install model-bakery
 ```
 
-# Contributing to Model Bakery
+## Supported Versions
 
-As an open-source project, Model Bakery welcomes contributions of many forms. Examples of contributions include:
+Model Bakery follows the [Python](https://devguide.python.org/versions/) and [Django](https://docs.djangoproject.com/en/stable/internals/release-process/#supported-versions) release and support cycles. We drop support for Python and Django versions when they reach end-of-life.
 
-- Code Patches
+## Contributing to Model Bakery
+
+As an open-source project, Model Bakery welcomes contributions of many forms:
+
+- Code patches
 - Documentation improvements
 - Bug reports
 
-Take a look in our [GitHub repo](https://github.com/model-bakers/model_bakery/blob/main/CONTRIBUTING.md) for more instructions on how to set up your local environment to help Model Bakery to grow.
+Take a look at our [GitHub repo](https://github.com/model-bakers/model_bakery/blob/main/CONTRIBUTING.md) for instructions
+on how to set up your local environment.
 
-# Doubts? Loved it? Hated it? Suggestions?
+## Support
 
-Feel free to [open an issue](https://github.com/model-bakers/model_bakery/issues/new) for support, development or ideas!
+Feel free to [open an issue](https://github.com/model-bakers/model_bakery/issues/new) for support, development ideas, or questions!
+
+## License
+
+Model Bakery is licensed under Apache License 2.0.
+See the [LICENSE](https://github.com/model-bakers/model_bakery/blob/main/LICENSE) file for more information.
 
 ## Contents
 

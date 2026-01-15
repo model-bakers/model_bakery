@@ -106,13 +106,16 @@ class PurchaseHistoryTestModel(TestCase):
 
 It will also create the Customer, automagically.
 
-**NOTE: ForeignKeys and OneToOneFields** - Since Django 1.8, ForeignKey and OneToOne fields don't accept unpersisted model instances anymore. This means that if you run:
+**NOTE: ForeignKeys and OneToOneFields** - Since Django 1.8, ForeignKey and OneToOne fields don't accept non persisted model instances anymore. This means that if you run:
 
 ```python
 baker.prepare('shop.PurchaseHistory')
 ```
 
 You'll end up with a persisted "Customer" instance.
+
+**NOTE: GenericForeignKey** - `model-bakery` defines the content type for this relation based in how
+the relation configures their [`for_concrete_model` flag](https://docs.djangoproject.com/en/5.2/ref/contrib/contenttypes/#django.contrib.contenttypes.fields.GenericForeignKey.for_concrete_model).
 
 ## M2M Relationships
 
@@ -209,14 +212,12 @@ from django.test import TestCase
 
 from model_bakery import baker
 
-from model_bakery.recipe import seq
-
 class CustomerTestModel(TestCase):
     def setUp(self):
         self.customer = baker.make(
             'shop.Customer',
             age=21,
-            name = seq('Joe')
+            name = baker.seq('Joe')
         )
 ```
 
@@ -241,6 +242,24 @@ class PurchaseHistoryTestModel(TestCase):
 Model Bakery does not create files for FileField types. If you need to have the files created, you can pass the flag `_create_files=True` (defaults to `False`) to either `baker.make` or `baker.make_recipe`.
 
 **Important**: the lib does not do any kind of file clean up, so it's up to you to delete the files created by it.
+
+## Refreshing Instances After Creation
+
+By default, Model Bakery does not refresh the instance after it is created and saved.
+If you want to refresh the instance after it is created,
+you can pass the flag `_refresh_after_create=True` to either `baker.make` or `baker.make_recipe`.
+This ensures that any changes made by the database or signal handlers are reflected in the instance.
+
+```python
+from model_bakery import baker
+
+# default behavior
+customer = baker.make('shop.Customer', birthday='1990-01-01', _refresh_after_create=False)
+assert customer.birthday == '1990-01-01'
+
+customer = baker.make('shop.Customer', birthday='1990-01-01', _refresh_after_create=True)
+assert customer.birthday == datetime.date(1990, 1, 1)
+```
 
 ## Non persistent objects
 

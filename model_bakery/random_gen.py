@@ -11,14 +11,16 @@ argument.
 
 import string
 import warnings
+from collections.abc import Callable
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from os.path import abspath, dirname, join
 from random import Random
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any
 from uuid import UUID
 
 from django.core.files.base import ContentFile
+from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import Field, Model
 from django.utils.timezone import now
 
@@ -48,7 +50,7 @@ def gen_image_field() -> ContentFile:
         return get_content_file(f.read(), name=name)
 
 
-def gen_from_list(a_list: Union[List[str], range]) -> Callable:
+def gen_from_list(a_list: list[str] | range) -> Callable:
     """Make sure all values of the field are generated from a list.
 
     Examples:
@@ -65,23 +67,176 @@ def gen_from_list(a_list: Union[List[str], range]) -> Callable:
 # -- DEFAULT GENERATORS --
 
 
-def gen_from_choices(choices: List) -> Callable:
+def gen_from_choices(
+    choices: list, nullable: bool = True, blankable: bool = True
+) -> Callable:
     choice_list = []
     for value, label in choices:
+        if not nullable and value is None:
+            continue
+        if not blankable and value == "":
+            continue
+
         if isinstance(label, (list, tuple)):
             for val, _lbl in label:
                 choice_list.append(val)
         else:
             choice_list.append(value)
+
     return gen_from_list(choice_list)
 
 
 def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
+    # Only warn when using default bounds that could cause overflow
+    if min_int == -MAX_INT or max_int == MAX_INT:
+        warnings.warn(
+            "gen_integer() may cause overflow errors with Django integer fields due to "
+            "large default MAX_INT value. Consider using field-specific generators instead:\n"
+            "- gen_positive_small_integer() for PositiveSmallIntegerField\n"
+            "- gen_small_integer() for SmallIntegerField\n"
+            "- gen_regular_integer() for IntegerField\n"
+            "- gen_positive_integer() for PositiveIntegerField\n"
+            "- gen_big_integer() for BigIntegerField\n"
+            "- gen_positive_big_integer() for PositiveBigIntegerField\n"
+            "See model_bakery.random_gen documentation for more details.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     return baker_random.randint(min_int, max_int)
 
 
-def gen_float() -> float:
-    return baker_random.random() * gen_integer()
+def _get_field_range(field_name: str) -> tuple[int, int]:
+    """Get field range from Django's BaseDatabaseOperations."""
+    return BaseDatabaseOperations.integer_field_ranges.get(
+        field_name, (-MAX_INT, MAX_INT)
+    )
+
+
+def gen_small_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for SmallIntegerField.
+
+    Defaults to Django's SmallIntegerField range (-32768 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("SmallIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_small_integer(
+    min_int: int | None = None, max_int: int | None = None
+) -> int:
+    """Generate integer for PositiveSmallIntegerField.
+
+    Defaults to Django's PositiveSmallIntegerField range (0 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveSmallIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for PositiveIntegerField.
+
+    Defaults to Django's PositiveIntegerField range (0 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_big_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for BigIntegerField.
+
+    Defaults to Django's BigIntegerField range (-9223372036854775808 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("BigIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_big_integer(
+    min_int: int | None = None, max_int: int | None = None
+) -> int:
+    """Generate integer for PositiveBigIntegerField.
+
+    Defaults to Django's PositiveBigIntegerField range (0 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveBigIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_regular_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for IntegerField.
+
+    Defaults to Django's IntegerField range (-2147483648 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("IntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for AutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("AutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_big_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for BigAutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("BigAutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_small_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for SmallAutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("SmallAutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_float(min_float: float = -1000000.0, max_float: float = 1000000.0) -> float:
+    """
+    Generate a random float uniformly distributed between `min_float` and `max_float`.
+
+    Defaults to ±1,000,000.0 which is suitable for most test data scenarios.
+    """
+    return baker_random.uniform(min_float, max_float)
 
 
 def gen_decimal(max_digits: int, decimal_places: int) -> Decimal:
@@ -115,7 +270,7 @@ def gen_string(max_length: int) -> str:
     return "".join(baker_random.choice(string.ascii_letters) for _ in range(max_length))
 
 
-def _gen_string_get_max_length(field: Field) -> Tuple[str, int]:
+def _gen_string_get_max_length(field: Field) -> tuple[str, int]:
     max_length = getattr(field, "max_length", None)
     if max_length is None:
         max_length = MAX_LENGTH
@@ -175,7 +330,7 @@ def gen_ipv46() -> str:
     return ip_gen()
 
 
-def gen_ip(protocol: str, default_validators: List[Callable]) -> str:
+def gen_ip(protocol: str, default_validators: list[Callable]) -> str:
     from django.core.exceptions import ValidationError
 
     protocol = (protocol or "").lower()
@@ -212,9 +367,18 @@ def gen_byte_string(max_length: int = 16) -> bytes:
     return bytes(generator)
 
 
-def gen_interval(interval_key: str = "milliseconds", offset: int = 0) -> timedelta:
-    interval = gen_integer() + offset
-    kwargs = {interval_key: interval}
+def gen_interval(
+    interval_key: str = "milliseconds",
+    min_interval: int = -365 * 24 * 60 * 60 * 1000,
+    max_interval: int = 365 * 24 * 60 * 60 * 1000,
+) -> timedelta:
+    """
+    Generate a random timedelta for `DurationField` or date range calculations.
+
+    Defaults to ±1 year in milliseconds, suitable for most test scenarios.
+    The `interval_key` determines which timedelta argument is set (e.g., 'seconds', 'days').
+    """
+    kwargs = {interval_key: baker_random.randint(min_interval, max_interval)}
     return timedelta(**kwargs)
 
 
@@ -253,7 +417,7 @@ def gen_hstore():
     return {}
 
 
-def _fk_model(field: Field) -> Tuple[str, Optional[Model]]:
+def _fk_model(field: Field) -> tuple[str, Model | None]:
     try:
         return ("model", field.related_model)
     except AttributeError:
@@ -262,7 +426,7 @@ def _fk_model(field: Field) -> Tuple[str, Optional[Model]]:
 
 def _prepare_related(
     model: str, _create_files=False, **attrs: Any
-) -> Union[Model, List[Model]]:
+) -> Model | list[Model]:
     from .baker import prepare
 
     return prepare(model, **attrs)
@@ -342,37 +506,56 @@ def gen_geometry_collection() -> str:
 
 
 def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
+    """
+    Factory that returns a generator for PostgreSQL numeric range fields.
+
+    The returned generator creates ranges like [-N, N] where N is a random value
+    between 1 and 100,000, cast to the appropriate numeric type (int, float, etc).
+    """
+
     def gen_range():
         try:
             from psycopg.types.range import Range
         except ImportError:
             from psycopg2._range import NumericRange as Range
 
-        base_num = gen_integer(1, 100000)
+        base_num = baker_random.randint(1, 100000)
         return Range(number_cast(-1 * base_num), number_cast(base_num))
 
     return gen_range
 
 
 def gen_date_range():
+    """
+    Generate random `DateRange` for PostgreSQL `DateRangeField`.
+
+    The range spans a random date with a minimum interval of 1 day
+    to avoid empty ranges in tests.
+    """
     try:
         from psycopg.types.range import DateRange
     except ImportError:
         from psycopg2.extras import DateRange
 
     base_date = gen_date()
-    interval = gen_interval(offset=24 * 60 * 60 * 1000)  # force at least 1 day interval
+    interval = gen_interval(min_interval=24 * 60 * 60 * 1000)
     args = sorted([base_date - interval, base_date + interval])
     return DateRange(*args)
 
 
 def gen_datetime_range():
+    """
+    Generate random `TimestamptzRange` for PostgreSQL DateTimeRangeField.
+
+    The range spans a random datetime with a minimum interval of 1 day
+    to avoid empty ranges in tests.
+    """
     try:
         from psycopg.types.range import TimestamptzRange
     except ImportError:
         from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
     base_datetime = gen_datetime()
-    interval = gen_interval()
+    interval = gen_interval(min_interval=24 * 60 * 60 * 1000)
     args = sorted([base_datetime - interval, base_datetime + interval])
     return TimestamptzRange(*args)

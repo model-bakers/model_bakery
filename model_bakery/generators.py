@@ -1,7 +1,7 @@
+from collections.abc import Callable
 from decimal import Decimal
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any
 
-from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import (
     AutoField,
     BigAutoField,
@@ -81,29 +81,20 @@ except ImportError:
     IntegerRangeField = None
 
 
-def _make_integer_gen_by_range(field_type: Any) -> Callable:
-    min_int, max_int = BaseDatabaseOperations.integer_field_ranges[field_type.__name__]
-
-    def gen_integer():
-        return random_gen.gen_integer(min_int=min_int, max_int=max_int)
-
-    return gen_integer
-
-
 default_mapping = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
     BooleanField: random_gen.gen_boolean,
-    AutoField: _make_integer_gen_by_range(AutoField),
-    BigAutoField: _make_integer_gen_by_range(BigAutoField),
-    IntegerField: _make_integer_gen_by_range(IntegerField),
-    SmallAutoField: _make_integer_gen_by_range(SmallAutoField),
-    BigIntegerField: _make_integer_gen_by_range(BigIntegerField),
-    SmallIntegerField: _make_integer_gen_by_range(SmallIntegerField),
-    PositiveBigIntegerField: _make_integer_gen_by_range(PositiveBigIntegerField),
-    PositiveIntegerField: _make_integer_gen_by_range(PositiveIntegerField),
-    PositiveSmallIntegerField: _make_integer_gen_by_range(PositiveSmallIntegerField),
+    AutoField: random_gen.gen_auto_field,
+    BigAutoField: random_gen.gen_big_auto_field,
+    IntegerField: random_gen.gen_regular_integer,
+    SmallAutoField: random_gen.gen_small_auto_field,
+    BigIntegerField: random_gen.gen_big_integer,
+    SmallIntegerField: random_gen.gen_small_integer,
+    PositiveBigIntegerField: random_gen.gen_positive_big_integer,
+    PositiveIntegerField: random_gen.gen_positive_integer,
+    PositiveSmallIntegerField: random_gen.gen_positive_small_integer,
     FloatField: random_gen.gen_float,
     DecimalField: random_gen.gen_decimal,
     BinaryField: random_gen.gen_byte_string,
@@ -122,7 +113,7 @@ default_mapping = {
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
     JSONField: random_gen.gen_json,
-}  # type: Dict[Type, Callable]
+}  # type: dict[type, Callable]
 
 if ArrayField:
     default_mapping[ArrayField] = random_gen.gen_array
@@ -149,7 +140,7 @@ if DateTimeRangeField:
 # Add GIS fields
 
 
-def get_type_mapping() -> Dict[Type, Callable]:
+def get_type_mapping() -> dict[type, Callable]:
     from .content_types import default_contenttypes_mapping
     from .gis import default_gis_mapping
 
@@ -162,9 +153,9 @@ def get_type_mapping() -> Dict[Type, Callable]:
 user_mapping = {}
 
 
-def add(field: str, func: Optional[Union[Callable, str]]) -> None:
+def add(field: str, func: Callable | str | None) -> None:
     user_mapping[import_from_str(field)] = import_from_str(func)
 
 
-def get(field: Any) -> Optional[Callable]:
+def get(field: Any) -> Callable | None:
     return user_mapping.get(field)

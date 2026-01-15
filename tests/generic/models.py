@@ -46,11 +46,14 @@ else:
     GenericRelation = None
     GenericForeignKey = None
 
-GENDER_CHOICES = [
-    ("M", "male"),
-    ("F", "female"),
-    ("N", "non-binary"),
-]
+
+class Gender(models.TextChoices):
+    MALE = "M", "male"
+    FEMALE = "F", "female"
+    NON_BINARY = "N", "non-binary"
+
+    __empty__ = ""
+
 
 OCCUPATION_CHOICES = (
     ("Service Industry", (("waitress", "Waitress"), ("bartender", "Bartender"))),
@@ -81,7 +84,7 @@ class PaymentBill(models.Model):
 
 
 class Person(models.Model):
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=1, choices=Gender.choices)
     #  Jards Macalé is an amazing brazilian musician! =]
     enjoy_jards_macale = models.BooleanField(default=True)
     like_metal_music = models.BooleanField(default=False)
@@ -103,6 +106,8 @@ class Person(models.Model):
     email = models.EmailField()
     id_document = models.CharField(unique=True, max_length=10)
     data = models.JSONField()
+    if django.VERSION >= (5, 0):
+        retirement_age = models.IntegerField(db_default=20)
 
     try:
         from django.contrib.postgres.fields import (
@@ -123,8 +128,9 @@ class Person(models.Model):
         )
 
         if settings.USING_POSTGRES:
-            if django.VERSION >= (4, 2):
-                long_name = models.CharField()
+            long_name = (
+                models.CharField()
+            )  # max_length is not required as PostgresSQL supports unlimited VARCHAR
             acquaintances = ArrayField(models.IntegerField())
             hstore_data = HStoreField()
             ci_char = CICharField(max_length=30)
@@ -149,6 +155,11 @@ class Person(models.Model):
         multi_line_string = models.MultiLineStringField()
         multi_polygon = models.MultiPolygonField()
         geom_collection = models.GeometryCollectionField()
+
+
+class ProxyToPersonModel(Person):
+    class Meta:
+        proxy = True
 
 
 class Dog(models.Model):
@@ -278,6 +289,11 @@ class UnsupportedField(models.Field):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def db_type(self, connection):
+        # Return a real database type so Django can create the column
+        # The field remains "unsupported" by Baker (no generator defined)
+        return "varchar(255)"
+
 
 class UnsupportedModel(models.Model):
     unsupported_field = UnsupportedField()
@@ -293,6 +309,18 @@ if BAKER_CONTENTTYPES:
         )
         object_id = models.PositiveIntegerField()
         content_object = GenericForeignKey("content_type", "object_id")
+
+        proxy_content_type = models.ForeignKey(
+            contenttypes.ContentType,
+            on_delete=models.CASCADE,
+            blank=True,
+            null=True,
+            limit_choices_to={"model__in": ["person", "dog"]},
+        )
+        proxy_object_id = models.PositiveIntegerField()
+        proxy_content_object = GenericForeignKey(
+            "proxy_content_type", "proxy_object_id", for_concrete_model=False
+        )
 
     class DummyGenericRelationModel(models.Model):
         relation = GenericRelation(DummyGenericForeignKeyModel)
