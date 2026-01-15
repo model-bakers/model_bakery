@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add dedicated generators for each integer field type that use Django's actual field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
 
 ### Changed
+- docs: Update seq import in basic usage
+- Add type hints to `seq()`'s `increment_by` argument
 - Deprecate `gen_integer()` in favor of field-specific generators that respect Django's field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
 
 ### Removed
