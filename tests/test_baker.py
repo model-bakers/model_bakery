@@ -1209,19 +1209,32 @@ class TestFieldSpecificIntegerGenerators:
 
         assert 100 <= obj.positive_small_int_field <= 200
 
-    def test_gen_integer_shows_deprecation_warning(self):
+    def test_gen_integer_shows_deprecation_warning_with_default_bounds(self):
         import warnings
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
 
-            # This should trigger the deprecation warning
-            value = random_gen.gen_integer(min_int=1, max_int=100)
+            # Using default bounds should trigger the deprecation warning
+            value = random_gen.gen_integer()
 
             assert len(w) == 1
             assert issubclass(w[0].category, DeprecationWarning)
             assert "gen_integer() may cause overflow errors" in str(w[0].message)
             assert "gen_positive_small_integer()" in str(w[0].message)
+
+        assert isinstance(value, int)
+
+    def test_gen_integer_no_warning_with_explicit_bounds(self):
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            # Using explicit bounds should NOT trigger the warning
+            value = random_gen.gen_integer(min_int=1, max_int=100)
+
+            assert len(w) == 0
 
         assert 1 <= value <= 100
 

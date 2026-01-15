@@ -8,11 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
-- Add explicit field-specific generators for `AutoField`, `BigAutoField`, and `SmallAutoField`
-- Add dedicated generators for each integer field type that use Django's actual field ranges
+- Add explicit field-specific generators for `AutoField`, `BigAutoField`, and `SmallAutoField` ([#61](https://github.com/model-bakers/model_bakery/issues/61))
+- Add dedicated generators for each integer field type that use Django's actual field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
 
 ### Changed
-- Deprecate `gen_integer()` in favor of field-specific generators that respect Django's field ranges
+- Deprecate `gen_integer()` in favor of field-specific generators that respect Django's field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
 
 ### Removed
 - Drop mentions of model_mommy from the project. The old migration script is available in [the GitHub gist](https://gist.github.com/amureki/168b545105cb3e71f824351ffff507dc).

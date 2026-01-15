@@ -87,19 +87,21 @@ def gen_from_choices(
 
 
 def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
-    warnings.warn(
-        "gen_integer() may cause overflow errors with Django integer fields due to "
-        "large default MAX_INT value. Consider using field-specific generators instead:\n"
-        "- gen_positive_small_integer() for PositiveSmallIntegerField\n"
-        "- gen_small_integer() for SmallIntegerField\n"
-        "- gen_regular_integer() for IntegerField\n"
-        "- gen_positive_integer() for PositiveIntegerField\n"
-        "- gen_big_integer() for BigIntegerField\n"
-        "- gen_positive_big_integer() for PositiveBigIntegerField\n"
-        "See model_bakery.random_gen documentation for more details.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
+    # Only warn when using default bounds that could cause overflow
+    if min_int == -MAX_INT or max_int == MAX_INT:
+        warnings.warn(
+            "gen_integer() may cause overflow errors with Django integer fields due to "
+            "large default MAX_INT value. Consider using field-specific generators instead:\n"
+            "- gen_positive_small_integer() for PositiveSmallIntegerField\n"
+            "- gen_small_integer() for SmallIntegerField\n"
+            "- gen_regular_integer() for IntegerField\n"
+            "- gen_positive_integer() for PositiveIntegerField\n"
+            "- gen_big_integer() for BigIntegerField\n"
+            "- gen_positive_big_integer() for PositiveBigIntegerField\n"
+            "See model_bakery.random_gen documentation for more details.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     return baker_random.randint(min_int, max_int)
 
 
