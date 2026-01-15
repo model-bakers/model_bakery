@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add dedicated generators for each integer field type that use Django's actual field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
 
 ### Changed
-- docs: Update seq import in basic usage
-- Add type hints to `seq()`'s `increment_by` argument
 - Deprecate `gen_integer()` in favor of field-specific generators that respect Django's field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
+- `prepare()` with `GenericForeignKey` no longer accesses the database; `content_object` attribute is unavailable in this mode
+- Add type hints to `seq()`'s `increment_by` argument
+- docs: Update `seq()` import in basic usage
 
 ### Removed
 - Drop mentions of model_mommy from the project. The old migration script is available in [the GitHub gist](https://gist.github.com/amureki/168b545105cb3e71f824351ffff507dc).
