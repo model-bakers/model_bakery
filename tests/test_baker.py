@@ -1186,3 +1186,146 @@ class TestAutoNowFields:
         assert instance.created == created
         assert instance.updated == updated
         assert instance.sent_date == sent_date
+
+
+class TestFieldSpecificIntegerGenerators:
+    @pytest.mark.django_db
+    def test_gen_positive_small_integer_works_safely(self):
+        obj = baker.make(
+            models.DummyPositiveIntModel,
+            positive_small_int_field=random_gen.gen_positive_small_integer(),
+        )
+
+        assert 0 <= obj.positive_small_int_field <= 32767
+
+    @pytest.mark.django_db
+    def test_field_specific_generators_respect_constraints(self):
+        obj = baker.make(
+            models.DummyPositiveIntModel,
+            positive_small_int_field=random_gen.gen_positive_small_integer(
+                min_int=100, max_int=200
+            ),
+        )
+
+        assert 100 <= obj.positive_small_int_field <= 200
+
+    def test_gen_integer_shows_deprecation_warning_with_default_bounds(self):
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            # Using default bounds should trigger the deprecation warning
+            value = random_gen.gen_integer()
+
+            assert len(w) == 1
+            assert issubclass(w[0].category, DeprecationWarning)
+            assert "gen_integer() may cause overflow errors" in str(w[0].message)
+            assert "gen_positive_small_integer()" in str(w[0].message)
+
+        assert isinstance(value, int)
+
+    def test_gen_integer_no_warning_with_explicit_bounds(self):
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            # Using explicit bounds should NOT trigger the warning
+            value = random_gen.gen_integer(min_int=1, max_int=100)
+
+            assert len(w) == 0
+
+        assert 1 <= value <= 100
+
+    @pytest.mark.django_db
+    def test_automatic_generation_still_works(self):
+        obj = baker.make(models.DummyPositiveIntModel)
+
+        assert 0 <= obj.positive_small_int_field <= 32767
+        assert isinstance(obj.positive_int_field, int)
+        assert isinstance(obj.positive_big_int_field, int)
+
+    @pytest.mark.django_db
+    def test_gen_small_integer_works(self):
+        obj = baker.make(
+            models.DummyIntModel,
+            small_int_field=random_gen.gen_small_integer(),
+        )
+
+        assert -32768 <= obj.small_int_field <= 32767
+
+    @pytest.mark.django_db
+    def test_gen_regular_integer_works(self):
+        obj = baker.make(
+            models.DummyIntModel,
+            int_field=random_gen.gen_regular_integer(),
+        )
+
+        assert -2147483648 <= obj.int_field <= 2147483647
+
+    @pytest.mark.django_db
+    def test_gen_big_integer_works(self):
+        obj = baker.make(
+            models.DummyIntModel,
+            big_int_field=random_gen.gen_big_integer(),
+        )
+
+        assert -9223372036854775808 <= obj.big_int_field <= 9223372036854775807
+
+    @pytest.mark.django_db
+    def test_gen_positive_integer_works(self):
+        obj = baker.make(
+            models.DummyPositiveIntModel,
+            positive_int_field=random_gen.gen_positive_integer(),
+        )
+
+        assert 0 <= obj.positive_int_field <= 2147483647
+
+    @pytest.mark.django_db
+    def test_gen_positive_big_integer_works(self):
+        obj = baker.make(
+            models.DummyPositiveIntModel,
+            positive_big_int_field=random_gen.gen_positive_big_integer(),
+        )
+
+        assert 0 <= obj.positive_big_int_field <= 9223372036854775807
+
+    def test_signed_fields_can_generate_negative_values(self):
+        # Generate multiple values to increase chance of getting negatives
+        values = [random_gen.gen_small_integer() for _ in range(50)]
+        assert any(v < 0 for v in values), "Should generate some negative values"
+
+    def test_positive_fields_include_zero(self):
+        # Generate multiple values to verify non-negative range
+        values = [random_gen.gen_positive_small_integer() for _ in range(100)]
+        # All values should be >= 0 per Django's PositiveSmallIntegerField definition
+        assert all(v >= 0 for v in values), "All values should be non-negative"
+
+    @pytest.mark.django_db
+    def test_custom_range_overrides_field_defaults(self):
+        obj = baker.make(
+            models.DummyIntModel,
+            int_field=random_gen.gen_regular_integer(min_int=-10, max_int=10),
+        )
+
+        assert -10 <= obj.int_field <= 10
+
+    @pytest.mark.django_db
+    def test_automatic_generation_for_all_signed_fields(self):
+        obj = baker.make(models.DummyIntModel)
+
+        assert -32768 <= obj.small_int_field <= 32767
+        assert -2147483648 <= obj.int_field <= 2147483647
+        assert -9223372036854775808 <= obj.big_int_field <= 9223372036854775807
+
+    def test_auto_field_generators_start_from_one(self):
+        # Auto fields should never generate 0 or negative values
+        values = [random_gen.gen_auto_field() for _ in range(100)]
+        assert all(v >= 1 for v in values), "AutoField values should be >= 1"
+
+        big_values = [random_gen.gen_big_auto_field() for _ in range(100)]
+        assert all(v >= 1 for v in big_values), "BigAutoField values should be >= 1"
+
+        small_values = [random_gen.gen_small_auto_field() for _ in range(100)]
+        assert all(v >= 1 for v in small_values), "SmallAutoField values should be >= 1"

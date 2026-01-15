@@ -20,6 +20,7 @@ from typing import Any
 from uuid import UUID
 
 from django.core.files.base import ContentFile
+from django.db.backends.base.operations import BaseDatabaseOperations
 from django.db.models import Field, Model
 from django.utils.timezone import now
 
@@ -86,7 +87,147 @@ def gen_from_choices(
 
 
 def gen_integer(min_int: int = -MAX_INT, max_int: int = MAX_INT) -> int:
+    # Only warn when using default bounds that could cause overflow
+    if min_int == -MAX_INT or max_int == MAX_INT:
+        warnings.warn(
+            "gen_integer() may cause overflow errors with Django integer fields due to "
+            "large default MAX_INT value. Consider using field-specific generators instead:\n"
+            "- gen_positive_small_integer() for PositiveSmallIntegerField\n"
+            "- gen_small_integer() for SmallIntegerField\n"
+            "- gen_regular_integer() for IntegerField\n"
+            "- gen_positive_integer() for PositiveIntegerField\n"
+            "- gen_big_integer() for BigIntegerField\n"
+            "- gen_positive_big_integer() for PositiveBigIntegerField\n"
+            "See model_bakery.random_gen documentation for more details.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     return baker_random.randint(min_int, max_int)
+
+
+def _get_field_range(field_name: str) -> tuple[int, int]:
+    """Get field range from Django's BaseDatabaseOperations."""
+    return BaseDatabaseOperations.integer_field_ranges.get(
+        field_name, (-MAX_INT, MAX_INT)
+    )
+
+
+def gen_small_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for SmallIntegerField.
+
+    Defaults to Django's SmallIntegerField range (-32768 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("SmallIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_small_integer(
+    min_int: int | None = None, max_int: int | None = None
+) -> int:
+    """Generate integer for PositiveSmallIntegerField.
+
+    Defaults to Django's PositiveSmallIntegerField range (0 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveSmallIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for PositiveIntegerField.
+
+    Defaults to Django's PositiveIntegerField range (0 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_big_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for BigIntegerField.
+
+    Defaults to Django's BigIntegerField range (-9223372036854775808 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("BigIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_positive_big_integer(
+    min_int: int | None = None, max_int: int | None = None
+) -> int:
+    """Generate integer for PositiveBigIntegerField.
+
+    Defaults to Django's PositiveBigIntegerField range (0 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("PositiveBigIntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_regular_integer(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for IntegerField.
+
+    Defaults to Django's IntegerField range (-2147483648 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("IntegerField")
+    actual_min = min_int if min_int is not None else field_min
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for AutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 2147483647).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("AutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_big_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for BigAutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 9223372036854775807).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("BigAutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
+
+
+def gen_small_auto_field(min_int: int | None = None, max_int: int | None = None) -> int:
+    """Generate integer for SmallAutoField.
+
+    Auto fields are auto-incrementing primary keys that start from 1.
+    Defaults to range (1 to 32767).
+    Override with min_int/max_int to constrain range.
+    """
+    field_min, field_max = _get_field_range("SmallAutoField")
+    # Auto fields start from 1, not 0 or negative
+    actual_min = min_int if min_int is not None else max(field_min, 1)
+    actual_max = max_int if max_int is not None else field_max
+    return baker_random.randint(actual_min, actual_max)
 
 
 def gen_float(min_float: float = -1000000.0, max_float: float = 1000000.0) -> float:
