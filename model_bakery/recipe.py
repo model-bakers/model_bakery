@@ -244,6 +244,6 @@ class related(Generic[M]):  # FIXME
             else:
                 raise TypeError("Not a recipe")
 
-    def make(self) -> list[M | list[M]]:
+    def make(self, **attrs: Any) -> list[M | list[M]]:
         """Persist objects to m2m relation."""
-        return [m.make() for m in self.related]
+        return [m.make(**attrs) for m in self.related]

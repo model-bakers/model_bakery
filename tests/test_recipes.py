@@ -441,6 +441,20 @@ class TestForeignKey:
         assert lady.dog_set.all()[0].breed == "Pug"
         assert lady.dog_set.all()[1].breed == "Basset"
 
+    def test_related_fk_does_not_create_duplicate_parent(self):
+        """Regression test for issue #397.
+
+        When using related() with FK, the parent should be reused,
+        not duplicated by the child recipe's foreign_key().
+        """
+        from tests.generic.models import Person
+
+        lady = baker.make_recipe("tests.generic.dog_lady")
+        assert Person.objects.count() == 1
+        assert lady.dog_set.count() == 2
+        for dog in lady.dog_set.all():
+            assert dog.owner == lady
+
     def test_related_models_recipes_make_mutiple(self):
         ladies = baker.make_recipe("tests.generic.dog_lady", _quantity=2)
         assert ladies[0].dog_set.count() == 2

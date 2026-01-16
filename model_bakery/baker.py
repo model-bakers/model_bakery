@@ -658,11 +658,26 @@ class Baker(Generic[M]):
             setattr(instance, k, v)
 
     def _handle_one_to_many(self, instance: Model, attrs: dict[str, Any]):
+        """Handle reverse one-to-many relationships.
+
+        For related() callables, automatically injects the parent instance
+        to the FK field to avoid duplicate creation via foreign_key() in child recipes.
+        """
+        import types
+
+        from .recipe import related
+
         for key, values in attrs.items():
             manager = getattr(instance, key)
 
             if callable(values):
-                values = values()
+                if isinstance(values, types.MethodType) and isinstance(
+                    values.__self__, related
+                ):
+                    fk_field_name = manager.field.name
+                    values = values(**{fk_field_name: instance})
+                else:
+                    values = values()
 
             for value in values:
                 # Django will handle any operation to persist nested non-persisted FK because
