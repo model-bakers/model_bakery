@@ -17,3 +17,4 @@ dist/
 /.coverage
 /.coverage.*
 .envrc
+uv.lock

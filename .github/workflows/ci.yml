@@ -21,12 +21,11 @@ jobs:
           - mypy model_bakery
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.13"
-          cache: pip
-      - run: python -m pip install .[test]
-      - run: ${{ matrix.lint-command }}
+      - run: uv run ${{ matrix.lint-command }}
 
   sqlite-tests:
     name: SQLite - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
