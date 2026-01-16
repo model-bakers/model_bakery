@@ -7,7 +7,7 @@ module-root = ""
 
 [project]
 name = "model-bakery"
-version = "1.22.0"
+version = "1.22.1"
 description = "Smart object creation facility for Django."
 readme = "README.md"
 requires-python = ">=3.10"

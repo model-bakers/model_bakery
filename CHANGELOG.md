@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.22.1](https://pypi.org/project/model-bakery/1.22.1/)
+
+### Added
 - [dev] PyPI releases now use trusted publishing
 
 ### Changed
