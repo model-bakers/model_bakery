@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [1.22.0](https://pypi.org/project/model-bakery/1.22.0/)
+
+### Added
 - Add explicit field-specific generators for `AutoField`, `BigAutoField`, and `SmallAutoField` ([#61](https://github.com/model-bakers/model_bakery/issues/61))
 - Add dedicated generators for each integer field type that use Django's actual field ranges ([#61](https://github.com/model-bakers/model_bakery/issues/61))
 
