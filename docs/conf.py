@@ -1,14 +1,13 @@
 import os
 import sys
-
-from model_bakery import __about__
+from importlib.metadata import version as get_version
 
 sys.path.insert(0, os.path.abspath(".."))
 
 project = "Model Bakery"
 copyright = "2023, Rust Saiargaliev"
 author = "Rust Saiargaliev"
-version = release = __about__.__version__
+version = release = get_version("model-bakery")
 
 extensions = [
     "myst_parser",

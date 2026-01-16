@@ -1,10 +1,13 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
 
 [project]
 name = "model-bakery"
-dynamic = ["version"]
+version = "1.22.0"
 description = "Smart object creation facility for Django."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -44,7 +47,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
+docs = [
+    "Sphinx",
+    "sphinx-rtd-theme",
+    "myst-parser",
+]
+
+[dependency-groups]
+dev = [
     "coverage",
     "pillow",
     "pytest",
@@ -52,11 +62,6 @@ test = [
     "black",
     "ruff",
     "mypy",
-]
-docs = [
-    "Sphinx",
-    "sphinx-rtd-theme",
-    "myst-parser",
 ]
 
 [project.urls]
@@ -69,7 +74,6 @@ source = [
     "model_bakery",
 ]
 omit = [
-    "model_bakery/__about__.py",
     "model_bakery/_types.py",
 ]
 
@@ -81,14 +85,6 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
-
-[tool.hatch.version]
-path = "model_bakery/__about__.py"
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "/model_bakery",
-]
 
 [tool.mypy]
 ignore_missing_imports = true
