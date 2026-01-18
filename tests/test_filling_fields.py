@@ -320,6 +320,19 @@ class TestFillingIPAddressField:
     not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
 )
 class TestFillingGenericForeignKeyField:
+    @pytest.fixture(autouse=True)
+    def clear_content_type_cache(self):
+        """Clear ContentType cache to avoid stale entries from rolled-back transactions.
+
+        pytest-django doesn't clear the ContentType cache between tests (unlike Site cache).
+        This can cause FK violations on PostgreSQL when a cached ContentType references
+        a pk that was created in a rolled-back transaction.
+        See: https://github.com/pytest-dev/pytest-django/issues/1156
+        """
+        from django.contrib.contenttypes.models import ContentType
+
+        ContentType.objects.clear_cache()
+
     @pytest.mark.django_db
     def test_content_type_field(self):
         from django.contrib.contenttypes.models import ContentType
