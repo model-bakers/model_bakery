@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Fix `related()` with FK relations creating duplicate parent entities ([#397](https://github.com/model-bakers/model_bakery/issues/397))
 - [dev] CI: use uv for faster dependency installation and caching
+- [dev] Fix missing psycopg dependency in tox no-contenttypes environment
 
 ### Removed
 - Drop EOL Django 5.0 and 5.1 support
