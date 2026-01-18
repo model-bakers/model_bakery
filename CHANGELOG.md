@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fix `related()` with FK relations creating duplicate parent entities ([#397](https://github.com/model-bakers/model_bakery/issues/397))
+- [dev] CI: use uv for faster dependency installation and caching
 
 ### Removed
+- Drop EOL Django 5.0 and 5.1 support
 
 ## [1.22.1](https://pypi.org/project/model-bakery/1.22.1/)
 
