@@ -6,7 +6,7 @@ from django.conf import settings
 
 def pytest_configure():
     test_db = os.environ.get("TEST_DB", "sqlite")
-    use_contenttypes = os.environ.get("USE_CONTENTTYPES", False)
+    use_contenttypes = os.environ.get("USE_CONTENTTYPES", "").lower() == "true"
     installed_apps = [
         "tests.generic",
         "tests.ambiguous",
