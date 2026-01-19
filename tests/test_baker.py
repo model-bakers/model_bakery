@@ -140,8 +140,8 @@ class TestsBakerCreatesSimpleModel:
         ).exists()
 
 
-@pytest.mark.django_db
 class TestsBakerRepeatedCreatesSimpleModel(TestCase):
+    @pytest.mark.django_db
     def test_make_should_create_objects_respecting_quantity_parameter(self):
         with self.assertNumQueries(5):
             baker.make(models.Person, _quantity=5)
@@ -151,6 +151,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             people = baker.make(models.Person, _quantity=5, name="George Washington")
             assert all(p.name == "George Washington" for p in people)
 
+    @pytest.mark.django_db
     def test_make_quantity_respecting_bulk_create_parameter(self):
         query_count = 1
         with self.assertNumQueries(query_count):
@@ -176,6 +177,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
             )
         assert models.NonStandardManager.manager.count() == 3
 
+    @pytest.mark.django_db
     def test_make_raises_correct_exception_if_invalid_quantity(self):
         with pytest.raises(InvalidQuantityException):
             baker.make(_model=models.Person, _quantity="hi")
@@ -200,6 +202,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         with pytest.raises(InvalidQuantityException):
             baker.prepare(_model=models.Person, _quantity=0)
 
+    @pytest.mark.django_db
     def test_accepts_generators_with_quantity(self):
         baker.make(
             models.Person,
@@ -220,6 +223,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert p5.name == "b"
         assert p5.id_document == "d5"
 
+    @pytest.mark.django_db
     def test_accepts_generators_with_quantity_for_unique_fields(self):
         baker.make(
             models.DummyUniqueIntegerFieldModel,
@@ -237,6 +241,7 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         not apps.is_installed("django.contrib.auth"),
         reason="Django auth app is not installed",
     )
+    @pytest.mark.django_db
     def test_generators_work_with_user_model(self):
         from django.contrib.auth import get_user_model
 
@@ -730,13 +735,14 @@ class TestFillNullsTestCase:
         assert classroom.students.count() == 0
 
 
-@pytest.mark.django_db
 class TestSkipBlanksTestCase:
+    @pytest.mark.django_db
     def test_skip_blank(self):
         dummy = baker.make(models.DummyBlankFieldsModel)
         assert dummy.blank_char_field == ""
         assert dummy.blank_text_field == ""
 
+    @pytest.mark.django_db
     def test_skip_blank_with_argument(self):
         dummy = baker.make(models.DummyBlankFieldsModel, _fill_optional=False)
         assert dummy.blank_char_field == ""
@@ -753,8 +759,8 @@ class TestSkipBlanksTestCase:
         assert dummy.blank_text_field == ""
 
 
-@pytest.mark.django_db
 class TestFillBlanksTestCase:
+    @pytest.mark.django_db
     def test_fill_field_optional(self):
         dummy = baker.make(
             models.DummyBlankFieldsModel, _fill_optional=["blank_char_field"]
@@ -767,6 +773,7 @@ class TestFillBlanksTestCase:
         )
         assert len(dummy.blank_char_field) == 50
 
+    @pytest.mark.django_db
     def test_fill_wrong_field(self):
         with pytest.raises(AttributeError) as exc_info:
             baker.make(
@@ -777,10 +784,12 @@ class TestFillBlanksTestCase:
         msg = "_fill_optional field(s) ['wrong'] are not related to model DummyBlankFieldsModel"
         assert msg in str(exc_info.value)
 
+    @pytest.mark.django_db
     def test_fill_wrong_fields_with_parent(self):
         with pytest.raises(AttributeError):
             baker.make(models.SubclassOfAbstract, _fill_optional=["name", "wrong"])
 
+    @pytest.mark.django_db
     def test_fill_many_optional(self):
         dummy = baker.make(
             models.DummyBlankFieldsModel,
@@ -788,6 +797,7 @@ class TestFillBlanksTestCase:
         )
         assert len(dummy.blank_text_field) == 300
 
+    @pytest.mark.django_db
     def test_fill_all_optional(self):
         dummy = baker.make(models.DummyBlankFieldsModel, _fill_optional=True)
         assert len(dummy.blank_char_field) == 50
@@ -798,15 +808,18 @@ class TestFillBlanksTestCase:
         assert len(dummy.blank_char_field) == 50
         assert len(dummy.blank_text_field) == 300
 
+    @pytest.mark.django_db
     def test_fill_optional_with_integer(self):
         with pytest.raises(TypeError):
             baker.make(models.DummyBlankFieldsModel, _fill_optional=1)
 
+    @pytest.mark.django_db
     def test_fill_optional_with_default(self):
         dummy = baker.make(models.DummyDefaultFieldsModel, _fill_optional=True)
         assert dummy.default_callable_int_field == 12
         assert isinstance(dummy.default_callable_datetime_field, datetime.datetime)
 
+    @pytest.mark.django_db
     def test_fill_optional_with_default_unknown_class(self):
         dummy = baker.make(models.DummyDefaultFieldsModel, _fill_optional=True)
         assert dummy.default_unknown_class_field == 42
