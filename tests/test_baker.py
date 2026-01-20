@@ -87,8 +87,8 @@ class TestRecipeFinder:
             baker.prepare_recipe("person")
 
 
-@pytest.mark.django_db
 class TestsBakerCreatesSimpleModel:
+    @pytest.mark.django_db
     def test_consider_real_django_fields_only(self):
         id_ = models.ModelWithImpostorField._meta.get_field("id")
         with patch.object(baker.Baker, "get_fields") as mock:
@@ -100,6 +100,7 @@ class TestsBakerCreatesSimpleModel:
             except TypeError:
                 raise AssertionError("TypeError raised")
 
+    @pytest.mark.django_db
     def test_make_should_create_one_object(self):
         person = baker.make(models.Person)
         assert isinstance(person, models.Person)
@@ -107,6 +108,7 @@ class TestsBakerCreatesSimpleModel:
         # makes sure it is the person we created
         assert models.Person.objects.filter(id=person.id).exists()
 
+    @pytest.mark.django_db
     def test_prepare_should_not_persist_one_object(self):
         person = baker.prepare(models.Person)
         assert isinstance(person, models.Person)
@@ -115,6 +117,7 @@ class TestsBakerCreatesSimpleModel:
         assert not models.Person.objects.all().exists()
         assert person.id is None
 
+    @pytest.mark.django_db
     def test_non_abstract_model_creation(self):
         person = baker.make(
             models.NonAbstractPerson, name="bob", enjoy_jards_macale=False
@@ -123,6 +126,7 @@ class TestsBakerCreatesSimpleModel:
         assert person.name == "bob"
         assert person.enjoy_jards_macale is False
 
+    @pytest.mark.django_db
     def test_abstract_model_subclass_creation(self):
         instance = baker.make(models.SubclassOfAbstract)
         assert isinstance(instance, models.SubclassOfAbstract)
@@ -131,6 +135,7 @@ class TestsBakerCreatesSimpleModel:
         assert len(instance.name) == 30
         assert isinstance(instance.height, int)
 
+    @pytest.mark.django_db
     def test_multiple_inheritance_creation(self):
         multiple = baker.make(models.DummyMultipleInheritanceModel)
         assert isinstance(multiple, models.DummyMultipleInheritanceModel)
@@ -310,17 +315,19 @@ class TestBakerPrepareSavingRelatedInstances:
         assert lonely_person.only_friend.pk
 
 
-@pytest.mark.django_db
 class TestBakerCreatesAssociatedModels(TestCase):
+    @pytest.mark.django_db
     def test_dependent_models_with_ForeignKey(self):
         dog = baker.make(models.Dog)
         assert isinstance(dog.owner, models.Person)
 
+    @pytest.mark.django_db
     def test_foreign_key_on_parent_should_create_one_object(self):
         person_count = models.Person.objects.count()
         baker.make(models.GuardDog)
         assert models.Person.objects.count() == person_count + 1
 
+    @pytest.mark.django_db
     def test_foreign_key_on_parent_is_not_created(self):
         """Foreign key on parent doesn't get created using owner."""
         owner = baker.make(models.Person)
@@ -329,6 +336,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.count() == person_count
         assert dog.owner == owner
 
+    @pytest.mark.django_db
     def test_foreign_key_on_parent_id_is_not_created(self):
         """Foreign key on parent doesn't get created using owner_id."""
         owner = baker.make(models.Person)
@@ -337,23 +345,27 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.count() == person_count
         assert models.GuardDog.objects.get(pk=dog.pk).owner == owner
 
+    @pytest.mark.django_db
     def test_auto_now_add_on_parent_should_work(self):
         person_count = models.Person.objects.count()
         dog = baker.make(models.GuardDog)
         assert models.Person.objects.count() == person_count + 1
         assert dog.created
 
+    @pytest.mark.django_db
     def test_attrs_on_related_model_through_parent(self):
         baker.make(models.GuardDog, owner__name="john")
         for person in models.Person.objects.all():
             assert person.name == "john"
 
+    @pytest.mark.django_db
     def test_access_related_name_of_m2m(self):
         try:
             baker.make(models.Person, classroom_set=[baker.make(models.Classroom)])
         except TypeError:
             raise AssertionError("type error raised")
 
+    @pytest.mark.django_db
     def test_save_object_instances_when_handling_one_to_many_relations(self):
         owner = baker.make(models.Person)
         dogs_set = baker.prepare(
@@ -371,6 +383,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert home.dogs.count() == 2
         assert models.Dog.objects.count() == 2  # dogs in dogs_set were created
 
+    @pytest.mark.django_db
     def test_prepare_fk(self):
         dog = baker.prepare(models.Dog)
         assert isinstance(dog, models.Dog)
@@ -379,6 +392,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.all().count() == 0
         assert models.Dog.objects.all().count() == 0
 
+    @pytest.mark.django_db
     def test_create_one_to_one(self):
         lonely_person = baker.make(models.LonelyPerson)
 
@@ -386,11 +400,13 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert isinstance(lonely_person.only_friend, models.Person)
         assert models.Person.objects.all().count() == 1
 
+    @pytest.mark.django_db
     def test_create_multiple_one_to_one(self):
         baker.make(models.LonelyPerson, _quantity=5)
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
+    @pytest.mark.django_db
     def test_bulk_create_multiple_one_to_one(self):
         query_count = 6
         with self.assertNumQueries(query_count):
@@ -399,6 +415,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
+    @pytest.mark.django_db
     def test_chaining_bulk_create_reduces_query_count(self):
         query_count = 3
         with self.assertNumQueries(query_count):
@@ -415,6 +432,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.LonelyPerson.objects.all().count() == 5
         assert models.Person.objects.all().count() == 5
 
+    @pytest.mark.django_db
     def test_bulk_create_multiple_fk(self):
         query_count = 6
         with self.assertNumQueries(query_count):
@@ -423,11 +441,13 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.PaymentBill.objects.all().count() == 5
         assert models.User.objects.all().count() == 5
 
+    @pytest.mark.django_db
     def test_create_many_to_many_if_flagged(self):
         store = baker.make(models.Store, make_m2m=True)
         assert store.employees.count() == 5
         assert store.customers.count() == 5
 
+    @pytest.mark.django_db
     def test_regression_many_to_many_field_is_accepted_as_kwargs(self):
         employees = baker.make(models.Person, _quantity=3)
         customers = baker.make(models.Person, _quantity=3)
@@ -438,6 +458,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert store.customers.count() == 3
         assert models.Person.objects.count() == 6
 
+    @pytest.mark.django_db
     def test_create_many_to_many_with_iter(self):
         students = baker.make(models.Person, _quantity=3)
         classrooms = baker.make(models.Classroom, _quantity=3, students=iter(students))
@@ -449,6 +470,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert classrooms[2].students.count() == 1
         assert classrooms[2].students.first() == students[2]
 
+    @pytest.mark.django_db
     def test_create_many_to_many_with_unsaved_iter(self):
         students = baker.prepare(models.Person, _quantity=3)
         classrooms = baker.make(models.Classroom, _quantity=3, students=iter(students))
@@ -464,6 +486,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert classrooms[2].students.count() == 1
         assert classrooms[2].students.first() == students[2]
 
+    @pytest.mark.django_db
     def test_create_many_to_many_with_through_and_iter(self):
         students = baker.make(models.Person, _quantity=3)
         schools = baker.make(
@@ -479,11 +502,13 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert schools[2].students.count() == 1
         assert schools[2].students.first() == students[2]
 
+    @pytest.mark.django_db
     def test_create_many_to_many_with_set_default_quantity(self):
         store = baker.make(models.Store, make_m2m=True)
         assert store.employees.count() == baker.MAX_MANY_QUANTITY
         assert store.customers.count() == baker.MAX_MANY_QUANTITY
 
+    @pytest.mark.django_db
     def test_create_many_to_many_with_through_option(self):
         # School student's attr is a m2m relationship with a model through
         school = baker.make(models.School, make_m2m=True)
@@ -492,19 +517,23 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.SchoolEnrollment.objects.count() == baker.MAX_MANY_QUANTITY
         assert models.Person.objects.count() == baker.MAX_MANY_QUANTITY
 
+    @pytest.mark.django_db
     def test_does_not_create_many_to_many_as_default(self):
         store = baker.make(models.Store)
         assert store.employees.count() == 0
         assert store.customers.count() == 0
 
+    @pytest.mark.django_db
     def test_does_not_create_nullable_many_to_many_for_relations(self):
         classroom = baker.make(models.Classroom, make_m2m=False)
         assert classroom.students.count() == 0
 
+    @pytest.mark.django_db
     def test_nullable_many_to_many_is_not_created_even_if_flagged(self):
         classroom = baker.make(models.Classroom, make_m2m=True)
         assert classroom.students.count() == 0
 
+    @pytest.mark.django_db
     def test_m2m_changed_signal_is_fired(self):
         # TODO: Use object attrs instead of mocks for Django 1.4 compat
         self.m2m_changed_fired = False
@@ -516,12 +545,14 @@ class TestBakerCreatesAssociatedModels(TestCase):
         baker.make(models.Store, make_m2m=True)
         assert self.m2m_changed_fired
 
+    @pytest.mark.django_db
     def test_simple_creating_person_with_parameters(self):
         kid = baker.make(models.Person, enjoy_jards_macale=True, age=10, name="Mike")
         assert kid.age == 10
         assert kid.enjoy_jards_macale is True
         assert kid.name == "Mike"
 
+    @pytest.mark.django_db
     def test_creating_person_from_factory_using_parameters(self):
         person_baker_ = baker.Baker(models.Person)
         person = person_baker_.make(
@@ -532,32 +563,39 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert person.name == "John"
         assert person.gender == "M"
 
+    @pytest.mark.django_db
     def test_ForeignKey_model_field_population(self):
         dog = baker.make(models.Dog, breed="X1", owner__name="Bob")
         assert dog.breed == "X1"
         assert dog.owner.name == "Bob"
 
+    @pytest.mark.django_db
     def test_ForeignKey_model_field_population_should_work_with_prepare(self):
         dog = baker.prepare(models.Dog, breed="X1", owner__name="Bob")
         assert dog.breed == "X1"
         assert dog.owner.name == "Bob"
 
+    @pytest.mark.django_db
     def test_ForeignKey_model_field_population_for_not_required_fk(self):
         user = baker.make(models.User, profile__email="a@b.com")
         assert user.profile.email == "a@b.com"
 
+    @pytest.mark.django_db
     def test_does_not_creates_null_ForeignKey(self):
         user = baker.make(models.User)
         assert not user.profile
 
+    @pytest.mark.django_db
     def test_passing_m2m_value(self):
         store = baker.make(models.Store, customers=[baker.make(models.Person)])
         assert store.customers.count() == 1
 
+    @pytest.mark.django_db
     def test_ensure_recursive_ForeignKey_population(self):
         bill = baker.make(models.PaymentBill, user__profile__email="a@b.com")
         assert bill.user.profile.email == "a@b.com"
 
+    @pytest.mark.django_db
     def test_field_lookup_for_m2m_relationship(self):
         store = baker.make(models.Store, suppliers__gender="M")
         suppliers = store.suppliers.all()
@@ -565,10 +603,12 @@ class TestBakerCreatesAssociatedModels(TestCase):
         for supplier in suppliers:
             assert supplier.gender == "M"
 
+    @pytest.mark.django_db
     def test_field_lookup_for_one_to_one_relationship(self):
         lonely_person = baker.make(models.LonelyPerson, only_friend__name="Bob")
         assert lonely_person.only_friend.name == "Bob"
 
+    @pytest.mark.django_db
     def test_allow_create_fk_related_model(self):
         try:
             person = baker.make(
@@ -579,6 +619,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
         assert person.dog_set.count() == 2
 
+    @pytest.mark.django_db
     def test_field_lookup_for_related_field(self):
         person = baker.make(
             models.Person,
@@ -592,6 +633,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert person.one_related.name == "Foo"
         assert person.fk_related.get().name == "Bar"
 
+    @pytest.mark.django_db
     def test_field_lookup_for_related_field_does_not_work_with_prepare(self):
         person = baker.prepare(
             models.Person,
@@ -602,6 +644,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert not person.pk
         assert models.RelatedNamesModel.objects.count() == 0
 
+    @pytest.mark.django_db
     def test_ensure_reverse_fk_for_many_to_one_is_working(self):
         """This is a regression test to make sure issue 291 is fixed."""
         fk1, fk2 = baker.prepare(
@@ -619,8 +662,8 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert related_2.name == "custom name"
 
 
-@pytest.mark.django_db
 class TestHandlingUnsupportedModels:
+    @pytest.mark.django_db
     def test_unsupported_model_raises_an_explanatory_exception(self):
         try:
             baker.make(models.UnsupportedModel)
@@ -633,8 +676,8 @@ class TestHandlingUnsupportedModels:
 @pytest.mark.skipif(
     not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
 )
-@pytest.mark.django_db
 class TestHandlingModelsWithGenericRelationFields:
+    @pytest.mark.django_db
     def test_create_model_with_generic_relation(self):
         dummy = baker.make(models.DummyGenericRelationModel)
         assert isinstance(dummy, models.DummyGenericRelationModel)
@@ -643,8 +686,8 @@ class TestHandlingModelsWithGenericRelationFields:
 @pytest.mark.skipif(
     not BAKER_CONTENTTYPES, reason="Django contenttypes framework is not installed"
 )
-@pytest.mark.django_db
 class TestHandlingContentTypeField:
+    @pytest.mark.django_db
     def test_create_model_with_contenttype_field(self):
         from django.contrib.contenttypes.models import ContentType
 
@@ -652,6 +695,7 @@ class TestHandlingContentTypeField:
         assert isinstance(dummy, models.DummyGenericForeignKeyModel)
         assert isinstance(dummy.content_type, ContentType)
 
+    @pytest.mark.django_db
     def test_create_model_with_contenttype_with_content_object(self):
         """Test creating model with contenttype field and populating that field by function."""
         from django.contrib.contenttypes.models import ContentType
@@ -666,6 +710,7 @@ class TestHandlingContentTypeField:
         assert isinstance(dummy.content_type, ContentType)
         assert isinstance(dummy.content_object, models.Person)
 
+    @pytest.mark.django_db
     def test_create_model_with_contenttype_field_and_proxy_model_respecting_generic_fK_config(
         self,
     ):
@@ -708,26 +753,28 @@ class TestHandlingContentTypeFieldNoQueries:
         assert isinstance(dummy.content_type, ContentType)
 
 
-@pytest.mark.django_db
 class TestSkipNullsTestCase:
+    @pytest.mark.django_db
     def test_skip_null(self):
         dummy = baker.make(models.DummyNullFieldsModel)
         assert dummy.null_foreign_key is None
         assert dummy.null_integer_field is None
 
 
-@pytest.mark.django_db
 class TestFillNullsTestCase:
+    @pytest.mark.django_db
     def test_create_nullable_many_to_many_if_flagged_and_fill_field_optional(self):
         classroom = baker.make(
             models.Classroom, make_m2m=True, _fill_optional=["students"]
         )
         assert classroom.students.count() == 5
 
+    @pytest.mark.django_db
     def test_create_nullable_many_to_many_if_flagged_and_fill_optional(self):
         classroom = baker.make(models.Classroom, make_m2m=True, _fill_optional=True)
         assert classroom.students.count() == 5
 
+    @pytest.mark.django_db
     def test_nullable_many_to_many_is_not_created_if_not_flagged_and_fill_optional(
         self,
     ):
@@ -825,13 +872,14 @@ class TestFillBlanksTestCase:
         assert dummy.default_unknown_class_field == 42
 
 
-@pytest.mark.django_db
 class TestFillAutoFieldsTestCase:
+    @pytest.mark.django_db
     def test_fill_autofields_with_provided_value(self):
         baker.make(models.DummyEmptyModel, id=237)
         saved_dummy = models.DummyEmptyModel.objects.get()
         assert saved_dummy.id == 237
 
+    @pytest.mark.django_db
     def test_keeps_prepare_autovalues(self):
         dummy = baker.prepare(models.DummyEmptyModel, id=543)
         assert dummy.id == 543
@@ -840,8 +888,8 @@ class TestFillAutoFieldsTestCase:
         assert saved_dummy.id == 543
 
 
-@pytest.mark.django_db
 class TestSkipDefaultsTestCase:
+    @pytest.mark.django_db
     def test_skip_fields_with_default(self):
         dummy = baker.make(models.DummyDefaultFieldsModel)
         assert dummy.default_char_field == "default"
@@ -859,8 +907,8 @@ class TestSkipDefaultsTestCase:
         assert isinstance(dummy.default_callable_datetime_field, datetime.datetime)
 
 
-@pytest.mark.django_db
 class TestBakerHandlesModelWithNext:
+    @pytest.mark.django_db
     def test_creates_instance_for_model_with_next(self):
         instance = baker.make(
             models.BaseModelForNext,
@@ -873,8 +921,8 @@ class TestBakerHandlesModelWithNext:
         assert instance.fk.next() == "foo"
 
 
-@pytest.mark.django_db
 class TestBakerHandlesModelWithList:
+    @pytest.mark.django_db
     def test_creates_instance_for_model_with_list(self):
         instance = baker.make(models.BaseModelForList, fk=["foo"])
 
@@ -882,8 +930,8 @@ class TestBakerHandlesModelWithList:
         assert instance.fk == ["foo"]
 
 
-@pytest.mark.django_db
 class TestBakerGeneratesIPAddresses:
+    @pytest.mark.django_db
     def test_create_model_with_valid_ips(self):
         form_data = {
             "ipv4_field": random_gen.gen_ipv4(),
@@ -1073,8 +1121,8 @@ class TestBakerSupportsMultiDatabase(TestCase):
         assert not models.Person.objects.exists()
 
 
-@pytest.mark.django_db
 class TestBakerAutomaticallyRefreshFromDB:
+    @pytest.mark.django_db
     def test_refresh_from_db_if_true(self):
         person = baker.make(
             models.Person, birthday="2017-02-01", _refresh_after_create=True
@@ -1082,6 +1130,7 @@ class TestBakerAutomaticallyRefreshFromDB:
 
         assert person.birthday == datetime.date(2017, 2, 1)
 
+    @pytest.mark.django_db
     def test_do_not_refresh_from_db_if_false(self):
         person = baker.make(
             models.Person, birthday="2017-02-01", _refresh_after_create=False
@@ -1090,6 +1139,7 @@ class TestBakerAutomaticallyRefreshFromDB:
         assert person.birthday == "2017-02-01"
         assert person.birthday != datetime.date(2017, 2, 1)
 
+    @pytest.mark.django_db
     def test_do_not_refresh_from_db_by_default(self):
         person = baker.make(models.Person, birthday="2017-02-01")
 
@@ -1097,8 +1147,8 @@ class TestBakerAutomaticallyRefreshFromDB:
         assert person.birthday != datetime.date(2017, 2, 1)
 
 
-@pytest.mark.django_db
 class TestBakerMakeCanFetchInstanceFromDefaultManager:
+    @pytest.mark.django_db
     def test_annotation_within_manager_get_queryset_are_run_on_make(self):
         """A custom model Manager can be used within make().
 
@@ -1121,8 +1171,8 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
         assert movie.title == movie.name
 
 
-@pytest.mark.django_db
 class TestCreateM2MWhenBulkCreate(TestCase):
+    @pytest.mark.django_db
     def test_create(self):
         person = baker.make(models.Person)
 
@@ -1133,6 +1183,7 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         c1, c2 = models.Classroom.objects.all()[:2]
         assert list(c1.students.all()) == list(c2.students.all()) == [person]
 
+    @pytest.mark.django_db
     def test_make_should_create_objects_using_reverse_name(self):
         classroom = baker.make(models.Classroom)
 
@@ -1150,7 +1201,7 @@ class TestCreateM2MWhenBulkCreate(TestCase):
 
 
 class TestBakerSeeded:
-    @pytest.fixture()
+    @pytest.fixture
     def reset_seed(self):
         old_state = random_gen.baker_random.getstate()
         yield

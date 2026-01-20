@@ -32,22 +32,23 @@ class SadPeopleBaker(baker.Baker):
     }
 
 
-@pytest.mark.django_db
 class TestSimpleExtendBaker:
+    @pytest.mark.django_db
     def test_list_generator_respects_values_from_list(self):
         experient_bakers_factory = ExperientBaker(Person)
         experient_baker = experient_bakers_factory.make()
         assert experient_baker.age in ExperientBaker.age_list
 
 
-@pytest.mark.django_db
 class TestLessSimpleExtendBaker:
+    @pytest.mark.django_db
     def test_nonexistent_required_field(self):
         gen_opposite.required = ["house"]
         sad_people_factory = SadPeopleBaker(Person)
         with pytest.raises(AttributeError):
             sad_people_factory.make()
 
+    @pytest.mark.django_db
     def test_string_to_generator_required(self):
         gen_opposite.required = ["default"]
         enjoy_jards_macale_field = Person._meta.get_field("enjoy_jards_macale")
@@ -57,11 +58,13 @@ class TestLessSimpleExtendBaker:
         assert person.enjoy_jards_macale is enjoy_jards_macale_field.default
         assert person.like_metal_music is like_metal_music_field.default
 
+    @pytest.mark.django_db
     def test_kwarg_used_over_attr_mapping_generator(self):
         sad_people_factory = SadPeopleBaker(Person)
         person = sad_people_factory.make(name="test")
         assert person.name == "test"
 
+    @pytest.mark.django_db
     @pytest.mark.parametrize("value", [18, 18.5, [], {}, True])
     def test_fail_pass_non_string_to_generator_required(self, value):
         teens_bakers_factory = TeenagerBaker(Person)

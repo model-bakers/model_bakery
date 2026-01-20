@@ -62,7 +62,7 @@ def person(db):
     return baker.make("generic.Person")
 
 
-@pytest.fixture()
+@pytest.fixture
 def custom_cfg():
     yield None
     if hasattr(settings, "BAKER_CUSTOM_FIELDS_GEN"):
@@ -209,22 +209,21 @@ class TestJSONFieldsFilling:
         assert isinstance(person.data, dict)
 
 
-@pytest.mark.django_db
 class TestFillingIntFields:
     def test_fill_IntegerField_with_a_random_number(self):
-        dummy_int_model = baker.make(models.DummyIntModel)
+        dummy_int_model = baker.prepare(models.DummyIntModel)
         int_field = models.DummyIntModel._meta.get_field("int_field")
         assert isinstance(int_field, fields.IntegerField)
         assert isinstance(dummy_int_model.int_field, int)
 
     def test_fill_BigIntegerField_with_a_random_number(self):
-        dummy_int_model = baker.make(models.DummyIntModel)
+        dummy_int_model = baker.prepare(models.DummyIntModel)
         big_int_field = models.DummyIntModel._meta.get_field("big_int_field")
         assert isinstance(big_int_field, fields.BigIntegerField)
         assert isinstance(dummy_int_model.big_int_field, int)
 
     def test_fill_SmallIntegerField_with_a_random_number(self):
-        dummy_int_model = baker.make(models.DummyIntModel)
+        dummy_int_model = baker.prepare(models.DummyIntModel)
         small_int_field = models.DummyIntModel._meta.get_field("small_int_field")
         assert isinstance(small_int_field, fields.SmallIntegerField)
         assert isinstance(dummy_int_model.small_int_field, int)
@@ -234,15 +233,14 @@ class TestFillingIntFields:
         reason="The db_default field attribute was added after 5.0",
     )
     def test_respects_db_default(self):
-        person = baker.make(models.Person, age=10)
+        person = baker.prepare(models.Person, age=10)
         assert person.age == 10
         assert person.retirement_age == 20
 
 
-@pytest.mark.django_db
 class TestFillingPositiveIntFields:
     def test_fill_PositiveSmallIntegerField_with_a_random_number(self):
-        dummy_positive_int_model = baker.make(models.DummyPositiveIntModel)
+        dummy_positive_int_model = baker.prepare(models.DummyPositiveIntModel)
         field = models.DummyPositiveIntModel._meta.get_field("positive_small_int_field")
         positive_small_int_field = field
         assert isinstance(positive_small_int_field, fields.PositiveSmallIntegerField)
@@ -250,7 +248,7 @@ class TestFillingPositiveIntFields:
         assert dummy_positive_int_model.positive_small_int_field > 0
 
     def test_fill_PositiveIntegerField_with_a_random_number(self):
-        dummy_positive_int_model = baker.make(models.DummyPositiveIntModel)
+        dummy_positive_int_model = baker.prepare(models.DummyPositiveIntModel)
         positive_int_field = models.DummyPositiveIntModel._meta.get_field(
             "positive_int_field"
         )
@@ -259,7 +257,7 @@ class TestFillingPositiveIntFields:
         assert dummy_positive_int_model.positive_int_field > 0
 
     def test_fill_PositiveBigIntegerField_with_a_random_number(self):
-        dummy_positive_int_model = baker.make(models.DummyPositiveIntModel)
+        dummy_positive_int_model = baker.prepare(models.DummyPositiveIntModel)
         positive_big_int_field = models.DummyPositiveIntModel._meta.get_field(
             "positive_big_int_field"
         )
@@ -297,10 +295,9 @@ class TestFillingEmailField:
         assert isinstance(person.email, str)
 
 
-@pytest.mark.django_db
 class TestFillingIPAddressField:
     def test_filling_IPAddressField(self):
-        obj = baker.make(models.DummyGenericIPAddressFieldModel)
+        obj = baker.prepare(models.DummyGenericIPAddressFieldModel)
         field = models.DummyGenericIPAddressFieldModel._meta.get_field("ipv4_field")
         assert isinstance(field, fields.GenericIPAddressField)
         assert isinstance(obj.ipv4_field, str)
@@ -448,14 +445,15 @@ class TestFillingGenericForeignKeyField:
         assert dummy.object_id is None
 
 
-@pytest.mark.django_db
 class TestFillingForeignKeyFieldWithDefaultFunctionReturningId:
+    @pytest.mark.django_db
     def test_filling_foreignkey_with_default_id(self):
         dummy = baker.make(models.RelatedNamesWithDefaultsModel)
         assert dummy.cake.__class__.objects.count() == 1
         assert dummy.cake.id == models.get_default_cake_id()
         assert dummy.cake.name == "Muffin"
 
+    @pytest.mark.django_db
     def test_filling_foreignkey_with_default_id_with_custom_arguments(self):
         dummy = baker.make(
             models.RelatedNamesWithDefaultsModel, cake__name="Baumkuchen"
@@ -465,12 +463,13 @@ class TestFillingForeignKeyFieldWithDefaultFunctionReturningId:
         assert dummy.cake.name == "Baumkuchen"
 
 
-@pytest.mark.django_db
 class TestFillingOptionalForeignKeyField:
+    @pytest.mark.django_db
     def test_not_filling_optional_foreignkey(self):
         dummy = baker.make(models.RelatedNamesWithEmptyDefaultsModel)
         assert dummy.cake is None
 
+    @pytest.mark.django_db
     def test_filling_optional_foreignkey_implicitly(self):
         dummy = baker.make(
             models.RelatedNamesWithEmptyDefaultsModel, cake__name="Carrot cake"
@@ -479,8 +478,8 @@ class TestFillingOptionalForeignKeyField:
         assert dummy.cake.name == "Carrot cake"
 
 
-@pytest.mark.django_db
 class TestsFillingFileField:
+    @pytest.mark.django_db
     def test_filling_file_field(self):
         dummy = baker.make(models.DummyFileFieldModel, _create_files=True)
         field = models.DummyFileFieldModel._meta.get_field("file_field")
@@ -493,12 +492,14 @@ class TestsFillingFileField:
         dummy.file_field.delete()
         dummy.delete()
 
+    @pytest.mark.django_db
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyFileFieldModel)
         with pytest.raises(ValueError):
             # Django raises ValueError if file does not exist
             assert dummy.file_field.path
 
+    @pytest.mark.django_db
     def test_filling_nested_file_fields(self):
         dummy = baker.make(models.NestedFileFieldModel, _create_files=True)
 
@@ -506,6 +507,7 @@ class TestsFillingFileField:
         dummy.attached_file.file_field.delete()
         dummy.delete()
 
+    @pytest.mark.django_db
     def test_does_not_fill_nested_file_fields_unflagged(self):
         dummy = baker.make(models.NestedFileFieldModel)
 
@@ -515,12 +517,11 @@ class TestsFillingFileField:
         dummy.delete()
 
 
-@pytest.mark.django_db
 class TestFillingCustomFields:
     def test_raises_unsupported_field_for_custom_field(self, custom_cfg):
         """Should raise an exception if a generator is not provided for a custom field."""
         with pytest.raises(TypeError):
-            baker.make(models.CustomFieldWithoutGeneratorModel)
+            baker.prepare(models.CustomFieldWithoutGeneratorModel)
 
     def test_uses_generator_defined_on_settings_for_custom_field(self, custom_cfg):
         """Should use the function defined in settings as a generator."""
@@ -528,7 +529,7 @@ class TestFillingCustomFields:
             "tests.generic.fields.CustomFieldWithGenerator": generators.gen_value_string
         }
         settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
-        obj = baker.make(models.CustomFieldWithGeneratorModel)
+        obj = baker.prepare(models.CustomFieldWithGeneratorModel)
         assert obj.custom_value == "value"
 
     def test_uses_generator_defined_as_string_on_settings_for_custom_field(
@@ -542,7 +543,7 @@ class TestFillingCustomFields:
         }
         # fmt: on
         settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
-        obj = baker.make(models.CustomFieldWithGeneratorModel)
+        obj = baker.prepare(models.CustomFieldWithGeneratorModel)
         assert obj.custom_value == "value"
 
     def test_uses_generator_defined_on_settings_for_custom_foreignkey(self, custom_cfg):
@@ -551,7 +552,7 @@ class TestFillingCustomFields:
             "tests.generic.fields.CustomForeignKey": "model_bakery.random_gen.gen_related"
         }
         settings.BAKER_CUSTOM_FIELDS_GEN = generator_dict
-        obj = baker.make(
+        obj = baker.prepare(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )
         assert obj.custom_fk.email == "a@b.com"
@@ -562,13 +563,13 @@ class TestFillingCustomFields:
             "tests.generic.fields.CustomFieldWithGenerator",
             "tests.generic.generators.gen_value_string",
         )
-        obj = baker.make(models.CustomFieldWithGeneratorModel)
+        obj = baker.prepare(models.CustomFieldWithGeneratorModel)
         assert obj.custom_value == "value"
 
     def test_uses_generator_function_for_custom_foreignkey(self, custom_cfg):
         """Should use the generator function passed as a value for the add method."""
         baker.generators.add("tests.generic.fields.CustomForeignKey", gen_related)
-        obj = baker.make(
+        obj = baker.prepare(
             models.CustomForeignKeyWithGeneratorModel, custom_fk__email="a@b.com"
         )
         assert obj.custom_fk.email == "a@b.com"
@@ -579,17 +580,17 @@ class TestFillingCustomFields:
 
         baker.generators.add("django.db.models.fields.CharField", gen_char)
 
-        person = baker.make(models.Person)
+        person = baker.prepare(models.Person)
 
         assert person.name == "Some value"
 
     def test_ensure_adding_generators_via_settings_works(self):
-        obj = baker.make(models.CustomFieldViaSettingsModel)
+        obj = baker.prepare(models.CustomFieldViaSettingsModel)
         assert obj.custom_value == "always the same text"
 
 
-@pytest.mark.django_db
 class TestFillingAutoFields:
+    @pytest.mark.django_db
     def test_filling_AutoField(self):
         obj = baker.make(models.DummyEmptyModel)
         field = models.DummyEmptyModel._meta.get_field("id")
@@ -597,9 +598,9 @@ class TestFillingAutoFields:
         assert isinstance(obj.id, int)
 
 
-@pytest.mark.django_db
 @pytest.mark.skipif(not models.has_pil, reason="PIL is required to test ImageField")
 class TestFillingImageFileField:
+    @pytest.mark.django_db
     def test_filling_image_file_field(self):
         dummy = baker.make(models.DummyImageFieldModel, _create_files=True)
         field = models.DummyImageFieldModel._meta.get_field("image_field")
@@ -614,6 +615,7 @@ class TestFillingImageFileField:
         assert dummy.image_field.height
         dummy.image_field.delete()
 
+    @pytest.mark.django_db
     def test_does_not_create_file_if_not_flagged(self):
         dummy = baker.make(models.DummyImageFieldModel)
         with pytest.raises(ValueError):

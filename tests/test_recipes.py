@@ -58,8 +58,8 @@ def test_import_recipes():
     )
 
 
-@pytest.mark.django_db
 class TestDefiningRecipes:
+    @pytest.mark.django_db
     def test_flat_model_make_recipe_with_the_correct_attributes(self):
         """Test a 'flat model' - without associations, like FK, M2M and O2O."""
         person = person_recipe.make()
@@ -89,11 +89,13 @@ class TestDefiningRecipes:
         assert person.data == recipe_attrs["data"]
         assert person.id is None
 
+    @pytest.mark.django_db
     def test_accepts_callable(self):
         r = Recipe(DummyBlankFieldsModel, blank_char_field=lambda: "callable!!")
         value = r.make().blank_char_field
         assert value == "callable!!"
 
+    @pytest.mark.django_db
     def test_always_calls_when_creating(self):
         with patch("tests.test_recipes.choice") as choice_mock:
             choice_mock.return_value = "foo"
@@ -103,6 +105,7 @@ class TestDefiningRecipes:
             assert r.make().blank_char_field
             assert choice_mock.call_count == 2
 
+    @pytest.mark.django_db
     def test_always_calls_with_quantity(self):
         with patch("tests.test_recipes.choice") as choice_mock:
             choice_mock.return_value = "foo"
@@ -111,6 +114,7 @@ class TestDefiningRecipes:
             r.make(_quantity=3)
             assert choice_mock.call_count == 3
 
+    @pytest.mark.django_db
     def test_make_recipes_with_args(self):
         """Overriding some fields values at recipe execution."""
         person = person_recipe.make(name="Guido", age=56)
@@ -145,6 +149,7 @@ class TestDefiningRecipes:
         assert person.days_since_last_login == recipe_attrs["days_since_last_login"]
         assert person.id is None
 
+    @pytest.mark.django_db
     def test_make_recipe_without_all_model_needed_data(self):
         person_recipe = Recipe(Person, name="John Doe")
         person = person_recipe.make()
@@ -171,6 +176,7 @@ class TestDefiningRecipes:
         assert person.days_since_last_login
         assert not person.id
 
+    @pytest.mark.django_db
     def test_defining_recipes_str(self):
         p = Recipe("generic.Person", name=seq("foo"))
         try:
@@ -178,6 +184,7 @@ class TestDefiningRecipes:
         except AttributeError as e:
             pytest.fail(f"{e}")
 
+    @pytest.mark.django_db
     def test_recipe_dict_attribute_isolation(self):
         person1 = person_recipe.make()
         person2 = person_recipe.make()
@@ -193,6 +200,7 @@ class TestDefiningRecipes:
     @pytest.mark.skipif(
         connection.vendor != "postgresql", reason="PostgreSQL specific tests"
     )
+    @pytest.mark.django_db
     def test_recipe_list_attribute_isolation(self):
         pg_person_recipe = person_recipe.extend(acquaintances=[1, 2, 3])
         person1 = pg_person_recipe.make()
@@ -207,10 +215,10 @@ class TestDefiningRecipes:
         assert person3.acquaintances == [1, 2, 3]
 
 
-@pytest.mark.django_db
 class TestExecutingRecipes:
     """Tests for calling recipes defined in baker_recipes.py."""
 
+    @pytest.mark.django_db
     def test_model_with_foreign_key(self):
         dog = baker.make_recipe("tests.generic.dog")
         assert dog.breed == "Pug"
@@ -233,6 +241,7 @@ class TestExecutingRecipes:
             assert dog.breed == "Pug"
             assert dog.owner == owner
 
+    @pytest.mark.django_db
     def test_model_with_foreign_key_as_str(self):
         dog = baker.make_recipe("tests.generic.other_dog")
         assert dog.breed == "Basset"
@@ -244,6 +253,7 @@ class TestExecutingRecipes:
         assert isinstance(dog.owner, Person)
         assert dog.owner.id is None
 
+    @pytest.mark.django_db
     def test_model_with_foreign_key_as_unicode(self):
         dog = baker.make_recipe("tests.generic.other_dog_unicode")
         assert dog.breed == "Basset"
@@ -255,11 +265,13 @@ class TestExecutingRecipes:
         assert isinstance(dog.owner, Person)
         assert dog.owner.id is None
 
+    @pytest.mark.django_db
     def test_make_recipe(self):
         person = baker.make_recipe("tests.generic.person")
         assert isinstance(person, Person)
         assert person.id
 
+    @pytest.mark.django_db
     def test_make_recipe_with_quantity_parameter(self):
         people = baker.make_recipe("tests.generic.person", _quantity=3)
         assert len(people) == 3
@@ -267,6 +279,7 @@ class TestExecutingRecipes:
             assert isinstance(person, Person)
             assert person.id
 
+    @pytest.mark.django_db
     def test_make_extended_recipe(self):
         extended_dog = baker.make_recipe("tests.generic.extended_dog")
         assert extended_dog.breed == "Super basset"
@@ -274,9 +287,11 @@ class TestExecutingRecipes:
         base_dog = baker.make_recipe("tests.generic.dog")
         assert base_dog.breed == "Pug"
 
+    @pytest.mark.django_db
     def test_extended_recipe_type(self):
         assert isinstance(pug, SmallDogRecipe)
 
+    @pytest.mark.django_db
     def test_save_related_instances_on_prepare_recipe(self):
         dog = baker.prepare_recipe("tests.generic.homeless_dog")
         assert not dog.id
@@ -286,6 +301,7 @@ class TestExecutingRecipes:
         assert not dog.id
         assert dog.owner.id
 
+    @pytest.mark.django_db
     def test_make_recipe_with_quantity_parameter_respecting_model_args(self):
         people = baker.make_recipe(
             "tests.generic.person", _quantity=3, name="Dennis Ritchie", age=70
@@ -339,6 +355,7 @@ class TestExecutingRecipes:
         assert isinstance(person, Person)
         assert not person.id
 
+    @pytest.mark.django_db
     def test_make_recipe_with_args(self):
         person = baker.make_recipe(
             "tests.generic.person", name="Dennis Ritchie", age=70
@@ -358,6 +375,7 @@ class TestExecutingRecipes:
         person = baker.prepare_recipe(recipe_name)
         assert person.name == "John Deeper"
 
+    @pytest.mark.django_db
     def test_pass_save_kwargs(self):
         owner = baker.make(Person)
 
@@ -366,10 +384,12 @@ class TestExecutingRecipes:
         )
         assert owner == dog.owner
 
+    @pytest.mark.django_db
     def test_pass_save_kwargs_in_recipe_definition(self):
         dog = baker.make_recipe("tests.generic.with_save_kwargs")
         assert dog.breed == "updated_breed"
 
+    @pytest.mark.django_db
     def test_ip_fields_with_start(self):
         first, second = baker.make_recipe("tests.generic.ip_fields", _quantity=2)
 
@@ -379,7 +399,6 @@ class TestExecutingRecipes:
         assert second.ipv6_field == "2001:12f8:0:28::6"
 
 
-@pytest.mark.django_db
 class TestForeignKey:
     def test_foreign_key_method_returns_a_recipe_foreign_key_object(self):
         number_recipe = Recipe(DummyNumbersModel, float_field=1.6)
@@ -392,6 +411,7 @@ class TestForeignKey:
         exception = c.value
         assert str(exception) == "Not a recipe"
 
+    @pytest.mark.django_db
     def test_load_from_other_module_recipe(self):
         dog = Recipe(Dog, owner=foreign_key("tests.generic.person")).make()
         assert dog.owner.name == "John Doe"
@@ -404,6 +424,7 @@ class TestForeignKey:
         with pytest.raises(TypeError):
             RecipeForeignKey("foo")
 
+    @pytest.mark.django_db
     def test_do_not_create_related_model(self):
         """It should not create another object when passing the object as argument."""
         person = baker.make_recipe("tests.generic.person")
@@ -413,6 +434,7 @@ class TestForeignKey:
         baker.prepare_recipe("tests.generic.dog", owner=person)
         assert Person.objects.count() == 1
 
+    @pytest.mark.django_db
     def test_do_query_lookup_for_recipes_make_method(self):
         """It should not create another object when using query lookup syntax."""
         dog = baker.make_recipe("tests.generic.dog", owner__name="James")
@@ -424,6 +446,7 @@ class TestForeignKey:
         dog = baker.prepare_recipe("tests.generic.dog", owner__name="James")
         assert dog.owner.name == "James"
 
+    @pytest.mark.django_db
     def test_do_query_lookup_empty_recipes(self):
         """It should not create another object when using query lookup syntax."""
         dog_recipe = Recipe(Dog)
@@ -435,12 +458,14 @@ class TestForeignKey:
         assert Person.objects.count() == 1
         assert dog.owner.name == "Zezin"
 
+    @pytest.mark.django_db
     def test_related_models_recipes(self):
         lady = baker.make_recipe("tests.generic.dog_lady")
         assert lady.dog_set.count() == 2
         assert lady.dog_set.all()[0].breed == "Pug"
         assert lady.dog_set.all()[1].breed == "Basset"
 
+    @pytest.mark.django_db
     def test_related_fk_does_not_create_duplicate_parent(self):
         """Regression test for issue #397.
 
@@ -455,27 +480,31 @@ class TestForeignKey:
         for dog in lady.dog_set.all():
             assert dog.owner == lady
 
+    @pytest.mark.django_db
     def test_related_models_recipes_make_mutiple(self):
         ladies = baker.make_recipe("tests.generic.dog_lady", _quantity=2)
         assert ladies[0].dog_set.count() == 2
         assert ladies[1].dog_set.count() == 2
 
+    @pytest.mark.django_db
     def test_nullable_related(self):
         nullable = baker.make_recipe("tests.generic.nullable_related")
         assert nullable.dummynullfieldsmodel_set.count() == 1
 
+    @pytest.mark.django_db
     def test_chained_related(self):
         movie = baker.make_recipe("tests.generic.movie_with_cast")
         assert movie.cast_members.count() == 2
 
+    @pytest.mark.django_db
     def test_one_to_one_relationship(self):
         lonely_people = baker.make_recipe("tests.generic.lonely_person", _quantity=2)
         friend_ids = {x.only_friend.id for x in lonely_people}
         assert len(friend_ids) == 2
 
 
-@pytest.mark.django_db
 class TestM2MField:
+    @pytest.mark.django_db
     def test_create_many_to_many(self):
         dog = baker.make_recipe("tests.generic.dog_with_friends")
         assert len(dog.friends_with.all()) == 2
@@ -483,6 +512,7 @@ class TestM2MField:
             assert friend.breed == "Pug"
             assert friend.owner.name == "John Doe"
 
+    @pytest.mark.django_db
     def test_create_nested(self):
         dog = baker.make_recipe("tests.generic.dog_with_more_friends")
         assert len(dog.friends_with.all()) == 1
@@ -490,8 +520,8 @@ class TestM2MField:
         assert len(friend.friends_with.all()) == 2
 
 
-@pytest.mark.django_db
 class TestSequences:
+    @pytest.mark.django_db
     def test_increment_for_strings(self):
         person = baker.make_recipe("tests.generic.serial_person")
         assert person.name == "joe1"
@@ -500,6 +530,7 @@ class TestSequences:
         person = baker.make_recipe("tests.generic.serial_person")
         assert person.name == "joe3"
 
+    @pytest.mark.django_db
     def test_increment_for_strings_with_suffix(self):
         fred_person = person_recipe.extend(email=seq("fred", suffix="@example.com"))
         person = fred_person.make()
@@ -509,6 +540,7 @@ class TestSequences:
         person = fred_person.make()
         assert person.email == "fred3@example.com"
 
+    @pytest.mark.django_db
     def test_increment_for_fks(self):
         profiles = baker.make(Profile, _quantity=3)
         start_id = profiles[0].id
@@ -518,6 +550,7 @@ class TestSequences:
         user = seq_user.make()
         assert user.profile_id == start_id + 2
 
+    @pytest.mark.django_db
     def test_increment_for_one_to_one(self):
         people = baker.make(Person, _quantity=3)
         start_id = people[0].id
@@ -527,12 +560,14 @@ class TestSequences:
         user = seq_lonely_person.make()
         assert user.only_friend_id == start_id + 2
 
+    @pytest.mark.django_db
     def test_increment_for_strings_with_bad_suffix(self):
         bob_person = person_recipe.extend(email=seq("bob", suffix=42))
         with pytest.raises(TypeError) as exc:
             bob_person.make()
             assert str(exc.value) == "Sequences suffix can only be a string"
 
+    @pytest.mark.django_db
     def test_increment_for_strings_with_suffix_and_start(self):
         fred_person = person_recipe.extend(
             email=seq("fred", start=5, suffix="@example.com")
@@ -544,6 +579,7 @@ class TestSequences:
         person = fred_person.make()
         assert person.email == "fred7@example.com"
 
+    @pytest.mark.django_db
     def test_increment_for_numbers(self):
         dummy = baker.make_recipe("tests.generic.serial_numbers")
         assert dummy.default_int_field == 11
@@ -558,6 +594,7 @@ class TestSequences:
         assert dummy.default_decimal_field == Decimal("23.1")
         assert dummy.default_float_field == 4.23
 
+    @pytest.mark.django_db
     def test_increment_for_numbers_2(self):
         """Repeated test to ensure Sequences atomicity."""
         dummy = baker.make_recipe("tests.generic.serial_numbers")
@@ -573,6 +610,7 @@ class TestSequences:
         assert dummy.default_decimal_field == Decimal("23.1")
         assert dummy.default_float_field == 4.23
 
+    @pytest.mark.django_db
     def test_increment_for_numbers_with_suffix(self):
         with pytest.raises(TypeError) as exc:
             baker.make_recipe(
@@ -584,17 +622,20 @@ class TestSequences:
                 == "Sequences with suffix can only be used with text values"
             )
 
+    @pytest.mark.django_db
     def test_creates_unique_field_recipe_using_for_iterator(self):
         for i in range(1, 4):
             dummy = baker.make_recipe("tests.generic.dummy_unique_field")
             assert dummy.value == 10 + i
 
+    @pytest.mark.django_db
     def test_creates_unique_field_recipe_using_quantity_argument(self):
         dummies = baker.make_recipe("tests.generic.dummy_unique_field", _quantity=3)
         assert dummies[0].value == 11
         assert dummies[1].value == 12
         assert dummies[2].value == 13
 
+    @pytest.mark.django_db
     def test_increment_by_3(self):
         dummy = baker.make_recipe("tests.generic.serial_numbers_by")
         assert dummy.default_int_field == 13
@@ -609,6 +650,7 @@ class TestSequences:
         assert dummy.default_decimal_field == Decimal("27.3")
         assert dummy.default_float_field == pytest.approx(6.63)
 
+    @pytest.mark.django_db
     def test_increment_by_timedelta(self):
         dummy = baker.make_recipe("tests.generic.serial_datetime")
         assert dummy.default_date_field == (TEST_TIME.date() + timedelta(days=1))
@@ -619,6 +661,7 @@ class TestSequences:
         assert dummy.default_date_time_field == tz_aware(TEST_TIME + timedelta(hours=6))
         assert dummy.default_time_field == (TEST_TIME + timedelta(seconds=30)).time()
 
+    @pytest.mark.django_db
     def test_increment_by_timedelta_seq_combined_with_quantity(self):
         quantity = 5
         entries = baker.make_recipe("tests.generic.serial_datetime", _quantity=quantity)
@@ -635,12 +678,14 @@ class TestSequences:
                 == (TEST_TIME + timedelta(seconds=15 * index)).time()
             )
 
+    @pytest.mark.django_db
     def test_creates_unique_timedelta_recipe_using_quantity_argument(self):
         dummies = baker.make_recipe("tests.generic.serial_datetime", _quantity=3)
         assert dummies[0].default_date_field == TEST_TIME.date() + timedelta(days=1)
         assert dummies[1].default_date_field == TEST_TIME.date() + timedelta(days=2)
         assert dummies[2].default_date_field == TEST_TIME.date() + timedelta(days=3)
 
+    @pytest.mark.django_db
     def test_increment_after_override_definition_field(self):
         person = baker.make_recipe("tests.generic.serial_person", name="tom")
         assert person.name == "tom"
@@ -650,20 +695,22 @@ class TestSequences:
         assert person.name == "joe5"
 
 
-@pytest.mark.django_db
 class TestIterators:
+    @pytest.mark.django_db
     def test_accepts_generators(self):
         r = Recipe(DummyBlankFieldsModel, blank_char_field=itertools.cycle(["a", "b"]))
         assert r.make().blank_char_field == "a"
         assert r.make().blank_char_field == "b"
         assert r.make().blank_char_field == "a"
 
+    @pytest.mark.django_db
     def test_accepts_iterators(self):
         r = Recipe(DummyBlankFieldsModel, blank_char_field=iter(["a", "b", "c"]))
         assert r.make().blank_char_field == "a"
         assert r.make().blank_char_field == "b"
         assert r.make().blank_char_field == "c"
 
+    @pytest.mark.django_db
     def test_empty_iterator_exception(self):
         r = Recipe(DummyBlankFieldsModel, blank_char_field=iter(["a", "b"]))
         assert r.make().blank_char_field == "a"
@@ -671,6 +718,7 @@ class TestIterators:
         with pytest.raises(RecipeIteratorEmpty):
             r.make()
 
+    @pytest.mark.django_db
     def test_only_iterators_not_iteratables_are_iterated(self):
         """Ensure we only iterate explicit iterators.
 
