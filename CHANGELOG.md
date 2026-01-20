@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Removed
+- [dev] Drop JSONField workarounds from tests
 
 ## [1.23.0](https://pypi.org/project/model-bakery/1.23.0/)
 
