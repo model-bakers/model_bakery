@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- [dev] Clean up stale TODO and fix signal handler leak in m2m test
 
 ### Removed
 

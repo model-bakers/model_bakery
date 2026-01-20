@@ -535,15 +535,17 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     @pytest.mark.django_db
     def test_m2m_changed_signal_is_fired(self):
-        # TODO: Use object attrs instead of mocks for Django 1.4 compat
-        self.m2m_changed_fired = False
+        signal_fired = []
 
-        def test_m2m_changed(*args, **kwargs):
-            self.m2m_changed_fired = True
+        def on_m2m_changed(*args, **kwargs):
+            signal_fired.append(True)
 
-        m2m_changed.connect(test_m2m_changed, dispatch_uid="test_m2m_changed")
-        baker.make(models.Store, make_m2m=True)
-        assert self.m2m_changed_fired
+        m2m_changed.connect(on_m2m_changed, dispatch_uid="test_m2m_changed")
+        try:
+            baker.make(models.Store, make_m2m=True)
+            assert signal_fired
+        finally:
+            m2m_changed.disconnect(on_m2m_changed, dispatch_uid="test_m2m_changed")
 
     @pytest.mark.django_db
     def test_simple_creating_person_with_parameters(self):
