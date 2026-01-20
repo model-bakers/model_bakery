@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [dev] Clean up stale TODO and fix signal handler leak in m2m test
 
 ### Removed
+- [dev] Drop JSONField workarounds from tests
 
 ## [1.23.0](https://pypi.org/project/model-bakery/1.23.0/)
 

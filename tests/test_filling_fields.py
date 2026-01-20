@@ -12,7 +12,7 @@ from django.core.validators import (
     validate_ipv46_address,
 )
 from django.db import connection
-from django.db.models import FileField, ImageField, fields
+from django.db.models import FileField, ImageField, JSONField, fields
 
 import pytest
 
@@ -23,18 +23,12 @@ from model_bakery.random_gen import MAX_LENGTH, gen_from_choices, gen_related
 from tests.generic import generators, models
 
 try:
-    from django.db.models import JSONField
-except ImportError:
-    JSONField = None
-
-try:
     from django.contrib.postgres.fields import (
         ArrayField,
         CICharField,
         CIEmailField,
         CITextField,
         HStoreField,
-        JSONField as PostgresJSONField,
     )
     from django.contrib.postgres.fields.ranges import (
         BigIntegerRangeField,
@@ -45,7 +39,6 @@ try:
     )
 except ImportError:
     ArrayField = None
-    PostgresJSONField = None
     HStoreField = None
     CICharField = None
     CIEmailField = None
@@ -201,7 +194,6 @@ class TestUUIDFieldsFilling:
         assert isinstance(person.uuid, uuid.UUID)
 
 
-@pytest.mark.skipif(JSONField is None, reason="JSONField could not be imported")
 class TestJSONFieldsFilling:
     def test_fill_JSONField_with_uuid_object(self, person):
         json_field = models.Person._meta.get_field("data")
