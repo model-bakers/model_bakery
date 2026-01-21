@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Allow `_bulk_create=True` without `_quantity` ([#462](https://github.com/model-bakers/model_bakery/issues/462))
 
 ### Removed
 
