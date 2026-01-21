@@ -183,6 +183,19 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert models.NonStandardManager.manager.count() == 3
 
     @pytest.mark.django_db
+    def test_make_bulk_create_without_quantity(self):
+        """Issue #462: _bulk_create=True without _quantity should use bulk_create."""
+        with patch.object(
+            models.Person._base_manager,
+            "bulk_create",
+            wraps=models.Person._base_manager.bulk_create,
+        ) as mock_bulk:
+            person = baker.make(models.Person, _bulk_create=True)
+        mock_bulk.assert_called_once()
+        assert isinstance(person, models.Person)
+        assert person.pk is not None
+
+    @pytest.mark.django_db
     def test_make_raises_correct_exception_if_invalid_quantity(self):
         with pytest.raises(InvalidQuantityException):
             baker.make(_model=models.Person, _quantity="hi")

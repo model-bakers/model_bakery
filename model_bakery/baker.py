@@ -135,8 +135,9 @@ def make(
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
-    if _quantity and _bulk_create:
-        return bulk_create(baker, _quantity, _save_kwargs=_save_kwargs, **attrs)
+    if _bulk_create:
+        result = bulk_create(baker, _quantity or 1, _save_kwargs=_save_kwargs, **attrs)
+        return result if _quantity else result[0]
     elif _quantity:
         return [
             baker.make(
