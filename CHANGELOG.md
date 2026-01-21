@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix `_bulk_create` for ManyToManyField using custom `through` models ([#477](https://github.com/model-bakers/model_bakery/issues/477))
 - [dev] Clean up stale TODO and fix signal handler leak in m2m test
 
 ### Removed

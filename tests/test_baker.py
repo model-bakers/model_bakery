@@ -459,6 +459,31 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.Person.objects.count() == 6
 
     @pytest.mark.django_db
+    def test_bulk_create_with_m2m(self):
+        """Regression test for issue #477."""
+        employees = baker.make(models.Person, _quantity=3)
+        stores = baker.make(
+            models.Store, employees=employees, _quantity=2, _bulk_create=True
+        )
+
+        assert models.Store.objects.count() == 2
+        assert stores[0].employees.count() == 3
+        assert stores[1].employees.count() == 3
+
+    @pytest.mark.django_db
+    def test_bulk_create_with_m2m_through_model(self):
+        """Regression test for issue #477 - custom through model."""
+        students = baker.make(models.Person, _quantity=3)
+        schools = baker.make(
+            models.School, students=students, _quantity=2, _bulk_create=True
+        )
+
+        assert models.School.objects.count() == 2
+        assert schools[0].students.count() == 3
+        assert schools[1].students.count() == 3
+        assert models.SchoolEnrollment.objects.count() == 6
+
+    @pytest.mark.django_db
     def test_create_many_to_many_with_iter(self):
         students = baker.make(models.Person, _quantity=3)
         classrooms = baker.make(models.Classroom, _quantity=3, students=iter(students))

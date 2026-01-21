@@ -940,8 +940,8 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
                     [
                         through_model(
                             **{
-                                field.remote_field.name: entry,
-                                field.related_model._meta.model_name: obj,
+                                field.m2m_field_name(): entry,
+                                field.m2m_reverse_field_name(): obj,
                             }
                         )
                         for obj in kwargs[field.name]
