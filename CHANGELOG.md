@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Allow `_bulk_create=True` without `_quantity` ([#462](https://github.com/model-bakers/model_bakery/issues/462))
 
 ### Removed
+
+## [1.23.2](https://pypi.org/project/model-bakery/1.23.2/)
+
+### Changed
+- Fix `_bulk_create=True` to use bulk_create even without `_quantity` ([#462](https://github.com/model-bakers/model_bakery/issues/462))
 
 ## [1.23.1](https://pypi.org/project/model-bakery/1.23.1/)
 
