@@ -18,7 +18,7 @@ jobs:
         lint-command:
           - ruff check --output-format=github .
           - black --check --diff .
-          - mypy model_bakery
+          - ty check model_bakery
     steps:
       - uses: actions/checkout@v6
       - name: Install uv

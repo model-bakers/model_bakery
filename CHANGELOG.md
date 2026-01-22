@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- [dev] Replace mypy with ty as the primary type checker with stricter type checks
 
 ### Removed
 

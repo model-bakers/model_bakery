@@ -719,7 +719,7 @@ class Baker(Generic[M]):
                         m2m_relation.source_field_name: instance,
                         m2m_relation.target_field_name: value,
                     }
-                    make(
+                    make(  # ty: ignore[no-matching-overload]
                         cast(type[Model], through_model),
                         _using=self._using,
                         **base_kwargs,
