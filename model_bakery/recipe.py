@@ -5,11 +5,8 @@ from typing import (
     Any,
     Generic,
     TypeVar,
-    cast,
     overload,
 )
-
-from django.db.models import Model
 
 from . import baker
 from ._types import M
@@ -178,19 +175,19 @@ class Recipe(Generic[M]):
         return type(self)(self._model, **attr_mapping)
 
 
-def _load_recipe_from_calling_module(recipe: str) -> Recipe[Model]:
+def _load_recipe_from_calling_module(recipe_name: str) -> Recipe[Any]:
     """Load `Recipe` from the string attribute given from the calling module.
 
     Args:
-        recipe (str): the name of the recipe attribute within the module from
+        recipe_name (str): the name of the recipe attribute within the module from
             which it should be loaded
 
     Returns:
         (Recipe): recipe resolved from calling module
     """
-    recipe = getattr(get_calling_module(2), recipe)
+    recipe = getattr(get_calling_module(2), recipe_name)
     if recipe:
-        return cast(Recipe[Model], recipe)
+        return recipe
     else:
         raise RecipeNotFound
 
@@ -217,16 +214,19 @@ def foreign_key(
     This resolves recipes supplied as strings from other module paths or from
     the calling code's module.
     """
+    resolved_recipe: Recipe[M]
     if isinstance(recipe, str):
         # Load `Recipe` from string before handing off to `RecipeForeignKey`
         try:
             # Try to load from another module
-            recipe = baker._recipe(recipe)
+            resolved_recipe = baker._recipe(recipe)
         except (AttributeError, ImportError, ValueError):
             # Probably not in another module, so load it from calling module
-            recipe = _load_recipe_from_calling_module(cast(str, recipe))
+            resolved_recipe = _load_recipe_from_calling_module(recipe)
+    else:
+        resolved_recipe = recipe
 
-    return RecipeForeignKey(cast(Recipe[M], recipe), one_to_one)
+    return RecipeForeignKey(resolved_recipe, one_to_one)
 
 
 class related(Generic[M]):  # FIXME

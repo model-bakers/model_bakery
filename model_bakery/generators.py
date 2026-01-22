@@ -43,13 +43,13 @@ try:
     # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
-    ArrayField = None
+    ArrayField = None  # type: ignore[misc,assignment]
 
 try:
     # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import HStoreField
 except ImportError:
-    HStoreField = None
+    HStoreField = None  # type: ignore[misc,assignment]
 
 try:
     # PostgreSQL-specific fields (only available when psycopg is installed)
@@ -59,9 +59,9 @@ try:
         CITextField,
     )
 except ImportError:
-    CICharField = None
-    CIEmailField = None
-    CITextField = None
+    CICharField = None  # type: ignore[misc,assignment]
+    CIEmailField = None  # type: ignore[misc,assignment]
+    CITextField = None  # type: ignore[misc,assignment]
 
 
 try:
@@ -74,11 +74,11 @@ try:
         IntegerRangeField,
     )
 except ImportError:
-    BigIntegerRangeField = None
-    DateRangeField = None
-    DateTimeRangeField = None
-    DecimalRangeField = None
-    IntegerRangeField = None
+    BigIntegerRangeField = None  # type: ignore[misc,assignment]
+    DateRangeField = None  # type: ignore[misc,assignment]
+    DateTimeRangeField = None  # type: ignore[misc,assignment]
+    DecimalRangeField = None  # type: ignore[misc,assignment]
+    IntegerRangeField = None  # type: ignore[misc,assignment]
 
 
 default_mapping = {

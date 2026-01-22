@@ -12,6 +12,6 @@ release:
 lint:
 	@black .
 	@ruff check .
-	@mypy model_bakery
+	@ty check model_bakery
 
 .PHONY: help test release lint

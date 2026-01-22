@@ -59,7 +59,7 @@ dev = [
     "pytest-django",
     "black",
     "ruff",
-    "mypy",
+    "ty",
 ]
 
 [project.urls]
@@ -84,9 +84,14 @@ source = [
 [tool.coverage.report]
 show_missing = true
 
-[tool.mypy]
-ignore_missing_imports = true
-disallow_untyped_calls = true
+[tool.ty.rules]
+# Django dynamic attributes (.objects, ._meta, etc.)
+# TODO: remove these two ignores when ty adds better Django support
+#  https://github.com/astral-sh/ty/issues/1018
+unresolved-attribute = "ignore"
+possibly-missing-attribute = "ignore"
+# Allow `# type: ignore` comments (mypy syntax) without warnings
+unused-ignore-comment = "ignore"
 
 [tool.pytest.ini_options]
 addopts = "--tb=short -rxs --nomigrations"

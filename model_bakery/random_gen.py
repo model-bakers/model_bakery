@@ -515,7 +515,7 @@ def gen_pg_numbers_range(number_cast: Callable[[int], Any]) -> Callable:
 
     def gen_range():
         try:
-            from psycopg.types.range import Range
+            from psycopg.types.range import Range  # ty: ignore[unresolved-import]
         except ImportError:
             from psycopg2._range import NumericRange as Range
 
@@ -533,7 +533,7 @@ def gen_date_range():
     to avoid empty ranges in tests.
     """
     try:
-        from psycopg.types.range import DateRange
+        from psycopg.types.range import DateRange  # ty: ignore[unresolved-import]
     except ImportError:
         from psycopg2.extras import DateRange
 
@@ -551,7 +551,9 @@ def gen_datetime_range():
     to avoid empty ranges in tests.
     """
     try:
-        from psycopg.types.range import TimestamptzRange
+        from psycopg.types.range import (
+            TimestamptzRange,
+        )  # ty: ignore[unresolved-import]
     except ImportError:
         from psycopg2.extras import DateTimeTZRange as TimestamptzRange
 
