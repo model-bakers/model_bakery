@@ -377,7 +377,7 @@ class Baker(Generic[M]):
         if isinstance(_model, str):
             self.model = cast(type[M], self.finder.get_model(_model))
         else:
-            self.model = cast(type[M], _model)
+            self.model = _model
 
         self.init_type_mapping()
 
@@ -719,7 +719,11 @@ class Baker(Generic[M]):
                         m2m_relation.source_field_name: instance,
                         m2m_relation.target_field_name: value,
                     }
-                    make(through_model, _using=self._using, **base_kwargs)
+                    make(
+                        cast(type[Model], through_model),
+                        _using=self._using,
+                        **base_kwargs,
+                    )
 
     def _handle_generic_foreign_keys(
         self, instance: Model, attrs: dict[str, Any], commit: bool = True
@@ -772,7 +776,7 @@ class Baker(Generic[M]):
     def _remote_field(
         self, field: ForeignKey | OneToOneField
     ) -> OneToOneRel | ManyToOneRel:
-        return field.remote_field
+        return cast(OneToOneRel | ManyToOneRel, field.remote_field)
 
     def generate_value(self, field: Field, commit: bool = True) -> Any:  # noqa: C901
         """Call the associated generator with a field passing all required args.
@@ -813,8 +817,8 @@ class Baker(Generic[M]):
             )
         elif is_content_type_fk:
             generator = self.type_mapping[contenttypes_models.ContentType]
-        elif generators.get(field.__class__):
-            generator = generators.get(field.__class__)
+        elif gen := generators.get(field.__class__):
+            generator = gen
         elif field.__class__ in self.type_mapping:
             generator = self.type_mapping[field.__class__]
         else:
