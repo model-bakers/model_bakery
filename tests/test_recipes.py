@@ -18,6 +18,7 @@ from tests.generic.models import (
     TEST_TIME,
     Dog,
     DummyBlankFieldsModel,
+    DummyNullFieldsModel,
     DummyNumbersModel,
     LonelyPerson,
     ModelWithAutoNowFields,
@@ -433,6 +434,20 @@ class TestForeignKey:
         assert Person.objects.count() == 1
         baker.prepare_recipe("tests.generic.dog", owner=person)
         assert Person.objects.count() == 1
+
+    @pytest.mark.django_db
+    def test_do_not_create_related_model_when_set_to_none(self):
+        """Regression test for issue #26: overriding FK with None should not create phantom objects."""
+        blank_recipe = Recipe(DummyBlankFieldsModel)
+        nullable_recipe = Recipe(
+            DummyNullFieldsModel,
+            null_foreign_key=foreign_key(blank_recipe),
+        )
+
+        assert DummyBlankFieldsModel.objects.count() == 0
+        obj = nullable_recipe.make(null_foreign_key=None)
+        assert obj.null_foreign_key is None
+        assert DummyBlankFieldsModel.objects.count() == 0
 
     @pytest.mark.django_db
     def test_do_query_lookup_for_recipes_make_method(self):
