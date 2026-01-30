@@ -25,7 +25,11 @@ from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
-from django.db.models.fields.reverse_related import ManyToOneRel, OneToOneRel
+from django.db.models.fields.reverse_related import (
+    ForeignObjectRel,
+    ManyToOneRel,
+    OneToOneRel,
+)
 
 from . import generators, random_gen
 from ._types import M, NewM
@@ -610,6 +614,11 @@ class Baker(Generic[M]):
 
         # Skip links to parent so parent is not created twice.
         if isinstance(field, OneToOneField) and self._remote_field(field).parent_link:
+            return True
+
+        # Skip reverse relations (ManyToOneRel, OneToOneRel, ManyToManyRel)
+        # These are handled separately in create_by_related_name
+        if isinstance(field, ForeignObjectRel):
             return True
 
         other_fields_to_skip = [
