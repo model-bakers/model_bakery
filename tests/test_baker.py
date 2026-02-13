@@ -920,6 +920,22 @@ class TestFillAutoFieldsTestCase:
         assert saved_dummy.id == 237
 
     @pytest.mark.django_db
+    def test_fill_autofields_with_provided_iterator_and_quantity(self):
+        baker.make(models.DummyEmptyModel, id=iter([11, 12, 13]), _quantity=3)
+        assert list(
+            models.DummyEmptyModel.objects.order_by("id").values_list("id", flat=True)
+        ) == [11, 12, 13]
+
+    @pytest.mark.django_db
+    def test_fill_autofields_with_cycle_and_quantity(self):
+        baker.make(
+            models.DummyEmptyModel, id=itertools.cycle(range(1, 11)), _quantity=10
+        )
+        assert list(
+            models.DummyEmptyModel.objects.order_by("id").values_list("id", flat=True)
+        ) == list(range(1, 11))
+
+    @pytest.mark.django_db
     def test_keeps_prepare_autovalues(self):
         dummy = baker.prepare(models.DummyEmptyModel, id=543)
         assert dummy.id == 543
