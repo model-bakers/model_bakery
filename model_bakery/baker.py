@@ -607,6 +607,8 @@ class Baker(Generic[M]):
             and field.attname in self.iterator_attrs
         ):
             return False
+        if isinstance(field, AutoField) and field.name in self.iterator_attrs:
+            return False
 
         # Skip links to parent so parent is not created twice.
         if isinstance(field, OneToOneField) and self._remote_field(field).parent_link:
