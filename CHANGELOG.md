@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix AttributeError when processing models with reverse ForeignKey relations (`ManyToOneRel`) ([#575](https://github.com/model-bakers/model_bakery/issues/575))
 - [dev] Replace mypy with ty as the primary type checker with stricter type checks
 - Allow overriding `AutoField` values via iterators with `_quantity` and avoid hangs ([#577](https://github.com/model-bakers/model_bakery/issues/577))
 
