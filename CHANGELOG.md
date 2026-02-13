@@ -10,11 +10,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+
+### Removed
+
+## [1.23.3](https://pypi.org/project/model-bakery/1.23.3/)
+
+### Changed
 - [dev] Replace mypy with ty as the primary type checker with stricter type checks
 - [dev] Fix ty 0.0.17 compatibility: update rule config, fix generic TypeVar bound, pin minimum version
 - Allow overriding `AutoField` values via iterators with `_quantity` and avoid hangs ([#577](https://github.com/model-bakers/model_bakery/issues/577))
-
-### Removed
 
 ## [1.23.2](https://pypi.org/project/model-bakery/1.23.2/)
 
