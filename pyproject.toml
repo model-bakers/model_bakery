@@ -7,7 +7,7 @@ module-root = ""
 
 [project]
 name = "model-bakery"
-version = "1.23.2"
+version = "1.23.3"
 description = "Smart object creation facility for Django."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -59,7 +59,7 @@ dev = [
     "pytest-django",
     "black",
     "ruff",
-    "ty",
+    "ty>=0.0.17",
 ]
 
 [project.urls]
@@ -92,6 +92,7 @@ unresolved-attribute = "ignore"
 possibly-missing-attribute = "ignore"
 # Allow `# type: ignore` comments (mypy syntax) without warnings
 unused-ignore-comment = "ignore"
+unused-type-ignore-comment = "ignore"
 
 [tool.pytest.ini_options]
 addopts = "--tb=short -rxs --nomigrations"

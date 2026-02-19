@@ -20,7 +20,7 @@ finder = baker.ModelFinder()
 
 
 class Recipe(Generic[M]):
-    _T = TypeVar("_T", bound="Recipe[M]")
+    _T = TypeVar("_T", bound="Recipe")
 
     def __init__(self, _model: str | type[M], **attrs: Any) -> None:
         self.attr_mapping = attrs
