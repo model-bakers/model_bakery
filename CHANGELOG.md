@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Fix AttributeError when processing models with reverse ForeignKey relations (`ManyToOneRel`) ([#575](https://github.com/model-bakers/model_bakery/issues/575))
 
 ### Removed
 

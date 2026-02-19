@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.conf import settings
-from django.db.models import Manager
+from django.db.models import Manager, ManyToOneRel
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
 
@@ -1461,3 +1461,16 @@ class TestFieldSpecificIntegerGenerators:
 
         small_values = [random_gen.gen_small_auto_field() for _ in range(100)]
         assert all(v >= 1 for v in small_values), "SmallAutoField values should be >= 1"
+
+
+class TestReverseRelations:
+    """Regression tests for issue #575."""
+
+    def test_skip_field_skips_reverse_relation_with_fill_optional(self):
+        reverse_rel = next(
+            f for f in models.Person._meta.get_fields() if isinstance(f, ManyToOneRel)
+        )
+
+        baker_instance = baker.Baker(models.Person)
+        baker_instance.fill_in_optional = True
+        assert baker_instance._skip_field(reverse_rel) is True
