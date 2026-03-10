@@ -1228,6 +1228,8 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
 
 
 class TestCreateM2MWhenBulkCreate(TestCase):
+    """Tests for M2M field population when using _bulk_create=True."""
+
     @pytest.mark.django_db
     def test_create(self):
         person = baker.make(models.Person)
@@ -1254,6 +1256,24 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         assert (
             list(s1.classroom_set.all()) == list(s2.classroom_set.all()) == [classroom]
         )
+
+    @pytest.mark.django_db
+    def test_create_with_field_with_related_name(self):
+        """Regression test for M2M fields that define an explicit related_name.
+
+        Store.customers uses related_name="favorite_stores". This test ensures
+        that bulk_create correctly populates the through table using the field's
+        actual column names rather than the related_name attribute, which was
+        the source of a TypeError in earlier versions.
+        """
+        person = baker.make(models.Person)
+
+        with self.assertNumQueries(11):
+            baker.make(
+                models.Store, customers=[person], _quantity=10, _bulk_create=True
+            )
+        for store in models.Store.objects.all():
+            assert list(store.customers.all()) == [person]
 
 
 class TestBakerSeeded:
