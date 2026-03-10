@@ -10,6 +10,7 @@ from typing import (
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -984,15 +985,20 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
             continue  # only handle one level of nesting
         try:
             fk_field = baker.model._meta.get_field(fk_field_name)
-        except Exception:
+        except FieldDoesNotExist:
             continue
         if not isinstance(fk_field, (ForeignKey, OneToOneField)):
             continue
         try:
             related_m2m = fk_field.related_model._meta.get_field(m2m_field_name)
-        except Exception:
+        except FieldDoesNotExist:
             continue
         if not isinstance(related_m2m, ManyToManyField):
+            continue
+        # skip custom through models — .set() requires an auto-created through table;
+        # custom through models have extra required fields baker cannot populate here
+        through_model = related_m2m.remote_field.through
+        if not through_model._meta.auto_created:
             continue
         for entry in created_entries:
             fk_obj = getattr(entry, fk_field_name, None)
