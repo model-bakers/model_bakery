@@ -182,6 +182,10 @@ class Home(models.Model):
     dogs = models.ManyToManyField("Dog")
 
 
+class HomeOwner(models.Model):
+    home = models.ForeignKey(Home, on_delete=models.CASCADE)
+
+
 class LonelyPerson(models.Model):
     only_friend = models.OneToOneField(Person, on_delete=models.CASCADE)
 

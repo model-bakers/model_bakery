@@ -971,4 +971,32 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
                         kwargs[reverse_relation_name]
                     )
 
+    # set many-to-many relations on FK-related objects specified via double-underscore
+    # syntax (e.g. home__dogs=[dog]). During prepare() the M2M values are stored in
+    # the sub-baker's m2m_dict but _handle_m2m() is never called because commit=False.
+    # _save_related_objs() only persists FK objects without touching M2M, so we must
+    # apply them here after all entries have been bulk-created and FK objects saved.
+    for kwarg_key, kwarg_value in kwargs.items():
+        if "__" not in kwarg_key:
+            continue
+        fk_field_name, m2m_field_name = kwarg_key.split("__", 1)
+        if "__" in m2m_field_name:
+            continue  # only handle one level of nesting
+        try:
+            fk_field = baker.model._meta.get_field(fk_field_name)
+        except Exception:
+            continue
+        if not isinstance(fk_field, (ForeignKey, OneToOneField)):
+            continue
+        try:
+            related_m2m = fk_field.related_model._meta.get_field(m2m_field_name)
+        except Exception:
+            continue
+        if not isinstance(related_m2m, ManyToManyField):
+            continue
+        for entry in created_entries:
+            fk_obj = getattr(entry, fk_field_name, None)
+            if fk_obj is not None:
+                getattr(fk_obj, m2m_field_name).set(kwarg_value)
+
     return created_entries
