@@ -1,5 +1,5 @@
 import collections
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from os.path import dirname, join
 from typing import (
     Any,
@@ -57,6 +57,9 @@ mock_file_jpeg = join(dirname(__file__), "mock_img.jpeg")
 mock_file_txt = join(dirname(__file__), "mock_file.txt")
 
 MAX_MANY_QUANTITY = 5
+
+M2MValues = Iterable[Model]
+M2MInput = M2MValues | Callable[[], M2MValues]
 
 __all__ = [
     "Baker",
@@ -367,7 +370,7 @@ class Baker(Generic[M]):
     ) -> None:
         self.make_m2m = make_m2m
         self.create_files = create_files
-        self.m2m_dict: dict[str, list] = {}
+        self.m2m_dict: dict[str, M2MInput] = {}
         self.iterator_attrs: dict[str, Iterator] = {}
         self.model_attrs: dict[str, Any] = {}
         self.rel_attrs: dict[str, Any] = {}
@@ -704,7 +707,7 @@ class Baker(Generic[M]):
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
             if callable(values):
-                values = values()
+                values = cast(Callable[[], M2MValues], values)()
 
             for value in values:
                 if not value.pk:
