@@ -25,7 +25,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.13"
-      - run: uv run ${{ matrix.lint-command }}
+      - run: uv run --frozen ${{ matrix.lint-command }}
 
   sqlite-tests:
     name: SQLite - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
