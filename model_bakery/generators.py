@@ -81,7 +81,7 @@ except ImportError:
     IntegerRangeField = None  # type: ignore[misc,assignment]
 
 
-default_mapping = {
+default_mapping: dict[type, Callable] = {
     ForeignKey: random_gen.gen_related,
     OneToOneField: random_gen.gen_related,
     ManyToManyField: random_gen.gen_m2m,
@@ -113,7 +113,7 @@ default_mapping = {
     ImageField: random_gen.gen_image_field,
     DurationField: random_gen.gen_interval,
     JSONField: random_gen.gen_json,
-}  # type: dict[type, Callable]
+}
 
 if ArrayField:
     default_mapping[ArrayField] = random_gen.gen_array
