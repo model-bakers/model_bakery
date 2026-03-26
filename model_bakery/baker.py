@@ -972,11 +972,9 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
                         kwargs[reverse_relation_name]
                     )
 
-    # set many-to-many relations on FK-related objects specified via double-underscore
-    # syntax (e.g. home__dogs=[dog]). During prepare() the M2M values are stored in
-    # the sub-baker's m2m_dict but _handle_m2m() is never called because commit=False.
-    # _save_related_objs() only persists FK objects without touching M2M, so we must
-    # apply them here after all entries have been bulk-created and FK objects saved.
+  # set M2M on FK-related objects (e.g. `home__dogs=[dog]`)
+  # `_handle_m2m()` is skipped during `prepare()` since `commit=False`,
+  # and `_save_related_objs()` only persists FK rows without touching M2M.
     for kwarg_key, kwarg_value in kwargs.items():
         if "__" not in kwarg_key:
             continue
