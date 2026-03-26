@@ -623,9 +623,7 @@ class Baker(Generic[M]):
         ]
 
         if BAKER_CONTENTTYPES:
-            other_fields_to_skip.extend(
-                cast(list[type], [GenericRelation, GenericForeignKey])
-            )
+            other_fields_to_skip.extend([GenericRelation, GenericForeignKey])  # type: ignore[list-item]
 
         if isinstance(field, tuple(other_fields_to_skip)):
             return True
