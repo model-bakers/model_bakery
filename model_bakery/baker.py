@@ -998,9 +998,20 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
         through_model = related_m2m.remote_field.through
         if not through_model._meta.auto_created:
             continue
+        through_rows = []
         for entry in created_entries:
             fk_obj = getattr(entry, fk_field_name, None)
             if fk_obj is not None:
-                getattr(fk_obj, m2m_field_name).set(kwarg_value)
+                through_rows.extend(
+                    through_model(
+                        **{
+                            related_m2m.m2m_field_name(): fk_obj,
+                            related_m2m.m2m_reverse_field_name(): obj,
+                        }
+                    )
+                    for obj in kwarg_value
+                )
+        if through_rows:
+            through_model.objects.bulk_create(through_rows)
 
     return created_entries
