@@ -916,7 +916,7 @@ def _save_related_objs(model, objects, _using=None) -> None:
                 setattr(objects[i], fk.name, fk_obj)
 
 
-def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
+def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:  # noqa: C901
     """
     Bulk create entries and all related FKs as well.
 
