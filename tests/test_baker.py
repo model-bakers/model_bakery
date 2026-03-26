@@ -1288,8 +1288,8 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         dog = baker.make(models.Dog)
         baker.make(models.HomeOwner, home__dogs=[dog], _quantity=10, _bulk_create=True)
 
-      for owner in models.HomeOwner.objects.all():
-          assert list(owner.home.dogs.all()) == [dog]
+        for owner in models.HomeOwner.objects.all():
+            assert list(owner.home.dogs.all()) == [dog]
 
 
 class TestBakerSeeded:
