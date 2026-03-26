@@ -10,6 +10,7 @@ from typing import (
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -915,7 +916,7 @@ def _save_related_objs(model, objects, _using=None) -> None:
                 setattr(objects[i], fk.name, fk_obj)
 
 
-def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
+def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:  # noqa: C901
     """
     Bulk create entries and all related FKs as well.
 
@@ -970,5 +971,47 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:
                     getattr(entry, reverse_relation_name).set(
                         kwargs[reverse_relation_name]
                     )
+
+    # set M2M on FK-related objects (e.g. `home__dogs=[dog]`)
+    # `_handle_m2m()` is skipped during `prepare()` since `commit=False`,
+    # and `_save_related_objs()` only persists FK rows without touching M2M.
+    for kwarg_key, kwarg_value in kwargs.items():
+        if "__" not in kwarg_key:
+            continue
+        fk_field_name, m2m_field_name = kwarg_key.split("__", 1)
+        if "__" in m2m_field_name:
+            continue  # only handle one level of nesting
+        try:
+            fk_field = baker.model._meta.get_field(fk_field_name)
+        except FieldDoesNotExist:
+            continue
+        if not isinstance(fk_field, (ForeignKey, OneToOneField)):
+            continue
+        try:
+            related_m2m = fk_field.related_model._meta.get_field(m2m_field_name)
+        except FieldDoesNotExist:
+            continue
+        if not isinstance(related_m2m, ManyToManyField):
+            continue
+        # skip custom through models — .set() requires an auto-created through table;
+        # custom through models have extra required fields baker cannot populate here
+        through_model = related_m2m.remote_field.through
+        if not through_model._meta.auto_created:
+            continue
+        through_rows = []
+        for entry in created_entries:
+            fk_obj = getattr(entry, fk_field_name, None)
+            if fk_obj is not None:
+                through_rows.extend(
+                    through_model(
+                        **{
+                            related_m2m.m2m_field_name(): fk_obj,
+                            related_m2m.m2m_reverse_field_name(): obj,
+                        }
+                    )
+                    for obj in kwarg_value
+                )
+        if through_rows:
+            through_model.objects.bulk_create(through_rows)
 
     return created_entries

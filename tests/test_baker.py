@@ -1275,6 +1275,22 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         for store in models.Store.objects.all():
             assert list(store.customers.all()) == [person]
 
+    @pytest.mark.django_db
+    def test_create_through_foreign_key_field(self):
+        """Regression test for M2M fields on FK-related objects with _bulk_create=True.
+
+        When a M2M value is specified via double-underscore lookup (e.g. home__dogs=[dog]),
+        baker must apply that M2M relationship to the saved FK object after bulk_create
+        completes. Previously, the M2M was stored in the sub-baker's m2m_dict during
+        prepare() but was never applied because _handle_m2m() is gated behind commit=True,
+        and _save_related_objs() only persists FK rows without touching M2M.
+        """
+        dog = baker.make(models.Dog)
+        baker.make(models.HomeOwner, home__dogs=[dog], _quantity=10, _bulk_create=True)
+
+        for owner in models.HomeOwner.objects.all():
+            assert list(owner.home.dogs.all()) == [dog]
+
 
 class TestBakerSeeded:
     @pytest.fixture
