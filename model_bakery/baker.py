@@ -617,13 +617,13 @@ class Baker(Generic[M]):
         if isinstance(field, OneToOneField) and self._remote_field(field).parent_link:
             return True
 
-        other_fields_to_skip = [
+        other_fields_to_skip: list[type] = [
             AutoField,
             OrderWrt,
         ]
 
         if BAKER_CONTENTTYPES:
-            other_fields_to_skip.extend([GenericRelation, GenericForeignKey])
+            other_fields_to_skip.extend([GenericRelation, GenericForeignKey])  # type: ignore[list-item]
 
         if isinstance(field, tuple(other_fields_to_skip)):
             return True
