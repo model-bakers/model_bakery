@@ -506,6 +506,12 @@ class SubclassOfAbstract(AbstractModel):
     height = models.IntegerField()
 
 
+class HiddenForeignKeyModel(models.Model):
+    """Model with a hidden reverse relation (related_name='+') for issue #575."""
+
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="+")
+
+
 class NonStandardManager(models.Model):
     name = models.CharField(max_length=30)
 

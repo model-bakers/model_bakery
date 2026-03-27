@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.conf import settings
-from django.db.models import Manager
+from django.db.models import Manager, ManyToOneRel
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
 
@@ -1497,3 +1497,41 @@ class TestFieldSpecificIntegerGenerators:
 
         small_values = [random_gen.gen_small_auto_field() for _ in range(100)]
         assert all(v >= 1 for v in small_values), "SmallAutoField values should be >= 1"
+
+
+class TestReverseRelations:
+    """Regression tests for issue #575.
+
+    ManyToOneRel doesn't have has_default(), so if a reverse relation
+    leaks past _skip_field into generate_value(), it crashes with
+    AttributeError. Baker.get_fields() normally filters these out via
+    related_objects subtraction, but _skip_field is the proper safety net.
+    """
+
+    def test_skip_field_skips_many_to_one_rel(self):
+        reverse_rel = next(
+            f for f in models.Person._meta.get_fields() if isinstance(f, ManyToOneRel)
+        )
+        baker_instance = baker.Baker(models.Person)
+        baker_instance.fill_in_optional = True
+        assert baker_instance._skip_field(reverse_rel) is True
+
+    def test_skip_field_skips_hidden_many_to_one_rel(self):
+        """Hidden reverse relations (related_name='+') are also skipped."""
+        hidden_rel = next(
+            f
+            for f in models.Person._meta.get_fields(include_hidden=True)
+            if isinstance(f, ManyToOneRel) and f.hidden
+        )
+        baker_instance = baker.Baker(models.Person)
+        baker_instance.fill_in_optional = True
+        assert baker_instance._skip_field(hidden_rel) is True
+
+    def test_generate_value_crashes_on_many_to_one_rel(self):
+        """Verify that ManyToOneRel reaching generate_value causes the reported crash."""
+        reverse_rel = next(
+            f for f in models.Person._meta.get_fields() if isinstance(f, ManyToOneRel)
+        )
+        baker_instance = baker.Baker(models.Person)
+        with pytest.raises(AttributeError, match="has_default"):
+            baker_instance.generate_value(reverse_rel)
