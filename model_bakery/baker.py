@@ -11,6 +11,7 @@ from typing import (
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist
+from django.db import transaction
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -99,6 +100,7 @@ def make(
     _create_files: bool = False,
     _using: str = "",
     _bulk_create: bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> M: ...
 
@@ -114,6 +116,7 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> list[M]: ...
 
@@ -128,6 +131,7 @@ def make(
     _using: str = "",
     _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ):
     """Create a persisted instance from a given model its associated models.
@@ -144,20 +148,30 @@ def make(
         raise InvalidQuantityException
 
     if _bulk_create:
-        result = bulk_create(baker, _quantity or 1, _save_kwargs=_save_kwargs, **attrs)
+        result = bulk_create(
+            baker,
+            _quantity or 1,
+            _save_kwargs=_save_kwargs,
+            _full_clean=_full_clean,
+            **attrs,
+        )
         return result if _quantity else result[0]
     elif _quantity:
         return [
             baker.make(
                 _save_kwargs=_save_kwargs,
                 _refresh_after_create=_refresh_after_create,
+                _full_clean=_full_clean,
                 **attrs,
             )
             for _ in range(_quantity)
         ]
 
     return baker.make(
-        _save_kwargs=_save_kwargs, _refresh_after_create=_refresh_after_create, **attrs
+        _save_kwargs=_save_kwargs,
+        _refresh_after_create=_refresh_after_create,
+        _full_clean=_full_clean,
+        **attrs,
     )
 
 
@@ -167,6 +181,7 @@ def prepare(
     _quantity: None = None,
     _save_related: bool = False,
     _using: str = "",
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> M: ...
 
@@ -178,6 +193,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> list[M]: ...
 
@@ -188,6 +204,7 @@ def prepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ):
     """Create but do not persist an instance from a given model.
@@ -202,11 +219,11 @@ def prepare(
 
     if _quantity:
         return [
-            baker.prepare(_save_related=_save_related, **attrs)
+            baker.prepare(_save_related=_save_related, _full_clean=_full_clean, **attrs)
             for i in range(_quantity)
         ]
 
-    return baker.prepare(_save_related=_save_related, **attrs)
+    return baker.prepare(_save_related=_save_related, _full_clean=_full_clean, **attrs)
 
 
 def _recipe(name: str) -> Any:
@@ -403,6 +420,7 @@ class Baker(Generic[M]):
         _refresh_after_create: bool = False,
         _from_manager=None,
         _fill_optional: list[str] | bool = False,
+        _full_clean: bool = False,
         **attrs: Any,
     ):
         """Create and persist an instance of the model associated with Baker instance."""
@@ -413,6 +431,7 @@ class Baker(Generic[M]):
             "_refresh_after_create": _refresh_after_create,
             "_from_manager": _from_manager,
             "_fill_optional": _fill_optional,
+            "_full_clean": _full_clean,
         }
         params.update(attrs)
         return self._make(**params)
@@ -421,6 +440,7 @@ class Baker(Generic[M]):
         self,
         _save_related=False,
         _fill_optional: list[str] | bool = False,
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> M:
         """Create, but do not persist, an instance of the associated model."""
@@ -428,6 +448,7 @@ class Baker(Generic[M]):
             "commit": False,
             "commit_related": _save_related,
             "_fill_optional": _fill_optional,
+            "_full_clean": _full_clean,
         }
         params.update(attrs)
         return self._make(**params)
@@ -444,6 +465,7 @@ class Baker(Generic[M]):
         _save_kwargs=None,
         _refresh_after_create=False,
         _from_manager=None,
+        _full_clean=False,
         **attrs: Any,
     ) -> M:
         _save_kwargs = _save_kwargs or {}
@@ -496,6 +518,7 @@ class Baker(Generic[M]):
             _commit=commit,
             _from_manager=_from_manager,
             _save_kwargs=_save_kwargs,
+            _full_clean=_full_clean,
         )
         if commit:
             for related in self.model._meta.related_objects:
@@ -514,7 +537,12 @@ class Baker(Generic[M]):
         return self.generate_value(field)
 
     def instance(
-        self, attrs: dict[str, Any], _commit, _save_kwargs, _from_manager
+        self,
+        attrs: dict[str, Any],
+        _commit,
+        _save_kwargs,
+        _from_manager,
+        _full_clean=False,
     ) -> M:
         one_to_many_keys = {}
         auto_now_keys = {}
@@ -545,6 +573,9 @@ class Baker(Generic[M]):
         self._handle_generic_foreign_keys(
             instance, generic_foreign_keys, commit=_commit
         )
+
+        if _full_clean:
+            instance.full_clean()
 
         if _commit:
             instance.save(**_save_kwargs)
@@ -925,7 +956,9 @@ def _save_related_objs(model, objects, _using=None) -> None:
                 setattr(objects[i], fk.name, fk_obj)
 
 
-def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:  # noqa: C901
+def bulk_create(  # noqa: C901
+    baker: Baker[M], quantity: int, _full_clean: bool = False, **kwargs
+) -> list[M]:
     """
     Bulk create entries and all related FKs as well.
 
@@ -936,12 +969,11 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:  # noqa: C
     # quantity number of times, passing in the additional keyword arguments
     entries = [
         baker.prepare(
+            _full_clean=_full_clean,
             **kwargs,
         )
         for _ in range(quantity)
     ]
-
-    _save_related_objs(baker.model, entries, _using=baker._using)
 
     # Use the desired database to create the entries
     if baker._using:
@@ -949,7 +981,13 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:  # noqa: C
     else:
         manager = baker.model._base_manager
 
-    created_entries = manager.bulk_create(entries)
+    if _full_clean:
+        with transaction.atomic(using=baker._using or None):
+            _save_related_objs(baker.model, entries, _using=baker._using)
+            created_entries = manager.bulk_create(entries)
+    else:
+        _save_related_objs(baker.model, entries, _using=baker._using)
+        created_entries = manager.bulk_create(entries)
 
     # set many-to-many relations from kwargs
     for entry in created_entries:
