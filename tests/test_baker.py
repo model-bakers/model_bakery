@@ -1228,6 +1228,8 @@ class TestBakerMakeCanFetchInstanceFromDefaultManager:
 
 
 class TestCreateM2MWhenBulkCreate(TestCase):
+    """Tests for M2M field population when using _bulk_create=True."""
+
     @pytest.mark.django_db
     def test_create(self):
         person = baker.make(models.Person)
@@ -1254,6 +1256,40 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         assert (
             list(s1.classroom_set.all()) == list(s2.classroom_set.all()) == [classroom]
         )
+
+    @pytest.mark.django_db
+    def test_create_with_field_with_related_name(self):
+        """Regression test for M2M fields that define an explicit related_name.
+
+        Store.customers uses related_name="favorite_stores". This test ensures
+        that bulk_create correctly populates the through table using the field's
+        actual column names rather than the related_name attribute, which was
+        the source of a TypeError in earlier versions.
+        """
+        person = baker.make(models.Person)
+
+        with self.assertNumQueries(11):
+            baker.make(
+                models.Store, customers=[person], _quantity=10, _bulk_create=True
+            )
+        for store in models.Store.objects.all():
+            assert list(store.customers.all()) == [person]
+
+    @pytest.mark.django_db
+    def test_create_through_foreign_key_field(self):
+        """Regression test for M2M fields on FK-related objects with _bulk_create=True.
+
+        When a M2M value is specified via double-underscore lookup (e.g. home__dogs=[dog]),
+        baker must apply that M2M relationship to the saved FK object after bulk_create
+        completes. Previously, the M2M was stored in the sub-baker's m2m_dict during
+        prepare() but was never applied because _handle_m2m() is gated behind commit=True,
+        and _save_related_objs() only persists FK rows without touching M2M.
+        """
+        dog = baker.make(models.Dog)
+        baker.make(models.HomeOwner, home__dogs=[dog], _quantity=10, _bulk_create=True)
+
+        for owner in models.HomeOwner.objects.all():
+            assert list(owner.home.dogs.all()) == [dog]
 
 
 class TestBakerSeeded:
