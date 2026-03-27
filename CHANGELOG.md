@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fix AttributeError when processing models with reverse ForeignKey relations (`ManyToOneRel`) ([#575](https://github.com/model-bakers/model_bakery/issues/575))
+- Fix `_bulk_create` not setting M2M fields on FK-related objects ([#583](https://github.com/model-bakers/model_bakery/issues/583))
+- [dev] Fix type annotations ([#584](https://github.com/model-bakers/model_bakery/pull/584))
+- [dev] Fix remaining ty type errors in baker.py and generators.py ([#589](https://github.com/model-bakers/model_bakery/pull/589))
 
 ### Removed
 
