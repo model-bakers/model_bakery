@@ -26,6 +26,7 @@ from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
+from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.db.models.fields.reverse_related import (
     ForeignObjectRel,
     ManyToOneRel,
@@ -517,6 +518,7 @@ class Baker(Generic[M]):
         self, attrs: dict[str, Any], _commit, _save_kwargs, _from_manager
     ) -> M:
         one_to_many_keys = {}
+        reverse_one_to_one_keys = {}
         auto_now_keys = {}
         generic_foreign_keys = {}
 
@@ -528,6 +530,8 @@ class Baker(Generic[M]):
 
             if isinstance(field, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[k] = attrs.pop(k)
+            elif isinstance(field, ReverseOneToOneDescriptor):
+                reverse_one_to_one_keys[k] = attrs.pop(k)
 
             if hasattr(field, "field") and _is_auto_datetime_field(field.field):
                 auto_now_keys[k] = attrs[k]
@@ -549,6 +553,7 @@ class Baker(Generic[M]):
         if _commit:
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
+            self._handle_reverse_one_to_one(instance, reverse_one_to_one_keys)
             self._handle_m2m(instance)
             self._handle_auto_now(instance, auto_now_keys)
 
@@ -713,6 +718,26 @@ class Baker(Generic[M]):
             except TypeError:
                 # for many-to-many relationships the bulk keyword argument doesn't exist
                 manager.set(values, clear=True)
+
+    def _handle_reverse_one_to_one(
+        self, instance: Model, attrs: dict[str, Any]
+    ) -> None:
+        """Handle reverse one-to-one relationships.
+
+        Sets the FK on the related object to point to instance and saves it.
+        This mirrors what Django would do if the relation were set via the
+        forward FK, but on the reverse side.
+        """
+        for key, value in attrs.items():
+            if callable(value):
+                value = value()
+            if value is None:
+                continue
+            descriptor = getattr(self.model, key)
+            fk_field_name = descriptor.related.field.name
+            setattr(value, fk_field_name, instance)
+            save_kwargs = {"using": self._using} if self._using else {}
+            value.save(**save_kwargs)
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
