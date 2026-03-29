@@ -1535,3 +1535,41 @@ class TestReverseRelations:
         baker_instance = baker.Baker(models.Person)
         with pytest.raises(AttributeError, match="has_default"):
             baker_instance.generate_value(reverse_rel)
+
+
+class TestGetFieldsCaching:
+    """Tests for Baker.get_fields() caching and id()-based filtering."""
+
+    def test_get_fields_excludes_related_objects(self):
+        """get_fields() must not include reverse relations."""
+        baker_instance = baker.Baker(models.Person)
+        fields = baker_instance.get_fields()
+        related_objects = set(models.Person._meta.related_objects)
+        assert not fields & related_objects
+
+    def test_get_fields_result_is_cached(self):
+        """Calling get_fields() twice for the same model returns the same object."""
+        baker.Baker._fields_cache.pop(models.Person, None)
+        b1 = baker.Baker(models.Person)
+        b2 = baker.Baker(models.Person)
+        result1 = b1.get_fields()
+        result2 = b2.get_fields()
+        assert result1 is result2
+
+    def test_get_fields_different_models_cached_separately(self):
+        """Different models get their own cache entries."""
+        baker.Baker._fields_cache.pop(models.Person, None)
+        baker.Baker._fields_cache.pop(models.Profile, None)
+        person_fields = baker.Baker(models.Person).get_fields()
+        profile_fields = baker.Baker(models.Profile).get_fields()
+        assert person_fields is not profile_fields
+
+    def test_get_fields_includes_all_non_reverse_fields(self):
+        """get_fields() includes every field from _meta.get_fields() except related_objects."""
+        baker.Baker._fields_cache.pop(models.Person, None)
+        all_fields = set(models.Person._meta.get_fields())
+        related = set(models.Person._meta.related_objects)
+        expected = all_fields - related
+
+        result = baker.Baker(models.Person).get_fields()
+        assert result == expected

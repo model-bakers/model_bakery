@@ -347,6 +347,9 @@ class Baker(Generic[M]):
     # rebuilding the model cache for every make_* or prepare_* call.
     finder = ModelFinder()
 
+    # Cache for get_fields() results per model. Uses id()-based comparison
+    _fields_cache: dict[type[Model], set[Any]] = {}
+
     @classmethod
     def seed(cls, seed: int | float | str | bytes | bytearray | None) -> None:
         random_gen.baker_random.seed(seed)
@@ -433,9 +436,13 @@ class Baker(Generic[M]):
         return self._make(**params)
 
     def get_fields(self) -> set[Any]:
-        return set(self.model._meta.get_fields()) - set(
-            self.model._meta.related_objects
-        )
+        model = self.model
+        if model not in self._fields_cache:
+            related_ids = {id(f) for f in model._meta.related_objects}
+            self._fields_cache[model] = {
+                f for f in model._meta.get_fields() if id(f) not in related_ids
+            }
+        return self._fields_cache[model]
 
     def _make(  # noqa: C901
         self,
