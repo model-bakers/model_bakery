@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Cache `Baker.get_fields()` results per model to avoid expensive `get_fields()()` calls on every `baker.make` call.
 
 ### Removed
 
