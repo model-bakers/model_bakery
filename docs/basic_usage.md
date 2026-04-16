@@ -342,6 +342,30 @@ user_iter = User.objects.all().iterator()
 baker.prepare(Profile, user=user_iter, _quantity=5, _bulk_create=True)
 ```
 
+## Running Model Validation
+
+By default, Model Bakery skips Django's model validation when creating objects. To enable
+it, pass `_full_clean=True`:
+
+```python
+from model_bakery import baker
+from django.core.exceptions import ValidationError
+import pytest
+
+with pytest.raises(ValidationError):
+    baker.make('myapp.Profile', email="not-valid", _full_clean=True)
+```
+
+The flag is also supported by `baker.prepare()`:
+
+```python
+with pytest.raises(ValidationError):
+    baker.prepare('myapp.Profile', email="not-valid", _full_clean=True)
+```
+
+When using `_full_clean=True` with `_bulk_create=True`, all objects are created within a
+transaction and will be rolled back if any validation errors occur.
+
 ## Multi-database support
 
 Model Bakery supports django application with more than one database.

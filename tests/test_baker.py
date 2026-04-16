@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models import Manager, ManyToOneRel
 from django.db.models.signals import m2m_changed
 from django.test import TestCase, override_settings
@@ -1535,3 +1536,56 @@ class TestReverseRelations:
         baker_instance = baker.Baker(models.Person)
         with pytest.raises(AttributeError, match="has_default"):
             baker_instance.generate_value(reverse_rel)
+
+
+class TestFullClean:
+    @pytest.mark.django_db
+    def test_make_with_full_clean_valid(self):
+        """_full_clean=True does not interfere with valid objects."""
+        profile = baker.make(models.Profile, _full_clean=True)
+        assert profile.pk is not None
+
+    @pytest.mark.django_db
+    def test_make_with_full_clean_raises_on_invalid(self):
+        """_full_clean=True raises ValidationError for invalid field values."""
+        with pytest.raises(ValidationError):
+            baker.make(models.Profile, email="not-an-email", _full_clean=True)
+
+    @pytest.mark.django_db
+    def test_make_with_full_clean_no_db_entry_on_error(self):
+        """No DB row is created when _full_clean=True raises ValidationError."""
+        with pytest.raises(ValidationError):
+            baker.make(models.Profile, email="not-an-email", _full_clean=True)
+        assert models.Profile.objects.count() == 0
+
+    @pytest.mark.django_db
+    def test_prepare_with_full_clean_raises_on_invalid(self):
+        """_full_clean=True on prepare() validates without hitting the DB."""
+        with pytest.raises(ValidationError):
+            baker.prepare(models.Profile, email="not-an-email", _full_clean=True)
+        assert models.Profile.objects.count() == 0
+
+    @pytest.mark.django_db
+    def test_bulk_create_with_full_clean_rolls_back_on_error(self):
+        """_full_clean=True with _bulk_create=True rolls back all entries on error."""
+        with pytest.raises(ValidationError):
+            baker.make(
+                models.Profile,
+                email="not-an-email",
+                _quantity=5,
+                _bulk_create=True,
+                _full_clean=True,
+            )
+        assert models.Profile.objects.count() == 0
+
+    @pytest.mark.django_db
+    def test_bulk_create_with_full_clean_valid(self):
+        """_full_clean=True with _bulk_create=True persists all entries when valid."""
+        profiles = baker.make(
+            models.Profile,
+            _quantity=3,
+            _bulk_create=True,
+            _full_clean=True,
+        )
+        assert len(profiles) == 3
+        assert models.Profile.objects.count() == 3
