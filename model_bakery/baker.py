@@ -432,10 +432,8 @@ class Baker(Generic[M]):
         params.update(attrs)
         return self._make(**params)
 
-    def get_fields(self) -> set[Any]:
-        return set(self.model._meta.get_fields()) - set(
-            self.model._meta.related_objects
-        )
+    def get_fields(self) -> tuple[Any, ...]:
+        return (*self.model._meta.fields, *self.model._meta.many_to_many)
 
     def _make(  # noqa: C901
         self,

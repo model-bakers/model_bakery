@@ -1535,3 +1535,23 @@ class TestReverseRelations:
         baker_instance = baker.Baker(models.Person)
         with pytest.raises(AttributeError, match="has_default"):
             baker_instance.generate_value(reverse_rel)
+
+
+class TestGetFields:
+    """Tests for Baker.get_fields()."""
+
+    def test_get_fields_excludes_related_objects(self):
+        """get_fields() must not include reverse relations."""
+        baker_instance = baker.Baker(models.Person)
+        fields = set(baker_instance.get_fields())
+        related_objects = set(models.Person._meta.related_objects)
+        assert not fields & related_objects
+
+    def test_get_fields_returns_concrete_and_m2m_fields(self):
+        """get_fields() returns concrete fields plus many-to-many fields."""
+        result = baker.Baker(models.Person).get_fields()
+        expected = (
+            *models.Person._meta.fields,
+            *models.Person._meta.many_to_many,
+        )
+        assert result == expected
