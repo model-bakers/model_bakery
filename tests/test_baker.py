@@ -1555,3 +1555,8 @@ class TestGetFields:
             *models.Person._meta.many_to_many,
         )
         assert result == expected
+
+    def test_get_fields_includes_private_fields(self):
+        """get_fields() includes private fields (e.g. GFK fields)."""
+        fields = baker.Baker(models.ModelWithPrivateField).get_fields()
+        assert "marker" in {f.name for f in fields}

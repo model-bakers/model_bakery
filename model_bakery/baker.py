@@ -433,7 +433,11 @@ class Baker(Generic[M]):
         return self._make(**params)
 
     def get_fields(self) -> tuple[Any, ...]:
-        return (*self.model._meta.fields, *self.model._meta.many_to_many)
+        return (
+            *self.model._meta.fields,
+            *self.model._meta.many_to_many,
+            *self.model._meta.private_fields,
+        )
 
     def _make(  # noqa: C901
         self,
