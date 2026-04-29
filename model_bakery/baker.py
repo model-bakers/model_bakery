@@ -70,6 +70,8 @@ M2MInput = M2MValues | Callable[[], M2MValues]
 
 __all__ = [
     "Baker",
+    "amake",
+    "aprepare",
     "make",
     "prepare",
     "make_recipe",
@@ -77,6 +79,35 @@ __all__ = [
     "seed",
     "seq",
 ]
+
+
+# Kwargs that have a sync-only implementation today. Passing one of these to
+# the async path is rejected up front so users hit a clear NotImplementedError
+# rather than silently falling through into a sync code path.
+_ASYNC_UNSUPPORTED_KWARGS = frozenset(
+    {
+        "make_m2m",
+        "_save_kwargs",
+        "_refresh_after_create",
+        "_create_files",
+        "_bulk_create",
+        "_from_manager",
+    }
+)
+
+
+def _reject_async_unsupported(kwargs: dict[str, Any]) -> None:
+    # Only reject when the user is actually asking for the feature (truthy).
+    # Falsy values like `_create_files=False` are forwarded by recursive calls
+    # and represent "no request," so they shouldn't trip the guard.
+    leaked = sorted(
+        k for k in _ASYNC_UNSUPPORTED_KWARGS if k in kwargs and kwargs[k]
+    )
+    if leaked:
+        raise NotImplementedError(
+            f"Async amake/aprepare does not support: {leaked}. "
+            "Use the sync make()/prepare() if you need these features."
+        )
 
 
 def _valid_quantity(quantity: str | int | None) -> bool:
@@ -228,6 +259,93 @@ def prepare(
         ]
 
     return baker.prepare(_save_related=_save_related, **full_clean_kwargs, **attrs)
+
+
+@overload
+async def amake(
+    _model: str | type[M],
+    _quantity: None = None,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> M: ...
+
+
+@overload
+async def amake(
+    _model: str | type[M],
+    _quantity: int,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> list[M]: ...
+
+
+async def amake(
+    _model,
+    _quantity: int | None = None,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+):
+    """Async variant of `make` — persists via Django's async ORM (`asave`)."""
+    _reject_async_unsupported(attrs)
+    attrs.update({"_fill_optional": _fill_optional})
+    baker: Baker = Baker.create(_model, _using=_using)
+    if _valid_quantity(_quantity):
+        raise InvalidQuantityException
+
+    if _quantity:
+        return [await baker.amake(**attrs) for _ in range(_quantity)]
+
+    return await baker.amake(**attrs)
+
+
+@overload
+async def aprepare(
+    _model: str | type[M],
+    _quantity: None = None,
+    _save_related: bool = False,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> M: ...
+
+
+@overload
+async def aprepare(
+    _model: str | type[M],
+    _quantity: int,
+    _save_related: bool = False,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> list[M]: ...
+
+
+async def aprepare(
+    _model,
+    _quantity: int | None = None,
+    _save_related: bool = False,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+):
+    """Async variant of `prepare` — builds instances without persisting."""
+    _reject_async_unsupported(attrs)
+    if _save_related:
+        raise NotImplementedError(
+            "aprepare(_save_related=True) is not yet supported in async mode"
+        )
+    attrs.update({"_fill_optional": _fill_optional})
+    baker = Baker.create(_model, _using=_using)
+    if _valid_quantity(_quantity):
+        raise InvalidQuantityException
+
+    if _quantity:
+        return [await baker.aprepare(**attrs) for _ in range(_quantity)]
+
+    return await baker.aprepare(**attrs)
 
 
 def _recipe(name: str) -> Any:
@@ -468,6 +586,36 @@ class Baker(Generic[M]):
         params.update(attrs)
         return self._make(**params)
 
+    async def amake(
+        self,
+        _fill_optional: list[str] | bool = False,
+        **attrs: Any,
+    ):
+        """Create and persist an instance using Django's async ORM."""
+        _reject_async_unsupported(attrs)
+        params = {
+            "commit": True,
+            "commit_related": True,
+            "_fill_optional": _fill_optional,
+        }
+        params.update(attrs)
+        return await self._amake(**params)
+
+    async def aprepare(
+        self,
+        _fill_optional: list[str] | bool = False,
+        **attrs: Any,
+    ) -> M:
+        """Build (but do not persist) an instance using async-compatible flow."""
+        _reject_async_unsupported(attrs)
+        params = {
+            "commit": False,
+            "commit_related": False,
+            "_fill_optional": _fill_optional,
+        }
+        params.update(attrs)
+        return await self._amake(**params)
+
     def get_fields(self) -> tuple[Any, ...]:
         return (
             *self.model._meta.fields,
@@ -552,6 +700,186 @@ class Baker(Generic[M]):
             instance.refresh_from_db()
 
         return instance
+
+    async def _amake(  # noqa: C901
+        self,
+        commit=True,
+        commit_related=True,
+        **attrs: Any,
+    ) -> M:
+        # Async parallel of `_make` — kept in lockstep, update both together.
+        # Diverges only at I/O points (`agenerate_value`, `ainstance`) and
+        # where unsupported features raise `NotImplementedError`.
+        _save_kwargs: dict[str, Any] = {}
+        if self._using:
+            _save_kwargs["using"] = self._using
+
+        self._clean_attrs(attrs)
+        for field in self.get_fields():
+            if self._skip_field(field):
+                continue
+
+            if isinstance(field, ManyToManyField):
+                # If user did not request M2M, sync-skip silently. If they did,
+                # raise — we don't yet have an async M2M path.
+                if (
+                    field.name in self.model_attrs
+                    or field.name in self.iterator_attrs
+                    or self.make_m2m
+                    or field.name in self.rel_fields
+                ):
+                    raise NotImplementedError(
+                        f"ManyToManyField '{field.name}' is not yet supported in "
+                        "async mode"
+                    )
+                continue
+            elif (
+                isinstance(field, (OneToOneField, ForeignKey))
+                and hasattr(field, "attname")
+                and field.attname in self.iterator_attrs
+            ):
+                self.model_attrs[field.attname] = next(
+                    self.iterator_attrs[field.attname]
+                )
+            elif field.name not in self.model_attrs:
+                if (
+                    not isinstance(field, ForeignKey)
+                    or hasattr(field, "attname")
+                    and field.attname not in self.model_attrs
+                ):
+                    self.model_attrs[field.name] = await self.agenerate_value(
+                        field, commit_related
+                    )
+            elif callable(self.model_attrs[field.name]):
+                self.model_attrs[field.name] = self.model_attrs[field.name]()
+            elif field.name in self.iterator_attrs:
+                try:
+                    self.model_attrs[field.name] = next(self.iterator_attrs[field.name])
+                except StopIteration:
+                    raise RecipeIteratorEmpty(f"{field.name} iterator is empty.")
+
+        instance = await self.ainstance(
+            self.model_attrs,
+            _commit=commit,
+            _save_kwargs=_save_kwargs,
+        )
+        if commit:
+            for related in self.model._meta.related_objects:
+                rel_name = related.get_accessor_name()
+                if rel_name and rel_name in self.rel_fields:
+                    raise NotImplementedError(
+                        f"Reverse relation '{rel_name}' (foo__bar via reverse) "
+                        "is not yet supported in async mode"
+                    )
+
+        return instance
+
+    async def ainstance(
+        self, attrs: dict[str, Any], _commit, _save_kwargs
+    ) -> M:
+        # Async parallel of `instance` — kept in lockstep. Rejects the
+        # reverse-relation, auto-now-override, and GenericForeignKey
+        # branches; those need Django async APIs we haven't wired yet.
+        for k in tuple(attrs.keys()):
+            field = getattr(self.model, k, None)
+            if not field:
+                continue
+
+            if isinstance(field, ForeignRelatedObjectsDescriptor):
+                raise NotImplementedError(
+                    f"Reverse one-to-many '{k}' is not yet supported in async mode"
+                )
+            if hasattr(field, "field") and _is_auto_datetime_field(field.field):
+                raise NotImplementedError(
+                    f"Overriding auto_now/auto_now_add field '{k}' is not yet "
+                    "supported in async mode"
+                )
+            if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
+                raise NotImplementedError(
+                    f"GenericForeignKey '{k}' is not yet supported in async mode"
+                )
+
+        instance = self.model(**attrs)
+
+        if _commit:
+            await instance.asave(**_save_kwargs)
+
+        return instance
+
+    async def agenerate_value(  # noqa: C901
+        self, field: Field, commit: bool = True
+    ) -> Any:
+        # Async parallel of `generate_value` — kept in lockstep. Sync logic
+        # for scalars/choices/defaults; forward FK / OneToOne recursion is
+        # routed through `agen_related` so the related instance lands on
+        # the same async connection.
+        is_content_type_fk = False
+        is_generic_fk = False
+        if BAKER_CONTENTTYPES:
+            is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
+                self._remote_field(field).model, contenttypes_models.ContentType
+            )
+            is_generic_fk = isinstance(field, GenericForeignKey)
+        if is_generic_fk:
+            raise NotImplementedError(
+                f"GenericForeignKey '{field.name}' is not yet supported in async mode"
+            )
+        if is_content_type_fk:
+            raise NotImplementedError(
+                f"ContentType FK '{field.name}' is not yet supported in async mode"
+            )
+        if field.has_default() and field.name not in self.rel_fields:
+            if callable(field.default):
+                return field.default()
+            return field.default
+        elif getattr(field, "db_default", NOT_PROVIDED) != NOT_PROVIDED:
+            return field.db_default
+        elif field.name in self.attr_mapping:
+            generator = self.attr_mapping[field.name]
+        elif field.choices:
+            generator = random_gen.gen_from_choices(
+                field.choices, nullable=field.null, blankable=field.blank
+            )
+        elif gen := generators.get(field.__class__):
+            generator = gen
+        elif field.__class__ in self.type_mapping:
+            generator = self.type_mapping[field.__class__]
+        else:
+            raise TypeError(
+                f"field {field.name} type {field.__class__} is not supported by baker."
+            )
+
+        field._using = self._using
+        generator_attrs = get_required_values(generator, field)
+
+        if field.name in self.rel_fields:
+            generator_attrs.update(filter_rel_attrs(field.name, **self.rel_attrs))
+
+        if (
+            field.__class__ in (ForeignKey, OneToOneField, ManyToManyField)
+            and not is_content_type_fk
+        ):
+            generator_attrs["_create_files"] = self.create_files
+
+        if isinstance(field, ManyToManyField):
+            raise NotImplementedError(
+                f"ManyToManyField '{field.name}' is not yet supported in async mode"
+            )
+
+        if not commit:
+            # `prepare` mode: no I/O — fall back to the generator's sync
+            # `.prepare` attribute (or the generator itself for non-relational
+            # fields).
+            generator = getattr(generator, "prepare", generator)
+            return generator(**generator_attrs)
+
+        # Forward FK / OneToOne: route through the async sibling so the
+        # recursive create runs on the same async connection.
+        if generator is random_gen.gen_related:
+            return await random_gen.agen_related(**generator_attrs)
+
+        # Pure-Python generator (no I/O expected).
+        return generator(**generator_attrs)
 
     def m2m_value(self, field: ManyToManyField) -> list[Any]:
         if field.name in self.rel_fields:

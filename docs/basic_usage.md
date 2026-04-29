@@ -383,3 +383,38 @@ assert history.customer in Customer.objects.using(custom_db).all()
 assert not PurchaseHistory.objects.exists()
 assert not Customer.objects.exists()
 ```
+
+## Async usage
+
+`baker.amake()` and `baker.aprepare()` are async-native variants that
+persist through Django's async ORM (`instance.asave()`), recursing through
+forward `ForeignKey` and `OneToOneField` on the same connection.
+
+```python
+from model_bakery import baker
+
+async def test_create_customer():
+    customer = await baker.amake("shop.Customer")
+    purchase = await baker.amake(
+        "shop.PurchaseHistory", customer__name="Alice"
+    )
+```
+
+Supported: forward FK / OneToOne, `foo__bar` traversal on forward relations,
+scalars, choices, defaults, `_quantity`, `_fill_optional`, `_using`, FK
+instance overrides, iterators, and custom field generators registered via
+`baker.generators.add(...)`.
+
+Not yet supported (raises `NotImplementedError`): `make_m2m`, M2M attrs,
+reverse-relation `foo__bar`, `GenericForeignKey`, `_bulk_create`,
+`_save_kwargs`, `_refresh_after_create`, `_create_files`, `_from_manager`,
+overriding `auto_now`/`auto_now_add` fields, recipes. Use sync `make()` if
+you need any of these.
+
+The motivating use case is pairing with an async-capable backend (e.g.
+`django-async-backend`) so test fixtures and assertions share one
+connection, letting `TestCase` rollback work correctly. With the stock
+Django backend, `asave()` is internally a `sync_to_async` wrapper that
+runs on a different thread's connection — async tests under
+`pytest-django` need `@pytest.mark.django_db(transaction=True)` to clean
+up between tests.
