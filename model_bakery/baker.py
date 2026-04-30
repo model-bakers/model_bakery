@@ -86,20 +86,15 @@ __all__ = [
 # rather than silently falling through into a sync code path.
 _ASYNC_UNSUPPORTED_KWARGS = frozenset(
     {
-        "make_m2m",
-        "_save_kwargs",
-        "_refresh_after_create",
-        "_create_files",
         "_bulk_create",
-        "_from_manager",
     }
 )
 
 
 def _reject_async_unsupported(kwargs: dict[str, Any]) -> None:
     # Only reject when the user is actually asking for the feature (truthy).
-    # Falsy values like `_create_files=False` are forwarded by recursive calls
-    # and represent "no request," so they shouldn't trip the guard.
+    # Falsy values forwarded by recursive calls represent "no request,"
+    # so they shouldn't trip the guard.
     leaked = sorted(
         k for k in _ASYNC_UNSUPPORTED_KWARGS if k in kwargs and kwargs[k]
     )
@@ -265,6 +260,10 @@ def prepare(
 async def amake(
     _model: str | type[M],
     _quantity: None = None,
+    make_m2m: bool = False,
+    _save_kwargs: dict[str, Any] | None = None,
+    _refresh_after_create: bool = False,
+    _create_files: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
     **attrs: Any,
@@ -275,6 +274,10 @@ async def amake(
 async def amake(
     _model: str | type[M],
     _quantity: int,
+    make_m2m: bool = False,
+    _save_kwargs: dict[str, Any] | None = None,
+    _refresh_after_create: bool = False,
+    _create_files: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
     **attrs: Any,
@@ -284,21 +287,39 @@ async def amake(
 async def amake(
     _model,
     _quantity: int | None = None,
+    make_m2m: bool = False,
+    _save_kwargs: dict[str, Any] | None = None,
+    _refresh_after_create: bool = False,
+    _create_files: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ):
     """Async variant of `make` — persists via Django's async ORM (`asave`)."""
     _reject_async_unsupported(attrs)
+    _save_kwargs = _save_kwargs or {}
     attrs.update({"_fill_optional": _fill_optional})
-    baker: Baker = Baker.create(_model, _using=_using)
+    baker: Baker = Baker.create(
+        _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
+    )
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
     if _quantity:
-        return [await baker.amake(**attrs) for _ in range(_quantity)]
+        return [
+            await baker.amake(
+                _save_kwargs=_save_kwargs,
+                _refresh_after_create=_refresh_after_create,
+                **attrs,
+            )
+            for _ in range(_quantity)
+        ]
 
-    return await baker.amake(**attrs)
+    return await baker.amake(
+        _save_kwargs=_save_kwargs,
+        _refresh_after_create=_refresh_after_create,
+        **attrs,
+    )
 
 
 @overload
@@ -588,6 +609,9 @@ class Baker(Generic[M]):
 
     async def amake(
         self,
+        _save_kwargs: dict[str, Any] | None = None,
+        _refresh_after_create: bool = False,
+        _from_manager=None,
         _fill_optional: list[str] | bool = False,
         **attrs: Any,
     ):
@@ -596,6 +620,9 @@ class Baker(Generic[M]):
         params = {
             "commit": True,
             "commit_related": True,
+            "_save_kwargs": _save_kwargs,
+            "_refresh_after_create": _refresh_after_create,
+            "_from_manager": _from_manager,
             "_fill_optional": _fill_optional,
         }
         params.update(attrs)
@@ -705,12 +732,15 @@ class Baker(Generic[M]):
         self,
         commit=True,
         commit_related=True,
+        _save_kwargs=None,
+        _refresh_after_create=False,
+        _from_manager=None,
         **attrs: Any,
     ) -> M:
         # Async parallel of `_make` — kept in lockstep, update both together.
         # Diverges only at I/O points (`agenerate_value`, `ainstance`) and
         # where unsupported features raise `NotImplementedError`.
-        _save_kwargs: dict[str, Any] = {}
+        _save_kwargs = _save_kwargs or {}
         if self._using:
             _save_kwargs["using"] = self._using
 
@@ -720,19 +750,15 @@ class Baker(Generic[M]):
                 continue
 
             if isinstance(field, ManyToManyField):
-                # If user did not request M2M, sync-skip silently. If they did,
-                # raise — we don't yet have an async M2M path.
-                if (
-                    field.name in self.model_attrs
-                    or field.name in self.iterator_attrs
-                    or self.make_m2m
-                    or field.name in self.rel_fields
-                ):
-                    raise NotImplementedError(
-                        f"ManyToManyField '{field.name}' is not yet supported in "
-                        "async mode"
-                    )
-                continue
+                if field.name not in self.model_attrs:
+                    self.m2m_dict[field.name] = await self.am2m_value(field)
+                else:
+                    if field.name in self.iterator_attrs:
+                        self.model_attrs[field.name] = [
+                            next(self.iterator_attrs[field.name])
+                        ]
+                    else:
+                        self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
             elif (
                 isinstance(field, (OneToOneField, ForeignKey))
                 and hasattr(field, "attname")
@@ -761,39 +787,56 @@ class Baker(Generic[M]):
         instance = await self.ainstance(
             self.model_attrs,
             _commit=commit,
+            _from_manager=_from_manager,
             _save_kwargs=_save_kwargs,
         )
         if commit:
             for related in self.model._meta.related_objects:
-                rel_name = related.get_accessor_name()
-                if rel_name and rel_name in self.rel_fields:
-                    raise NotImplementedError(
-                        f"Reverse relation '{rel_name}' (foo__bar via reverse) "
-                        "is not yet supported in async mode"
-                    )
+                await self.acreate_by_related_name(instance, related)
+
+        if _refresh_after_create:
+            await instance.arefresh_from_db()
 
         return instance
 
+    async def am2m_value(self, field: ManyToManyField) -> list[Any]:
+        if field.name in self.rel_fields:
+            return await self.agenerate_value(field)
+        if not self.make_m2m or field.null and not field.fill_optional:
+            return []
+        return await self.agenerate_value(field)
+
+    async def acreate_by_related_name(
+        self, instance: Model, related: ManyToOneRel | OneToOneRel
+    ) -> None:
+        rel_name = related.get_accessor_name()
+        if not rel_name or rel_name not in self.rel_fields:
+            return
+
+        kwargs = filter_rel_attrs(rel_name, **self.rel_attrs)
+        kwargs[related.field.name] = instance
+
+        await amake(related.field.model, **kwargs)
+
     async def ainstance(
-        self, attrs: dict[str, Any], _commit, _save_kwargs
+        self, attrs: dict[str, Any], _commit, _save_kwargs, _from_manager
     ) -> M:
-        # Async parallel of `instance` — kept in lockstep. Rejects the
-        # reverse-relation, auto-now-override, and GenericForeignKey
-        # branches; those need Django async APIs we haven't wired yet.
+        # Async parallel of `instance` — kept in lockstep. GFK still rejected
+        # (no public `aget_for_model` until Django 5.0, and GFK is rare).
+        one_to_many_keys = {}
+        auto_now_keys = {}
+
         for k in tuple(attrs.keys()):
             field = getattr(self.model, k, None)
             if not field:
                 continue
 
             if isinstance(field, ForeignRelatedObjectsDescriptor):
-                raise NotImplementedError(
-                    f"Reverse one-to-many '{k}' is not yet supported in async mode"
-                )
+                one_to_many_keys[k] = attrs.pop(k)
+
             if hasattr(field, "field") and _is_auto_datetime_field(field.field):
-                raise NotImplementedError(
-                    f"Overriding auto_now/auto_now_add field '{k}' is not yet "
-                    "supported in async mode"
-                )
+                auto_now_keys[k] = attrs[k]
+
             if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
                 raise NotImplementedError(
                     f"GenericForeignKey '{k}' is not yet supported in async mode"
@@ -803,8 +846,82 @@ class Baker(Generic[M]):
 
         if _commit:
             await instance.asave(**_save_kwargs)
+            await self._ahandle_one_to_many(instance, one_to_many_keys)
+            await self._ahandle_m2m(instance)
+            await self._ahandle_auto_now(instance, auto_now_keys)
+
+            if _from_manager:
+                manager = getattr(self.model, _from_manager)
+                instance = cast(M, await manager.aget(pk=instance.pk))
 
         return instance
+
+    async def _ahandle_auto_now(self, instance: Model, attrs: dict[str, Any]):
+        if not attrs:
+            return
+
+        await instance.__class__.objects.filter(pk=instance.pk).aupdate(**attrs)
+
+        for k, v in attrs.items():
+            setattr(instance, k, v)
+
+    async def _ahandle_one_to_many(self, instance: Model, attrs: dict[str, Any]):
+        # Async parallel of `_handle_one_to_many` — covers the
+        # `reverse_set=[..]` and `reverse_set=callable` shapes.
+        import types
+
+        from .recipe import related as related_callable
+
+        for key, values in attrs.items():
+            manager = getattr(instance, key)
+
+            if callable(values):
+                if isinstance(values, types.MethodType) and isinstance(
+                    values.__self__, related_callable
+                ):
+                    fk_field_name = manager.field.name
+                    values = values(**{fk_field_name: instance})
+                else:
+                    values = values()
+
+            for value in values:
+                fks = any(
+                    fk
+                    for fk in value._meta.fields
+                    if isinstance(fk, (ForeignKey, OneToOneField))
+                )
+                if not value.pk and not fks:
+                    await value.asave()
+
+            try:
+                await manager.aset(values, bulk=False, clear=True)
+            except TypeError:
+                await manager.aset(values, clear=True)
+
+    async def _ahandle_m2m(self, instance: Model):
+        for key, values in self.m2m_dict.items():
+            if callable(values):
+                values = cast(Callable[[], M2MValues], values)()
+
+            for value in values:
+                if not value.pk:
+                    await value.asave()
+            m2m_relation = getattr(instance, key)
+            through_model = m2m_relation.through
+
+            if through_model._meta.auto_created:
+                await m2m_relation.aadd(*values)
+            else:
+                for value in values:
+                    base_kwargs = {
+                        m2m_relation.source_field_name: instance,
+                        m2m_relation.target_field_name: value,
+                    }
+                    await amake(  # ty: ignore[no-matching-overload]
+                        cast(type[Model], through_model),
+                        _using=self._using,
+                        **base_kwargs,
+                    )
 
     async def agenerate_value(  # noqa: C901
         self, field: Field, commit: bool = True
@@ -861,11 +978,6 @@ class Baker(Generic[M]):
         ):
             generator_attrs["_create_files"] = self.create_files
 
-        if isinstance(field, ManyToManyField):
-            raise NotImplementedError(
-                f"ManyToManyField '{field.name}' is not yet supported in async mode"
-            )
-
         if not commit:
             # `prepare` mode: no I/O — fall back to the generator's sync
             # `.prepare` attribute (or the generator itself for non-relational
@@ -873,10 +985,12 @@ class Baker(Generic[M]):
             generator = getattr(generator, "prepare", generator)
             return generator(**generator_attrs)
 
-        # Forward FK / OneToOne: route through the async sibling so the
-        # recursive create runs on the same async connection.
+        # Forward FK / OneToOne and M2M: route through the async sibling so
+        # the recursive create runs on the same async connection.
         if generator is random_gen.gen_related:
             return await random_gen.agen_related(**generator_attrs)
+        if generator is random_gen.gen_m2m:
+            return await random_gen.agen_m2m(**generator_attrs)
 
         # Pure-Python generator (no I/O expected).
         return generator(**generator_attrs)

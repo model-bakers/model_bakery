@@ -466,6 +466,15 @@ def gen_m2m(model, _create_files=False, **attrs):
 gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 
 
+async def agen_m2m(model, _create_files=False, **attrs):
+    from .baker import MAX_MANY_QUANTITY, amake
+
+    return await amake(model, _quantity=MAX_MANY_QUANTITY, **attrs)
+
+
+agen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
+
+
 # GIS generators
 
 

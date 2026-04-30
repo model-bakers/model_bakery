@@ -400,16 +400,16 @@ async def test_create_customer():
     )
 ```
 
-Supported: forward FK / OneToOne, `foo__bar` traversal on forward relations,
-scalars, choices, defaults, `_quantity`, `_fill_optional`, `_using`, FK
-instance overrides, iterators, and custom field generators registered via
-`baker.generators.add(...)`.
+Supported: forward and reverse relations (FK, OneToOne, M2M, `foo__bar`
+traversal in both directions), scalars, choices, defaults, `_quantity`,
+`_fill_optional`, `_using`, `make_m2m`, M2M attrs, `_save_kwargs`,
+`_refresh_after_create`, `_create_files`, `_from_manager`, overriding
+`auto_now`/`auto_now_add` fields, FK/M2M instance overrides, iterators,
+and custom field generators registered via `baker.generators.add(...)`.
 
-Not yet supported (raises `NotImplementedError`): `make_m2m`, M2M attrs,
-reverse-relation `foo__bar`, `GenericForeignKey`, `_bulk_create`,
-`_save_kwargs`, `_refresh_after_create`, `_create_files`, `_from_manager`,
-overriding `auto_now`/`auto_now_add` fields, recipes. Use sync `make()` if
-you need any of these.
+Currently unsupported (raises `NotImplementedError`): `_bulk_create`,
+`GenericForeignKey`, and recipes (`amake_recipe` / `aprepare_recipe`).
+Use sync `make()` if you need any of these.
 
 Note: under stock Django, `asave()` is internally a `sync_to_async`
 wrapper that runs on a different thread's database connection. Async

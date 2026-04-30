@@ -10,11 +10,14 @@ see (or roll back) those writes, leaking rows into later tests. With
 covers any connection.
 """
 
+from datetime import datetime
+
 import pytest
 
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException
 from tests.generic.models import (
+    Classroom,
     Dog,
     Home,
     LonelyPerson,
@@ -81,6 +84,15 @@ class TestAmakeRelations:
         assert lonely.only_friend_id is not None
         assert lonely.only_friend.pk == lonely.only_friend_id
 
+    async def test_amake_reverse_relation_creates_child(self):
+        # `Profile` has a reverse FK from `User.profile` with default
+        # accessor `user_set`. Baker treats `user_set` as a reverse-rel
+        # name and creates a User attached to this Profile.
+        profile = await baker.amake(Profile, user_set__username="bob")
+        users = [u async for u in User.objects.filter(profile=profile)]
+        assert len(users) == 1
+        assert users[0].username == "bob"
+
 
 @pytest.mark.django_db(transaction=True)
 class TestAmakeQuantity:
@@ -114,41 +126,70 @@ class TestAprepare:
 
 
 @pytest.mark.django_db(transaction=True)
-class TestAmakeUnsupportedFeatures:
-    async def test_make_m2m_not_supported(self):
-        with pytest.raises(NotImplementedError, match="make_m2m"):
-            await baker.amake(Home, make_m2m=True)
+class TestAmakeM2M:
+    async def test_m2m_explicit_attr(self):
+        dog1 = await baker.amake(Dog)
+        dog2 = await baker.amake(Dog)
+        home = await baker.amake(Home, dogs=[dog1, dog2])
+        assert home.pk is not None
+        related = [d async for d in home.dogs.all()]
+        assert {d.pk for d in related} == {dog1.pk, dog2.pk}
 
-    async def test_save_kwargs_not_supported(self):
-        with pytest.raises(NotImplementedError, match="_save_kwargs"):
-            await baker.amake(Profile, _save_kwargs={"using": "default"})
+    async def test_make_m2m_auto_generates_required_field(self):
+        # `Home.dogs` is non-nullable M2M to Dog — `make_m2m=True` fills it.
+        home = await baker.amake(Home, make_m2m=True)
+        assert home.pk is not None
+        assert await home.dogs.acount() > 0
 
-    async def test_refresh_after_create_not_supported(self):
-        with pytest.raises(NotImplementedError, match="_refresh_after_create"):
-            await baker.amake(Profile, _refresh_after_create=True)
+    async def test_make_m2m_default_skips_nullable(self):
+        # Nullable M2M (Classroom.students) is not auto-filled even with
+        # `make_m2m=True` — matches sync behaviour. Override with
+        # `_fill_optional` if you want it.
+        classroom = await baker.amake(Classroom, make_m2m=True)
+        assert await classroom.students.acount() == 0
 
-    async def test_create_files_not_supported(self):
-        with pytest.raises(NotImplementedError, match="_create_files"):
-            await baker.amake(Profile, _create_files=True)
 
+@pytest.mark.django_db(transaction=True)
+class TestAmakeKwargs:
+    async def test_refresh_after_create(self):
+        # Smoke-test: creating with refresh re-reads from DB.
+        profile = await baker.amake(
+            Profile, email="x@y.z", _refresh_after_create=True
+        )
+        assert profile.pk is not None
+        assert profile.email == "x@y.z"
+
+    async def test_save_kwargs_forwarded(self):
+        # `using` is the only widely-applicable save kwarg without extra setup.
+        profile = await baker.amake(Profile, _save_kwargs={"using": "default"})
+        assert profile.pk is not None
+
+    async def test_create_files_kwarg_accepted(self):
+        # Smoke-test only: with `_create_files=False` the FileField is
+        # skipped, but the kwarg is no longer rejected by the async path.
+        # Actual file generation is the same code path as sync — covered
+        # by `tests/test_filling_fields.py::TestsFillingFileField`.
+        profile = await baker.amake(Profile, _create_files=False)
+        assert profile.pk is not None
+
+    async def test_auto_now_override(self):
+        # Dog has `created = DateTimeField(auto_now_add=True)`. The conftest
+        # leaves USE_TZ at its env default, which is False in this suite —
+        # use a naive datetime to match the SQLite backend's expectations.
+        dt = datetime(2020, 1, 1)
+        dog = await baker.amake(Dog, created=dt)
+        assert dog.pk is not None
+        assert dog.created == dt
+        # ...and the override survived a re-fetch.
+        await dog.arefresh_from_db()
+        assert dog.created == dt
+
+
+@pytest.mark.django_db(transaction=True)
+class TestAmakeRejectedFeatures:
     async def test_bulk_create_not_supported(self):
         with pytest.raises(NotImplementedError, match="_bulk_create"):
             await baker.amake(Profile, _bulk_create=True)
-
-    async def test_m2m_field_attr_raises(self):
-        # `Home.dogs` is M2M; passing it should fail clearly even though the
-        # generic kwarg sniffing wouldn't catch it.
-        dog = await baker.amake(Dog)
-        with pytest.raises(NotImplementedError, match="ManyToManyField"):
-            await baker.amake(Home, dogs=[dog])
-
-    async def test_auto_now_override_raises(self):
-        # Dog has `created = DateTimeField(auto_now_add=True)`.
-        from datetime import datetime, timezone
-
-        dt = datetime(2020, 1, 1, tzinfo=timezone.utc)
-        with pytest.raises(NotImplementedError, match="auto_now"):
-            await baker.amake(Dog, created=dt)
 
 
 @pytest.mark.django_db(transaction=True)

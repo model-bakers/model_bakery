@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
-- Async-native `baker.amake()` and `baker.aprepare()` for use from `async def` contexts. Persists via `instance.asave()`, recurses through forward `ForeignKey` / `OneToOneField` (including `foo__bar` traversal). Supports `_quantity`, `_fill_optional`, `_using`, and custom field generators registered via `baker.generators.add(...)` (the generator itself must be sync and not perform I/O). Unsupported features (`make_m2m`, M2M attrs, reverse `foo__bar`, `GenericForeignKey`, `_bulk_create`, `_save_kwargs`, `_refresh_after_create`, `_create_files`, `_from_manager`, recipes) raise `NotImplementedError`.
+- Async-native `baker.amake()` and `baker.aprepare()` for use from `async def` contexts. Persists via `instance.asave()`; recurses through forward and reverse relations on the same connection. Supports `_quantity`, `_fill_optional`, `_using`, `make_m2m`, M2M attrs, `foo__bar` traversal (forward and reverse), `_save_kwargs`, `_refresh_after_create`, `_create_files`, `_from_manager`, overriding `auto_now`/`auto_now_add` fields via `aupdate`, and custom field generators registered via `baker.generators.add(...)` (the generator itself must be sync and not perform I/O). Currently unsupported (raises `NotImplementedError`): `_bulk_create`, `GenericForeignKey`, and recipes (`amake_recipe` / `aprepare_recipe`) — follow-ups.
 
 - Add `_full_clean` flag to `baker.make()` and `baker.prepare()` to run Django model validation (`False` by default), including the `baker.make(..., _bulk_create=True)` path ([#523](https://github.com/model-bakers/model_bakery/issues/523))
 
