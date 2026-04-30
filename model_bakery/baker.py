@@ -81,30 +81,6 @@ __all__ = [
 ]
 
 
-# Kwargs that have a sync-only implementation today. Passing one of these to
-# the async path is rejected up front so users hit a clear NotImplementedError
-# rather than silently falling through into a sync code path.
-_ASYNC_UNSUPPORTED_KWARGS = frozenset(
-    {
-        "_bulk_create",
-    }
-)
-
-
-def _reject_async_unsupported(kwargs: dict[str, Any]) -> None:
-    # Only reject when the user is actually asking for the feature (truthy).
-    # Falsy values forwarded by recursive calls represent "no request,"
-    # so they shouldn't trip the guard.
-    leaked = sorted(
-        k for k in _ASYNC_UNSUPPORTED_KWARGS if k in kwargs and kwargs[k]
-    )
-    if leaked:
-        raise NotImplementedError(
-            f"Async amake/aprepare does not support: {leaked}. "
-            "Use the sync make()/prepare() if you need these features."
-        )
-
-
 def _valid_quantity(quantity: str | int | None) -> bool:
     return quantity is not None and (not isinstance(quantity, int) or quantity < 1)
 
@@ -265,6 +241,7 @@ async def amake(
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
+    _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ) -> M: ...
@@ -279,6 +256,7 @@ async def amake(
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
+    _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ) -> list[M]: ...
@@ -292,11 +270,11 @@ async def amake(
     _refresh_after_create: bool = False,
     _create_files: bool = False,
     _using: str = "",
+    _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
     **attrs: Any,
 ):
     """Async variant of `make` — persists via Django's async ORM (`asave`)."""
-    _reject_async_unsupported(attrs)
     _save_kwargs = _save_kwargs or {}
     attrs.update({"_fill_optional": _fill_optional})
     baker: Baker = Baker.create(
@@ -305,7 +283,12 @@ async def amake(
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
-    if _quantity:
+    if _bulk_create:
+        result = await abulk_create(
+            baker, _quantity or 1, _save_kwargs=_save_kwargs, **attrs
+        )
+        return result if _quantity else result[0]
+    elif _quantity:
         return [
             await baker.amake(
                 _save_kwargs=_save_kwargs,
@@ -353,7 +336,6 @@ async def aprepare(
     **attrs: Any,
 ):
     """Async variant of `prepare` — builds instances without persisting."""
-    _reject_async_unsupported(attrs)
     if _save_related:
         raise NotImplementedError(
             "aprepare(_save_related=True) is not yet supported in async mode"
@@ -616,7 +598,6 @@ class Baker(Generic[M]):
         **attrs: Any,
     ):
         """Create and persist an instance using Django's async ORM."""
-        _reject_async_unsupported(attrs)
         params = {
             "commit": True,
             "commit_related": True,
@@ -634,7 +615,6 @@ class Baker(Generic[M]):
         **attrs: Any,
     ) -> M:
         """Build (but do not persist) an instance using async-compatible flow."""
-        _reject_async_unsupported(attrs)
         params = {
             "commit": False,
             "commit_related": False,
@@ -1438,6 +1418,28 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
                 setattr(obj, fk.name, fk_obj)
 
 
+async def _asave_related_objs(model, objects, _using=None) -> None:
+    # Async parallel of `_save_related_objs` — kept in lockstep.
+    _save_kwargs = {"using": _using} if _using else {}
+
+    fk_fields = [
+        f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
+    ]
+
+    for fk in fk_fields:
+        fk_objects = []
+        for obj in objects:
+            fk_obj = getattr(obj, fk.name, None)
+            if fk_obj and not fk_obj.pk:
+                fk_objects.append(fk_obj)
+
+        if fk_objects:
+            await _asave_related_objs(fk.related_model, fk_objects)
+            for i, fk_obj in enumerate(fk_objects):
+                await fk_obj.asave(**_save_kwargs)
+                setattr(objects[i], fk.name, fk_obj)
+
+
 def bulk_create(  # noqa: C901
     baker: Baker[M], quantity: int, _full_clean: bool = False, **kwargs
 ) -> list[M]:
@@ -1548,5 +1550,95 @@ def bulk_create(  # noqa: C901
                 )
         if through_rows:
             through_model.objects.bulk_create(through_rows)
+
+    return created_entries
+
+
+async def abulk_create(  # noqa: C901
+    baker: Baker[M], quantity: int, **kwargs
+) -> list[M]:
+    """Async parallel of `bulk_create` — kept in lockstep.
+
+    Mirrors sync `bulk_create` step-for-step using async DB primitives:
+    `aprepare` to build instances, `_asave_related_objs` to persist FKs,
+    `manager.abulk_create` for the main insert, `aset`/`abulk_create` for
+    M2M post-processing.
+    """
+    entries = [await baker.aprepare(**kwargs) for _ in range(quantity)]
+
+    await _asave_related_objs(baker.model, entries, _using=baker._using)
+
+    if baker._using:
+        manager = baker.model._base_manager.using(baker._using)
+    else:
+        manager = baker.model._base_manager
+
+    created_entries = await manager.abulk_create(entries)
+
+    for entry in created_entries:
+        for field in baker.model._meta.many_to_many:
+            if field.name in kwargs:
+                through_model = getattr(entry, field.name).through
+                await through_model.objects.abulk_create(
+                    [
+                        through_model(
+                            **{
+                                field.m2m_field_name(): entry,
+                                field.m2m_reverse_field_name(): obj,
+                            }
+                        )
+                        for obj in kwargs[field.name]
+                    ]
+                )
+
+        for field in baker.model._meta.get_fields():
+            if field.many_to_many and hasattr(field, "related_model"):
+                reverse_relation_name = (
+                    field.related_query_name
+                    or field.related_name
+                    or f"{field.related_model._meta.model_name}_set"
+                )
+                if reverse_relation_name in kwargs:
+                    await getattr(entry, reverse_relation_name).aset(
+                        kwargs[reverse_relation_name]
+                    )
+
+    # M2M on FK-related (e.g. `home__dogs=[dog]`) — see sync comment.
+    for kwarg_key, kwarg_value in kwargs.items():
+        if "__" not in kwarg_key:
+            continue
+        fk_field_name, m2m_field_name = kwarg_key.split("__", 1)
+        if "__" in m2m_field_name:
+            continue
+        try:
+            fk_field = baker.model._meta.get_field(fk_field_name)
+        except FieldDoesNotExist:
+            continue
+        if not isinstance(fk_field, (ForeignKey, OneToOneField)):
+            continue
+        try:
+            related_m2m = fk_field.related_model._meta.get_field(m2m_field_name)
+        except FieldDoesNotExist:
+            continue
+        if not isinstance(related_m2m, ManyToManyField):
+            continue
+        through_model = related_m2m.remote_field.through
+        if not through_model._meta.auto_created:
+            continue
+        through_rows = []
+        for entry in created_entries:
+            fk_obj = getattr(entry, fk_field_name, None)
+            if fk_obj is not None:
+                through_rows.extend(
+                    through_model(
+                        **{
+                            related_m2m.m2m_field_name(): fk_obj,
+                            related_m2m.m2m_reverse_field_name(): obj,
+                        }
+                    )
+                    for obj in kwarg_value
+                )
+        if through_rows:
+            await through_model.objects.abulk_create(through_rows)
 
     return created_entries

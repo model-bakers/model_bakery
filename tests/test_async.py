@@ -186,10 +186,41 @@ class TestAmakeKwargs:
 
 
 @pytest.mark.django_db(transaction=True)
-class TestAmakeRejectedFeatures:
-    async def test_bulk_create_not_supported(self):
-        with pytest.raises(NotImplementedError, match="_bulk_create"):
-            await baker.amake(Profile, _bulk_create=True)
+class TestAmakeBulkCreate:
+    async def test_bulk_create_with_quantity(self):
+        profiles = await baker.amake(Profile, _quantity=5, _bulk_create=True)
+        assert isinstance(profiles, list)
+        assert len(profiles) == 5
+        assert all(p.pk is not None for p in profiles)
+        assert await Profile.objects.acount() == 5
+
+    async def test_bulk_create_persists_fk(self):
+        # Bulk-creating User auto-creates a nullable Profile per row via the
+        # `_save_related_objs` helper.
+        users = await baker.amake(
+            User, _quantity=3, _bulk_create=True, _fill_optional=["profile"]
+        )
+        assert len(users) == 3
+        assert await Profile.objects.acount() == 3
+        assert all(u.profile_id is not None for u in users)
+
+    async def test_bulk_create_with_m2m_attrs(self):
+        dog1 = await baker.amake(Dog)
+        dog2 = await baker.amake(Dog)
+        homes = await baker.amake(
+            Home, _quantity=2, _bulk_create=True, dogs=[dog1, dog2]
+        )
+        assert len(homes) == 2
+        for home in homes:
+            related = {d.pk async for d in home.dogs.all()}
+            assert related == {dog1.pk, dog2.pk}
+
+    async def test_bulk_create_single_returns_instance(self):
+        # Without `_quantity`, sync `make(..., _bulk_create=True)` returns
+        # the single created instance, not a list. Async should match.
+        profile = await baker.amake(Profile, _bulk_create=True)
+        assert not isinstance(profile, list)
+        assert profile.pk is not None
 
 
 @pytest.mark.django_db(transaction=True)
