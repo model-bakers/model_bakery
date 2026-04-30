@@ -359,3 +359,33 @@ assert history.customer in Customer.objects.using(custom_db).all()
 assert not PurchaseHistory.objects.exists()
 assert not Customer.objects.exists()
 ```
+
+## Async usage
+
+`baker.amake()` and `baker.aprepare()` are async-native variants of
+`make()` and `prepare()` that persist through Django's async ORM
+(`instance.asave()`).
+
+```python
+from model_bakery import baker
+
+async def test_create_customer():
+    customer = await baker.amake("shop.Customer")
+    purchase = await baker.amake(
+        "shop.PurchaseHistory", customer__name="Alice"
+    )
+```
+
+The async variants accept the same arguments as their sync counterparts.
+Two features are not yet supported and raise `NotImplementedError`:
+
+- `GenericForeignKey` fields
+- Recipes (no `amake_recipe` / `aprepare_recipe`)
+
+Use sync `make()` / `make_recipe()` if you need either.
+
+Note: when using `pytest-django`, async tests that persist instances
+should use `@pytest.mark.django_db(transaction=True)` — otherwise writes
+can leak between tests, since async saves may run on a different DB
+connection than the test runner. (This may change as Django's async DB
+backend story matures.)
