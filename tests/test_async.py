@@ -1,12 +1,5 @@
 """Tests for `amake` / `aprepare` — the async variants of `make` / `prepare`.
 
-These exercise the async code paths in `baker.py`. The motivating use case
-(single-connection rollback under `django-async-backend`) isn't exercised
-here because that backend is a separate dependency. What this file *does*
-verify is that the async path exists, recurses correctly through forward
-FKs, honours the same kwargs as sync `make`, and rejects unsupported
-features with a clear error.
-
 We use `pytest.mark.django_db(transaction=True)` rather than the default
 because under the stock Django backend `instance.asave()` is internally a
 `sync_to_async(thread_sensitive=True)` wrapper — saves run on asgiref's

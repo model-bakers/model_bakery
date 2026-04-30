@@ -411,10 +411,8 @@ reverse-relation `foo__bar`, `GenericForeignKey`, `_bulk_create`,
 overriding `auto_now`/`auto_now_add` fields, recipes. Use sync `make()` if
 you need any of these.
 
-The motivating use case is pairing with an async-capable backend (e.g.
-`django-async-backend`) so test fixtures and assertions share one
-connection, letting `TestCase` rollback work correctly. With the stock
-Django backend, `asave()` is internally a `sync_to_async` wrapper that
-runs on a different thread's connection — async tests under
-`pytest-django` need `@pytest.mark.django_db(transaction=True)` to clean
-up between tests.
+Note: under stock Django, `asave()` is internally a `sync_to_async`
+wrapper that runs on a different thread's database connection. Async
+tests under `pytest-django` need `@pytest.mark.django_db(transaction=True)`
+so writes are cleaned up between tests regardless of which connection
+saw them.
