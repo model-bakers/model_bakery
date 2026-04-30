@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Async-native `baker.amake()` and `baker.aprepare()` for use from `async def` contexts. Persists via `instance.asave()`; recurses through forward and reverse relations on the same connection. Supports `_quantity`, `_fill_optional`, `_using`, `make_m2m`, M2M attrs, `foo__bar` traversal (forward and reverse), `_save_kwargs`, `_refresh_after_create`, `_create_files`, `_from_manager`, `_bulk_create` (via `manager.abulk_create` and async M2M post-processing), overriding `auto_now`/`auto_now_add` fields via `aupdate`, and custom field generators registered via `baker.generators.add(...)` (the generator itself must be sync and not perform I/O). Currently unsupported (raises `NotImplementedError`): `GenericForeignKey` and recipes (`amake_recipe` / `aprepare_recipe`) — follow-ups.
 
 ### Changed
 - Speed up `Baker.get_fields()` by returning `_meta.fields + _meta.many_to_many` directly instead of filtering `_meta.get_fields()`.

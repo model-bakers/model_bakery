@@ -68,6 +68,8 @@ M2MInput = M2MValues | Callable[[], M2MValues]
 
 __all__ = [
     "Baker",
+    "amake",
+    "aprepare",
     "make",
     "prepare",
     "make_recipe",
@@ -207,6 +209,125 @@ def prepare(
         ]
 
     return baker.prepare(_save_related=_save_related, **attrs)
+
+
+@overload
+async def amake(
+    _model: str | type[M],
+    _quantity: None = None,
+    make_m2m: bool = False,
+    _save_kwargs: dict[str, Any] | None = None,
+    _refresh_after_create: bool = False,
+    _create_files: bool = False,
+    _using: str = "",
+    _bulk_create: bool = False,
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> M: ...
+
+
+@overload
+async def amake(
+    _model: str | type[M],
+    _quantity: int,
+    make_m2m: bool = False,
+    _save_kwargs: dict[str, Any] | None = None,
+    _refresh_after_create: bool = False,
+    _create_files: bool = False,
+    _using: str = "",
+    _bulk_create: bool = False,
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> list[M]: ...
+
+
+async def amake(
+    _model,
+    _quantity: int | None = None,
+    make_m2m: bool = False,
+    _save_kwargs: dict[str, Any] | None = None,
+    _refresh_after_create: bool = False,
+    _create_files: bool = False,
+    _using: str = "",
+    _bulk_create: bool = False,
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+):
+    """Async variant of `make` — persists via Django's async ORM (`asave`)."""
+    _save_kwargs = _save_kwargs or {}
+    attrs.update({"_fill_optional": _fill_optional})
+    baker: Baker = Baker.create(
+        _model, make_m2m=make_m2m, create_files=_create_files, _using=_using
+    )
+    if _valid_quantity(_quantity):
+        raise InvalidQuantityException
+
+    if _bulk_create:
+        result = await abulk_create(
+            baker, _quantity or 1, _save_kwargs=_save_kwargs, **attrs
+        )
+        return result if _quantity else result[0]
+    elif _quantity:
+        return [
+            await baker.amake(
+                _save_kwargs=_save_kwargs,
+                _refresh_after_create=_refresh_after_create,
+                **attrs,
+            )
+            for _ in range(_quantity)
+        ]
+
+    return await baker.amake(
+        _save_kwargs=_save_kwargs,
+        _refresh_after_create=_refresh_after_create,
+        **attrs,
+    )
+
+
+@overload
+async def aprepare(
+    _model: str | type[M],
+    _quantity: None = None,
+    _save_related: bool = False,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> M: ...
+
+
+@overload
+async def aprepare(
+    _model: str | type[M],
+    _quantity: int,
+    _save_related: bool = False,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+) -> list[M]: ...
+
+
+async def aprepare(
+    _model,
+    _quantity: int | None = None,
+    _save_related: bool = False,
+    _using: str = "",
+    _fill_optional: list[str] | bool = False,
+    **attrs: Any,
+):
+    """Async variant of `prepare` — builds instances without persisting."""
+    if _save_related:
+        raise NotImplementedError(
+            "aprepare(_save_related=True) is not yet supported in async mode"
+        )
+    attrs.update({"_fill_optional": _fill_optional})
+    baker = Baker.create(_model, _using=_using)
+    if _valid_quantity(_quantity):
+        raise InvalidQuantityException
+
+    if _quantity:
+        return [await baker.aprepare(**attrs) for _ in range(_quantity)]
+
+    return await baker.aprepare(**attrs)
 
 
 def _recipe(name: str) -> Any:
@@ -432,6 +553,40 @@ class Baker(Generic[M]):
         params.update(attrs)
         return self._make(**params)
 
+    async def amake(
+        self,
+        _save_kwargs: dict[str, Any] | None = None,
+        _refresh_after_create: bool = False,
+        _from_manager=None,
+        _fill_optional: list[str] | bool = False,
+        **attrs: Any,
+    ):
+        """Create and persist an instance using Django's async ORM."""
+        params = {
+            "commit": True,
+            "commit_related": True,
+            "_save_kwargs": _save_kwargs,
+            "_refresh_after_create": _refresh_after_create,
+            "_from_manager": _from_manager,
+            "_fill_optional": _fill_optional,
+        }
+        params.update(attrs)
+        return await self._amake(**params)
+
+    async def aprepare(
+        self,
+        _fill_optional: list[str] | bool = False,
+        **attrs: Any,
+    ) -> M:
+        """Build (but do not persist) an instance using async-compatible flow."""
+        params = {
+            "commit": False,
+            "commit_related": False,
+            "_fill_optional": _fill_optional,
+        }
+        params.update(attrs)
+        return await self._amake(**params)
+
     def get_fields(self) -> tuple[Any, ...]:
         return (
             *self.model._meta.fields,
@@ -507,6 +662,273 @@ class Baker(Generic[M]):
             instance.refresh_from_db()
 
         return instance
+
+    async def _amake(  # noqa: C901
+        self,
+        commit=True,
+        commit_related=True,
+        _save_kwargs=None,
+        _refresh_after_create=False,
+        _from_manager=None,
+        **attrs: Any,
+    ) -> M:
+        # Async parallel of `_make` — kept in lockstep, update both together.
+        # Diverges only at I/O points (`agenerate_value`, `ainstance`) and
+        # where unsupported features raise `NotImplementedError`.
+        _save_kwargs = _save_kwargs or {}
+        if self._using:
+            _save_kwargs["using"] = self._using
+
+        self._clean_attrs(attrs)
+        for field in self.get_fields():
+            if self._skip_field(field):
+                continue
+
+            if isinstance(field, ManyToManyField):
+                if field.name not in self.model_attrs:
+                    self.m2m_dict[field.name] = await self.am2m_value(field)
+                else:
+                    if field.name in self.iterator_attrs:
+                        self.model_attrs[field.name] = [
+                            next(self.iterator_attrs[field.name])
+                        ]
+                    else:
+                        self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
+            elif (
+                isinstance(field, (OneToOneField, ForeignKey))
+                and hasattr(field, "attname")
+                and field.attname in self.iterator_attrs
+            ):
+                self.model_attrs[field.attname] = next(
+                    self.iterator_attrs[field.attname]
+                )
+            elif field.name not in self.model_attrs:
+                if (
+                    not isinstance(field, ForeignKey)
+                    or hasattr(field, "attname")
+                    and field.attname not in self.model_attrs
+                ):
+                    self.model_attrs[field.name] = await self.agenerate_value(
+                        field, commit_related
+                    )
+            elif callable(self.model_attrs[field.name]):
+                self.model_attrs[field.name] = self.model_attrs[field.name]()
+            elif field.name in self.iterator_attrs:
+                try:
+                    self.model_attrs[field.name] = next(self.iterator_attrs[field.name])
+                except StopIteration:
+                    raise RecipeIteratorEmpty(f"{field.name} iterator is empty.")
+
+        instance = await self.ainstance(
+            self.model_attrs,
+            _commit=commit,
+            _from_manager=_from_manager,
+            _save_kwargs=_save_kwargs,
+        )
+        if commit:
+            for related in self.model._meta.related_objects:
+                await self.acreate_by_related_name(instance, related)
+
+        if _refresh_after_create:
+            await instance.arefresh_from_db()
+
+        return instance
+
+    async def am2m_value(self, field: ManyToManyField) -> list[Any]:
+        if field.name in self.rel_fields:
+            return await self.agenerate_value(field)
+        if not self.make_m2m or field.null and not field.fill_optional:
+            return []
+        return await self.agenerate_value(field)
+
+    async def acreate_by_related_name(
+        self, instance: Model, related: ManyToOneRel | OneToOneRel
+    ) -> None:
+        rel_name = related.get_accessor_name()
+        if not rel_name or rel_name not in self.rel_fields:
+            return
+
+        kwargs = filter_rel_attrs(rel_name, **self.rel_attrs)
+        kwargs[related.field.name] = instance
+
+        await amake(related.field.model, **kwargs)
+
+    async def ainstance(
+        self, attrs: dict[str, Any], _commit, _save_kwargs, _from_manager
+    ) -> M:
+        # Async parallel of `instance` — kept in lockstep. GFK still rejected
+        # (no public `aget_for_model` until Django 5.0, and GFK is rare).
+        one_to_many_keys = {}
+        auto_now_keys = {}
+
+        for k in tuple(attrs.keys()):
+            field = getattr(self.model, k, None)
+            if not field:
+                continue
+
+            if isinstance(field, ForeignRelatedObjectsDescriptor):
+                one_to_many_keys[k] = attrs.pop(k)
+
+            if hasattr(field, "field") and _is_auto_datetime_field(field.field):
+                auto_now_keys[k] = attrs[k]
+
+            if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
+                raise NotImplementedError(
+                    f"GenericForeignKey '{k}' is not yet supported in async mode"
+                )
+
+        instance = self.model(**attrs)
+
+        if _commit:
+            await instance.asave(**_save_kwargs)
+            await self._ahandle_one_to_many(instance, one_to_many_keys)
+            await self._ahandle_m2m(instance)
+            await self._ahandle_auto_now(instance, auto_now_keys)
+
+            if _from_manager:
+                manager = getattr(self.model, _from_manager)
+                instance = cast(M, await manager.aget(pk=instance.pk))
+
+        return instance
+
+    async def _ahandle_auto_now(self, instance: Model, attrs: dict[str, Any]):
+        if not attrs:
+            return
+
+        await instance.__class__.objects.filter(pk=instance.pk).aupdate(**attrs)
+
+        for k, v in attrs.items():
+            setattr(instance, k, v)
+
+    async def _ahandle_one_to_many(self, instance: Model, attrs: dict[str, Any]):
+        # Async parallel of `_handle_one_to_many` — covers the
+        # `reverse_set=[..]` and `reverse_set=callable` shapes.
+        import types
+
+        from .recipe import related as related_callable
+
+        for key, values in attrs.items():
+            manager = getattr(instance, key)
+
+            if callable(values):
+                if isinstance(values, types.MethodType) and isinstance(
+                    values.__self__, related_callable
+                ):
+                    fk_field_name = manager.field.name
+                    values = values(**{fk_field_name: instance})
+                else:
+                    values = values()
+
+            for value in values:
+                fks = any(
+                    fk
+                    for fk in value._meta.fields
+                    if isinstance(fk, (ForeignKey, OneToOneField))
+                )
+                if not value.pk and not fks:
+                    await value.asave()
+
+            try:
+                await manager.aset(values, bulk=False, clear=True)
+            except TypeError:
+                await manager.aset(values, clear=True)
+
+    async def _ahandle_m2m(self, instance: Model):
+        for key, values in self.m2m_dict.items():
+            if callable(values):
+                values = cast(Callable[[], M2MValues], values)()
+
+            for value in values:
+                if not value.pk:
+                    await value.asave()
+            m2m_relation = getattr(instance, key)
+            through_model = m2m_relation.through
+
+            if through_model._meta.auto_created:
+                await m2m_relation.aadd(*values)
+            else:
+                for value in values:
+                    base_kwargs = {
+                        m2m_relation.source_field_name: instance,
+                        m2m_relation.target_field_name: value,
+                    }
+                    await amake(  # ty: ignore[no-matching-overload]
+                        cast(type[Model], through_model),
+                        _using=self._using,
+                        **base_kwargs,
+                    )
+
+    async def agenerate_value(  # noqa: C901
+        self, field: Field, commit: bool = True
+    ) -> Any:
+        # Async parallel of `generate_value` — kept in lockstep. Sync logic
+        # for scalars/choices/defaults; forward FK / OneToOne recursion is
+        # routed through `agen_related` so the related instance lands on
+        # the same async connection.
+        is_content_type_fk = False
+        is_generic_fk = False
+        if BAKER_CONTENTTYPES:
+            is_content_type_fk = isinstance(field, ForeignKey) and issubclass(
+                self._remote_field(field).model, contenttypes_models.ContentType
+            )
+            is_generic_fk = isinstance(field, GenericForeignKey)
+        if is_generic_fk:
+            raise NotImplementedError(
+                f"GenericForeignKey '{field.name}' is not yet supported in async mode"
+            )
+        if is_content_type_fk:
+            raise NotImplementedError(
+                f"ContentType FK '{field.name}' is not yet supported in async mode"
+            )
+        if field.has_default() and field.name not in self.rel_fields:
+            if callable(field.default):
+                return field.default()
+            return field.default
+        elif getattr(field, "db_default", NOT_PROVIDED) != NOT_PROVIDED:
+            return field.db_default
+        elif field.name in self.attr_mapping:
+            generator = self.attr_mapping[field.name]
+        elif field.choices:
+            generator = random_gen.gen_from_choices(
+                field.choices, nullable=field.null, blankable=field.blank
+            )
+        elif gen := generators.get(field.__class__):
+            generator = gen
+        elif field.__class__ in self.type_mapping:
+            generator = self.type_mapping[field.__class__]
+        else:
+            raise TypeError(
+                f"field {field.name} type {field.__class__} is not supported by baker."
+            )
+
+        field._using = self._using
+        generator_attrs = get_required_values(generator, field)
+
+        if field.name in self.rel_fields:
+            generator_attrs.update(filter_rel_attrs(field.name, **self.rel_attrs))
+
+        if (
+            field.__class__ in (ForeignKey, OneToOneField, ManyToManyField)
+            and not is_content_type_fk
+        ):
+            generator_attrs["_create_files"] = self.create_files
+
+        if not commit:
+            # `prepare` mode: no I/O — fall back to the generator's sync
+            # `.prepare` attribute (or the generator itself for non-relational
+            # fields).
+            generator = getattr(generator, "prepare", generator)
+            return generator(**generator_attrs)
+
+        # Forward FK / OneToOne and M2M: route through the async sibling so
+        # the recursive create runs on the same async connection.
+        if generator is random_gen.gen_related:
+            return await random_gen.agen_related(**generator_attrs)
+        if generator is random_gen.gen_m2m:
+            return await random_gen.agen_m2m(**generator_attrs)
+
+        # Pure-Python generator (no I/O expected).
+        return generator(**generator_attrs)
 
     def m2m_value(self, field: ManyToManyField) -> list[Any]:
         if field.name in self.rel_fields:
@@ -927,6 +1349,28 @@ def _save_related_objs(model, objects, _using=None) -> None:
                 setattr(objects[i], fk.name, fk_obj)
 
 
+async def _asave_related_objs(model, objects, _using=None) -> None:
+    # Async parallel of `_save_related_objs` — kept in lockstep.
+    _save_kwargs = {"using": _using} if _using else {}
+
+    fk_fields = [
+        f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
+    ]
+
+    for fk in fk_fields:
+        fk_objects = []
+        for obj in objects:
+            fk_obj = getattr(obj, fk.name, None)
+            if fk_obj and not fk_obj.pk:
+                fk_objects.append(fk_obj)
+
+        if fk_objects:
+            await _asave_related_objs(fk.related_model, fk_objects)
+            for i, fk_obj in enumerate(fk_objects):
+                await fk_obj.asave(**_save_kwargs)
+                setattr(objects[i], fk.name, fk_obj)
+
+
 def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:  # noqa: C901
     """
     Bulk create entries and all related FKs as well.
@@ -1024,5 +1468,95 @@ def bulk_create(baker: Baker[M], quantity: int, **kwargs) -> list[M]:  # noqa: C
                 )
         if through_rows:
             through_model.objects.bulk_create(through_rows)
+
+    return created_entries
+
+
+async def abulk_create(  # noqa: C901
+    baker: Baker[M], quantity: int, **kwargs
+) -> list[M]:
+    """Async parallel of `bulk_create` — kept in lockstep.
+
+    Mirrors sync `bulk_create` step-for-step using async DB primitives:
+    `aprepare` to build instances, `_asave_related_objs` to persist FKs,
+    `manager.abulk_create` for the main insert, `aset`/`abulk_create` for
+    M2M post-processing.
+    """
+    entries = [await baker.aprepare(**kwargs) for _ in range(quantity)]
+
+    await _asave_related_objs(baker.model, entries, _using=baker._using)
+
+    if baker._using:
+        manager = baker.model._base_manager.using(baker._using)
+    else:
+        manager = baker.model._base_manager
+
+    created_entries = await manager.abulk_create(entries)
+
+    for entry in created_entries:
+        for field in baker.model._meta.many_to_many:
+            if field.name in kwargs:
+                through_model = getattr(entry, field.name).through
+                await through_model.objects.abulk_create(
+                    [
+                        through_model(
+                            **{
+                                field.m2m_field_name(): entry,
+                                field.m2m_reverse_field_name(): obj,
+                            }
+                        )
+                        for obj in kwargs[field.name]
+                    ]
+                )
+
+        for field in baker.model._meta.get_fields():
+            if field.many_to_many and hasattr(field, "related_model"):
+                reverse_relation_name = (
+                    field.related_query_name
+                    or field.related_name
+                    or f"{field.related_model._meta.model_name}_set"
+                )
+                if reverse_relation_name in kwargs:
+                    await getattr(entry, reverse_relation_name).aset(
+                        kwargs[reverse_relation_name]
+                    )
+
+    # M2M on FK-related (e.g. `home__dogs=[dog]`) — see sync comment.
+    for kwarg_key, kwarg_value in kwargs.items():
+        if "__" not in kwarg_key:
+            continue
+        fk_field_name, m2m_field_name = kwarg_key.split("__", 1)
+        if "__" in m2m_field_name:
+            continue
+        try:
+            fk_field = baker.model._meta.get_field(fk_field_name)
+        except FieldDoesNotExist:
+            continue
+        if not isinstance(fk_field, (ForeignKey, OneToOneField)):
+            continue
+        try:
+            related_m2m = fk_field.related_model._meta.get_field(m2m_field_name)
+        except FieldDoesNotExist:
+            continue
+        if not isinstance(related_m2m, ManyToManyField):
+            continue
+        through_model = related_m2m.remote_field.through
+        if not through_model._meta.auto_created:
+            continue
+        through_rows = []
+        for entry in created_entries:
+            fk_obj = getattr(entry, fk_field_name, None)
+            if fk_obj is not None:
+                through_rows.extend(
+                    through_model(
+                        **{
+                            related_m2m.m2m_field_name(): fk_obj,
+                            related_m2m.m2m_reverse_field_name(): obj,
+                        }
+                    )
+                    for obj in kwarg_value
+                )
+        if through_rows:
+            await through_model.objects.abulk_create(through_rows)
 
     return created_entries

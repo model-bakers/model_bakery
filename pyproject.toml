@@ -57,6 +57,7 @@ dev = [
     "coverage",
     "pillow",
     "pytest",
+    "pytest-asyncio",
     "pytest-django",
     "black",
     "ruff",
@@ -97,6 +98,7 @@ unused-type-ignore-comment = "ignore"
 
 [tool.pytest.ini_options]
 addopts = "--tb=short -rxs --nomigrations"
+asyncio_mode = "auto"
 
 [tool.ruff.lint]
 select = [
