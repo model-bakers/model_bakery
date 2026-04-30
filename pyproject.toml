@@ -11,7 +11,8 @@ version = "1.23.4"
 description = "Smart object creation facility for Django."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "Apache License 2.0"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
     { name = "berin", email = "bernardoxhc@gmail.com" },
     { name = "amureki", email = "amureki@hey.com" },
