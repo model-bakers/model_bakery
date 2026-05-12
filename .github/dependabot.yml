@@ -5,8 +5,12 @@ updates:
     schedule:
       interval: "monthly"
     rebase-strategy: "auto"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
