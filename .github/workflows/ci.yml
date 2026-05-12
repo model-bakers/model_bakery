@@ -24,6 +24,8 @@ jobs:
           - ty check model_bakery
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -47,6 +49,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Set TOX_ENV
         run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-sqlite" >> $GITHUB_ENV
 
@@ -104,6 +108,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Set TOX_ENV
         run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-${{ matrix.variant }}" >> $GITHUB_ENV
 
@@ -137,6 +143,8 @@ jobs:
     needs: [sqlite-tests, postgresql-tests]
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-python@v6
         with:
