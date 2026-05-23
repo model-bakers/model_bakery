@@ -674,6 +674,24 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert person.fk_related.get().name == "Bar"
 
     @pytest.mark.django_db
+    def test_reverse_one_to_one_is_persisted(self):
+        """Regression test for issue #473.
+
+        Reverse OneToOne relations passed as kwargs must be saved to the DB,
+        not just exist in memory on the created instance.
+        """
+        # RelatedNamesModel.one_to_one = OneToOneField(Person, related_name="one_related")
+        # Person.one_related is the reverse accessor — this is the bug scenario.
+        placeholder = baker.make(models.Person)
+        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
+
+        person = baker.make(models.Person, one_related=related)
+
+        related.refresh_from_db()
+        assert related.one_to_one == person
+        assert models.RelatedNamesModel.objects.filter(one_to_one=person).exists()
+
+    @pytest.mark.django_db
     def test_field_lookup_for_related_field_does_not_work_with_prepare(self):
         person = baker.prepare(
             models.Person,
@@ -1175,6 +1193,25 @@ class TestBakerSupportsMultiDatabase(TestCase):
         assert not models.School.objects.exists()
         assert not models.SchoolEnrollment.objects.exists()
         assert not models.Person.objects.exists()
+
+    def test_reverse_one_to_one_respects_using_kwarg(self):
+        """Reverse OneToOne handler must save related object to the correct DB."""
+        placeholder = baker.make(models.Person, _using=settings.EXTRA_DB)
+        related = baker.make(
+            models.RelatedNamesModel,
+            one_to_one=placeholder,
+            _using=settings.EXTRA_DB,
+        )
+        person = baker.make(
+            models.Person, one_related=related, _using=settings.EXTRA_DB
+        )
+        related.refresh_from_db(using=settings.EXTRA_DB)
+        assert related.one_to_one == person
+        assert (
+            models.RelatedNamesModel.objects.using(settings.EXTRA_DB)
+            .filter(one_to_one=person)
+            .exists()
+        )
 
 
 class TestBakerAutomaticallyRefreshFromDB:

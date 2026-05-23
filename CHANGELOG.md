@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Speed up `Baker.get_fields()` by returning `_meta.fields + _meta.many_to_many` directly instead of filtering `_meta.get_fields()`.
 
+- Fix reverse `OneToOneField` relations not being persisted to the database when passed as kwargs to `baker.make()` ([#473](https://github.com/model-bakers/model_bakery/issues/473))
+
 ### Removed
 
 ## [1.23.4](https://pypi.org/project/model-bakery/1.23.4/)
