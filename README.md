@@ -79,6 +79,10 @@ on how to set up your local environment.
 
 - [Vanderson Mota](https://github.com/vandersonmota/)
 
+## Sponsors
+
+[![Sponsors](https://django.the-box.sh/sponsors/model-bakers/model_bakery.svg)](https://github.com/model-bakers/model_bakery)
+
 ## License
 
 Model Bakery is licensed under Apache License 2.0.
