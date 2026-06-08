@@ -1589,3 +1589,16 @@ class TestFullClean:
         )
         assert len(profiles) == 3
         assert models.Profile.objects.count() == 3
+
+    @pytest.mark.django_db
+    def test_bulk_create_with_full_clean_handles_generated_required_fk(self):
+        """_full_clean=True validates after generated FK dependencies are saved."""
+        bills = baker.make(
+            models.PaymentBill,
+            _quantity=2,
+            _bulk_create=True,
+            _full_clean=True,
+        )
+        assert len(bills) == 2
+        assert models.PaymentBill.objects.count() == 2
+        assert models.User.objects.count() == 2

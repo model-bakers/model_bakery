@@ -969,7 +969,6 @@ def bulk_create(  # noqa: C901
     # quantity number of times, passing in the additional keyword arguments
     entries = [
         baker.prepare(
-            _full_clean=_full_clean,
             **kwargs,
         )
         for _ in range(quantity)
@@ -984,6 +983,8 @@ def bulk_create(  # noqa: C901
     if _full_clean:
         with transaction.atomic(using=baker._using or None):
             _save_related_objs(baker.model, entries, _using=baker._using)
+            for entry in entries:
+                entry.full_clean()
             created_entries = manager.bulk_create(entries)
     else:
         _save_related_objs(baker.model, entries, _using=baker._using)
