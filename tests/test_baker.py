@@ -1602,3 +1602,28 @@ class TestFullClean:
         assert len(bills) == 2
         assert models.PaymentBill.objects.count() == 2
         assert models.User.objects.count() == 2
+
+
+class TestGetFields:
+    """Tests for Baker.get_fields()."""
+
+    def test_get_fields_excludes_related_objects(self):
+        """get_fields() must not include reverse relations."""
+        baker_instance = baker.Baker(models.Person)
+        fields = set(baker_instance.get_fields())
+        related_objects = set(models.Person._meta.related_objects)
+        assert not fields & related_objects
+
+    def test_get_fields_returns_concrete_and_m2m_fields(self):
+        """get_fields() returns concrete fields plus many-to-many fields."""
+        result = baker.Baker(models.Person).get_fields()
+        expected = (
+            *models.Person._meta.fields,
+            *models.Person._meta.many_to_many,
+        )
+        assert result == expected
+
+    def test_get_fields_includes_private_fields(self):
+        """get_fields() includes private fields (e.g. GFK fields)."""
+        fields = baker.Baker(models.ModelWithPrivateField).get_fields()
+        assert "marker" in {f.name for f in fields}

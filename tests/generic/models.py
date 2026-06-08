@@ -21,6 +21,7 @@ from .fields import (
     CustomFieldWithoutGenerator,
     CustomForeignKey,
     FakeListField,
+    PrivateMarkerField,
 )
 
 # check whether PIL is installed
@@ -65,6 +66,11 @@ TEST_TIME = datetime.datetime(2014, 7, 21, 15, 39, 58, 457698)
 
 class ModelWithImpostorField(models.Model):
     pass
+
+
+class ModelWithPrivateField(models.Model):
+    name = models.CharField(max_length=32)
+    marker = PrivateMarkerField()
 
 
 class Profile(models.Model):

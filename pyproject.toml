@@ -1,5 +1,5 @@
 [build-system]
-requires = ["uv_build>=0.9.26,<0.11.0"]
+requires = ["uv_build>=0.9.26,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
@@ -7,11 +7,12 @@ module-root = ""
 
 [project]
 name = "model-bakery"
-version = "1.23.4"
+version = "1.23.5"
 description = "Smart object creation facility for Django."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "Apache License 2.0"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
     { name = "berin", email = "bernardoxhc@gmail.com" },
     { name = "amureki", email = "amureki@hey.com" },
