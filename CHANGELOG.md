@@ -10,9 +10,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
-- Speed up `Baker.get_fields()` by returning `_meta.fields + _meta.many_to_many` directly instead of filtering `_meta.get_fields()`.
 
 ### Removed
+
+## [1.23.5](https://pypi.org/project/model-bakery/1.23.5/)
+
+### Changed
+- Speed up `Baker.get_fields()` by returning `_meta.fields + _meta.many_to_many` directly instead of filtering `_meta.get_fields()`.
+- [dev] Clarify Apache-2.0 license text and package metadata ([#600](https://github.com/model-bakers/model_bakery/pull/600))
+- [dev] Harden GitHub Actions workflows and add Zizmor security checks ([#604](https://github.com/model-bakers/model_bakery/pull/604))
 
 ## [1.23.4](https://pypi.org/project/model-bakery/1.23.4/)
 
