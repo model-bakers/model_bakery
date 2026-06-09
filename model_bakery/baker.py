@@ -593,6 +593,8 @@ class Baker(Generic[M]):
                 }
 
         instance = self.model(**attrs)
+        if using := _save_kwargs.get("using"):
+            instance._state.db = using
 
         self._handle_generic_foreign_keys(
             instance, generic_foreign_keys, commit=_commit
@@ -981,9 +983,12 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
             _save_related_objs(
                 fk.related_model,
                 fk_objects,
+                _using=_using,
                 _full_clean=_full_clean,
             )
             for i, fk_obj in enumerate(fk_objects):
+                if _using:
+                    fk_obj._state.db = _using
                 if _full_clean:
                     fk_obj.full_clean()
                 fk_obj.save(**_save_kwargs)

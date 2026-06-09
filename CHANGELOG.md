@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - When using `baker.make(..., _bulk_create=True, _full_clean=True)`, the operation is wrapped in a transaction to ensure atomic rollback if validation fails
+- Use the requested `_using` database consistently for generated related objects in `baker.make(..., _bulk_create=True)`
 
 ### Removed
 

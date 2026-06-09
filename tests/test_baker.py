@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Manager, ManyToOneRel
 from django.db.models.signals import m2m_changed
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 import pytest
 
@@ -1066,34 +1066,29 @@ class TestBakerSupportsMultiDatabase(TestCase):
     def test_related_fk_database_specified_via_using_kwarg_combined_with_bulk_create(
         self,
     ):
-        # A custom router must be used when using bulk create and saving
-        # related objects in a multi-database setting.
-        class AllowRelationRouter:
-            """Custom router that allows saving of relations."""
-
-            def allow_relation(self, obj1, obj2, **hints):
-                """Allow all relations."""
-                return True
-
-        with override_settings(DATABASE_ROUTERS=[AllowRelationRouter()]):
-            baker.make(
-                models.PaymentBill,
-                _quantity=5,
-                _bulk_create=True,
-                _using=settings.EXTRA_DB,
-            )
+        baker.make(
+            models.PaymentBill,
+            _quantity=5,
+            _bulk_create=True,
+            _using=settings.EXTRA_DB,
+        )
 
         assert models.PaymentBill.objects.all().using(settings.EXTRA_DB).count() == 5
         assert models.User.objects.all().using(settings.EXTRA_DB).count() == 5
 
-        # Default router will not be able to save the related objects
-        with pytest.raises(ValueError):
-            baker.make(
-                models.PaymentBill,
-                _quantity=5,
-                _bulk_create=True,
-                _using=settings.EXTRA_DB,
-            )
+    def test_bulk_create_with_using_keeps_nested_fk_on_same_db(self):
+        baker.make(
+            models.PaymentBill,
+            user__profile__email="valid@example.com",
+            _quantity=1,
+            _bulk_create=True,
+            _using=settings.EXTRA_DB,
+        )
+
+        assert models.PaymentBill.objects.using(settings.EXTRA_DB).count() == 1
+        assert models.User.objects.using(settings.EXTRA_DB).count() == 1
+        assert models.Profile.objects.using(settings.EXTRA_DB).count() == 1
+        assert models.Profile.objects.using("default").count() == 0
 
     def test_allow_recipe_to_specify_database_via_using(self):
         dog = baker.make_recipe("generic.homeless_dog", _using=settings.EXTRA_DB)
