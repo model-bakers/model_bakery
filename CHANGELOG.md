@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Add `_full_clean` flag to `baker.make()`, `baker.prepare()`, and `baker.bulk_create()` to run Django model validation (`False` by default) ([#523](https://github.com/model-bakers/model_bakery/issues/523))
+- Add `_full_clean` flag to `baker.make()` and `baker.prepare()` to run Django model validation (`False` by default), including the `baker.make(..., _bulk_create=True)` path ([#523](https://github.com/model-bakers/model_bakery/issues/523))
 
 ### Changed
 

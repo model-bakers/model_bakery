@@ -1,5 +1,6 @@
 import collections
 from collections.abc import Callable, Iterable, Iterator
+from inspect import Parameter, signature
 from os.path import dirname, join
 from typing import (
     Any,
@@ -156,12 +157,14 @@ def make(
             **attrs,
         )
         return result if _quantity else result[0]
-    elif _quantity:
+
+    full_clean_kwargs = {"_full_clean": True} if _full_clean else {}
+    if _quantity:
         return [
             baker.make(
                 _save_kwargs=_save_kwargs,
                 _refresh_after_create=_refresh_after_create,
-                _full_clean=_full_clean,
+                **full_clean_kwargs,
                 **attrs,
             )
             for _ in range(_quantity)
@@ -170,7 +173,7 @@ def make(
     return baker.make(
         _save_kwargs=_save_kwargs,
         _refresh_after_create=_refresh_after_create,
-        _full_clean=_full_clean,
+        **full_clean_kwargs,
         **attrs,
     )
 
@@ -217,13 +220,14 @@ def prepare(
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
+    full_clean_kwargs = {"_full_clean": True} if _full_clean else {}
     if _quantity:
         return [
-            baker.prepare(_save_related=_save_related, _full_clean=_full_clean, **attrs)
+            baker.prepare(_save_related=_save_related, **full_clean_kwargs, **attrs)
             for i in range(_quantity)
         ]
 
-    return baker.prepare(_save_related=_save_related, _full_clean=_full_clean, **attrs)
+    return baker.prepare(_save_related=_save_related, **full_clean_kwargs, **attrs)
 
 
 def _recipe(name: str) -> Any:
@@ -322,6 +326,17 @@ class ModelFinder:
 
 def is_iterator(value: Any) -> bool:
     return isinstance(value, collections.abc.Iterator)
+
+
+def accepts_kwarg(callable_: Callable, name: str) -> bool:
+    """Return whether callable_ can receive name as a keyword argument."""
+    parameters = signature(callable_).parameters.values()
+    return any(
+        parameter.kind == Parameter.VAR_KEYWORD
+        or parameter.kind != Parameter.POSITIONAL_ONLY
+        and parameter.name == name
+        for parameter in parameters
+    )
 
 
 def _custom_baker_class() -> type | None:
@@ -475,6 +490,11 @@ class Baker(Generic[M]):
             _save_kwargs["using"] = self._using
 
         self._clean_attrs(attrs)
+        generate_value_kwargs = (
+            {"_full_clean": True}
+            if _full_clean and accepts_kwarg(self.generate_value, "_full_clean")
+            else {}
+        )
         for field in self.get_fields():
             if self._skip_field(field):
                 continue
@@ -505,7 +525,9 @@ class Baker(Generic[M]):
                     and field.attname not in self.model_attrs
                 ):
                     self.model_attrs[field.name] = self.generate_value(
-                        field, commit_related
+                        field,
+                        commit_related,
+                        **generate_value_kwargs,
                     )
             elif callable(self.model_attrs[field.name]):
                 self.model_attrs[field.name] = self.model_attrs[field.name]()
@@ -826,7 +848,9 @@ class Baker(Generic[M]):
     ) -> OneToOneRel | ManyToOneRel:
         return cast(OneToOneRel | ManyToOneRel, field.remote_field)
 
-    def generate_value(self, field: Field, commit: bool = True) -> Any:  # noqa: C901
+    def generate_value(  # noqa: C901
+        self, field: Field, commit: bool = True, _full_clean: bool = False
+    ) -> Any:
         """Call the associated generator with a field passing all required args.
 
         Generator Resolution Precedence Order:
@@ -888,6 +912,8 @@ class Baker(Generic[M]):
         ):
             # create files also on related models if required
             generator_attrs["_create_files"] = self.create_files
+            if _full_clean:
+                generator_attrs["_full_clean"] = True
 
         if not commit:
             generator = getattr(generator, "prepare", generator)
@@ -936,7 +962,7 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> dict[str, Any]:
     return clean_dict
 
 
-def _save_related_objs(model, objects, _using=None) -> None:
+def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
     """Recursively save all related foreign keys for each entry."""
     _save_kwargs = {"using": _using} if _using else {}
 
@@ -952,8 +978,14 @@ def _save_related_objs(model, objects, _using=None) -> None:
                 fk_objects.append(fk_obj)
 
         if fk_objects:
-            _save_related_objs(fk.related_model, fk_objects)
+            _save_related_objs(
+                fk.related_model,
+                fk_objects,
+                _full_clean=_full_clean,
+            )
             for i, fk_obj in enumerate(fk_objects):
+                if _full_clean:
+                    fk_obj.full_clean()
                 fk_obj.save(**_save_kwargs)
                 setattr(objects[i], fk.name, fk_obj)
 
@@ -984,7 +1016,12 @@ def bulk_create(  # noqa: C901
 
     if _full_clean:
         with transaction.atomic(using=baker._using or None):
-            _save_related_objs(baker.model, entries, _using=baker._using)
+            _save_related_objs(
+                baker.model,
+                entries,
+                _using=baker._using,
+                _full_clean=True,
+            )
             for entry in entries:
                 entry.full_clean()
             created_entries = manager.bulk_create(entries)

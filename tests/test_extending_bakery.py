@@ -3,7 +3,7 @@ import pytest
 from model_bakery import baker
 from model_bakery.exceptions import CustomBakerNotFound, InvalidCustomBaker
 from model_bakery.random_gen import gen_from_list
-from tests.generic.models import Person
+from tests.generic.models import Person, Profile
 
 
 def gen_opposite(default):
@@ -99,6 +99,25 @@ class BakerDuck:
         pass
 
 
+class StrictSignatureBaker(baker.Baker):
+    def make(
+        self,
+        _save_kwargs=None,
+        _refresh_after_create=False,
+        _from_manager=None,
+        _fill_optional=False,
+    ):
+        return "made"
+
+    def prepare(self, _save_related=False, _fill_optional=False):
+        return "prepared"
+
+
+class StrictGenerateValueBaker(baker.Baker):
+    def generate_value(self, field, commit=True):
+        return super().generate_value(field, commit)
+
+
 class TestCustomizeBakerClassViaSettings:
     def class_to_import_string(self, class_to_convert):
         return f"{self.__module__}.{class_to_convert.__name__}"
@@ -122,3 +141,18 @@ class TestCustomizeBakerClassViaSettings:
     def test_create_succeeds_with_valid_custom_baker(self, settings, cls):
         settings.BAKER_CUSTOM_CLASS = self.class_to_import_string(cls)
         assert baker.Baker.create(Person).__class__ == cls
+
+    def test_top_level_make_omits_false_full_clean_for_custom_baker(self, settings):
+        settings.BAKER_CUSTOM_CLASS = self.class_to_import_string(StrictSignatureBaker)
+        assert baker.make(Person) == "made"
+
+    def test_top_level_prepare_omits_false_full_clean_for_custom_baker(self, settings):
+        settings.BAKER_CUSTOM_CLASS = self.class_to_import_string(StrictSignatureBaker)
+        assert baker.prepare(Person) == "prepared"
+
+    @pytest.mark.django_db
+    def test_true_full_clean_keeps_custom_generate_value_compatible(self, settings):
+        settings.BAKER_CUSTOM_CLASS = self.class_to_import_string(
+            StrictGenerateValueBaker
+        )
+        assert baker.make(Profile, _full_clean=True).pk
