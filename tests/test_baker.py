@@ -1075,6 +1075,25 @@ class TestBakerSupportsMultiDatabase(TestCase):
 
         assert models.PaymentBill.objects.all().using(settings.EXTRA_DB).count() == 5
         assert models.User.objects.all().using(settings.EXTRA_DB).count() == 5
+        assert models.PaymentBill.objects.using("default").count() == 0
+        assert models.User.objects.using("default").count() == 0
+
+    def test_bulk_create_keeps_mixed_saved_and_unsaved_fks_on_original_objects(self):
+        saved_user = baker.make(models.User, _using=settings.EXTRA_DB)
+        unsaved_user = baker.prepare(models.User, _using=settings.EXTRA_DB)
+
+        bills = baker.make(
+            models.PaymentBill,
+            user=iter([saved_user, unsaved_user]),
+            _quantity=2,
+            _bulk_create=True,
+            _using=settings.EXTRA_DB,
+        )
+
+        assert bills[0].user == saved_user
+        assert bills[1].user == unsaved_user
+        assert models.PaymentBill.objects.using(settings.EXTRA_DB).count() == 2
+        assert models.User.objects.using(settings.EXTRA_DB).count() == 2
 
     def test_bulk_create_with_using_keeps_nested_fk_on_same_db(self):
         baker.make(
