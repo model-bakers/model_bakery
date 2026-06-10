@@ -593,6 +593,8 @@ class Baker(Generic[M]):
                 }
 
         instance = self.model(**attrs)
+        if using := _save_kwargs.get("using"):
+            instance._state.db = using
 
         self._handle_generic_foreign_keys(
             instance, generic_foreign_keys, commit=_commit
@@ -971,23 +973,27 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
     ]
 
     for fk in fk_fields:
-        fk_objects = []
+        fk_targets = []
         for obj in objects:
             fk_obj = getattr(obj, fk.name, None)
             if fk_obj and not fk_obj.pk:
-                fk_objects.append(fk_obj)
+                fk_targets.append((obj, fk_obj))
 
-        if fk_objects:
+        if fk_targets:
+            fk_objects = [fk_obj for _, fk_obj in fk_targets]
             _save_related_objs(
                 fk.related_model,
                 fk_objects,
+                _using=_using,
                 _full_clean=_full_clean,
             )
-            for i, fk_obj in enumerate(fk_objects):
+            for obj, fk_obj in fk_targets:
+                if _using:
+                    fk_obj._state.db = _using
                 if _full_clean:
                     fk_obj.full_clean()
                 fk_obj.save(**_save_kwargs)
-                setattr(objects[i], fk.name, fk_obj)
+                setattr(obj, fk.name, fk_obj)
 
 
 def bulk_create(  # noqa: C901
