@@ -13,11 +13,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- [dev] Modernize tox and CI around `tox-uv`, dependency groups, reusable coverage/docs tox environments, and docs validation in CI
 - When using `baker.make(..., _bulk_create=True, _full_clean=True)`, the operation is wrapped in a transaction to ensure atomic rollback if validation fails
 - Use the requested `_using` database consistently for generated related objects in `baker.make(..., _bulk_create=True)`
 - Preserve correct parent-to-FK associations in `baker.make(..., _bulk_create=True)` when related objects mix saved and unsaved instances
 
 ### Removed
+
+- Drop EOL Django 4.2 support
 
 ## [1.23.5](https://pypi.org/project/model-bakery/1.23.5/)
 
