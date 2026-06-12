@@ -383,3 +383,45 @@ assert history.customer in Customer.objects.using(custom_db).all()
 assert not PurchaseHistory.objects.exists()
 assert not Customer.objects.exists()
 ```
+
+## Async usage
+
+`baker.amake()` and `baker.aprepare()` are async-native variants that
+persist through Django's async ORM (`instance.asave()`), recursing through
+forward `ForeignKey` and `OneToOneField` on the same connection.
+
+```python
+from model_bakery import baker
+
+async def test_create_customer():
+    customer = await baker.amake("shop.Customer")
+    purchase = await baker.amake(
+        "shop.PurchaseHistory", customer__name="Alice"
+    )
+```
+
+Supported: forward and reverse relations (FK, OneToOne, M2M, `foo__bar`
+traversal in both directions), scalars, choices, defaults, `_quantity`,
+`_fill_optional`, `_using`, `make_m2m`, M2M attrs, `_save_kwargs`,
+`_refresh_after_create`, `_create_files`, `_from_manager`, `_bulk_create`,
+`_full_clean`, overriding `auto_now`/`auto_now_add` fields, FK/M2M instance
+overrides, iterators, and custom field generators registered via
+`baker.generators.add(...)`.
+
+`_full_clean=True` runs Django's `full_clean()` before each save, exactly as
+the sync path does. Because Django (as of 5.2) has no `afull_clean`, the async
+path runs the validation on asgiref's shared sync thread — the same one
+`asave()` uses. Unlike the sync `_bulk_create=True` path, the async bulk path
+is not wrapped in a transaction (Django has no async-native atomic block), but
+validation still runs before the bulk insert, so an invalid batch never reaches
+the database.
+
+Currently unsupported (raises `NotImplementedError`): `GenericForeignKey`
+and recipes (`amake_recipe` / `aprepare_recipe`). Use sync `make()` if you
+need either of these.
+
+Note: under stock Django, `asave()` is internally a `sync_to_async`
+wrapper that runs on a different thread's database connection. Async
+tests under `pytest-django` need `@pytest.mark.django_db(transaction=True)`
+so writes are cleaned up between tests regardless of which connection
+saw them.

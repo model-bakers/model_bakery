@@ -442,6 +442,19 @@ gen_related.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 gen_related.prepare = _prepare_related  # type: ignore[attr-defined]
 
 
+async def agen_related(model, _create_files=False, **attrs):
+    # `_create_files` is accepted for symmetry with `gen_related` (so the
+    # `required` attrs reuse) but dropped: not supported in the async path.
+    # The top-level `amake` rejects `_create_files=True` before we get here.
+    from .baker import amake
+
+    return await amake(model, **attrs)
+
+
+agen_related.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
+agen_related.prepare = _prepare_related  # type: ignore[attr-defined]
+
+
 def gen_m2m(model, _create_files=False, **attrs):
     from .baker import MAX_MANY_QUANTITY, make
 
@@ -451,6 +464,15 @@ def gen_m2m(model, _create_files=False, **attrs):
 
 
 gen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
+
+
+async def agen_m2m(model, _create_files=False, **attrs):
+    from .baker import MAX_MANY_QUANTITY, amake
+
+    return await amake(model, _quantity=MAX_MANY_QUANTITY, **attrs)
+
+
+agen_m2m.required = [_fk_model, "_using"]  # type: ignore[attr-defined]
 
 
 # GIS generators

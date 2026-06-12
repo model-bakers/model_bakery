@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
 ### Added
+- Async-native `baker.amake()` and `baker.aprepare()` for use from `async def` contexts. Persists via `instance.asave()`; recurses through forward and reverse relations on the same connection. Supports `_quantity`, `_fill_optional`, `_using`, `make_m2m`, M2M attrs, `foo__bar` traversal (forward and reverse), `_save_kwargs`, `_refresh_after_create`, `_create_files`, `_from_manager`, `_bulk_create` (via `manager.abulk_create` and async M2M post-processing), `_full_clean` (validation runs on asgiref's shared sync thread since Django has no `afull_clean`; the async bulk path validates before insert but is not transaction-wrapped), overriding `auto_now`/`auto_now_add` fields via `aupdate`, and custom field generators registered via `baker.generators.add(...)` (the generator itself must be sync and not perform I/O). Currently unsupported (raises `NotImplementedError`): `GenericForeignKey` and recipes (`amake_recipe` / `aprepare_recipe`) — follow-ups.
 
 - Add `_full_clean` flag to `baker.make()` and `baker.prepare()` to run Django model validation (`False` by default), including the `baker.make(..., _bulk_create=True)` path ([#523](https://github.com/model-bakers/model_bakery/issues/523))
 
