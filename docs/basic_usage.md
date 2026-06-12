@@ -404,9 +404,17 @@ Supported: forward and reverse relations (FK, OneToOne, M2M, `foo__bar`
 traversal in both directions), scalars, choices, defaults, `_quantity`,
 `_fill_optional`, `_using`, `make_m2m`, M2M attrs, `_save_kwargs`,
 `_refresh_after_create`, `_create_files`, `_from_manager`, `_bulk_create`,
-overriding `auto_now`/`auto_now_add` fields, FK/M2M instance overrides,
-iterators, and custom field generators registered via
+`_full_clean`, overriding `auto_now`/`auto_now_add` fields, FK/M2M instance
+overrides, iterators, and custom field generators registered via
 `baker.generators.add(...)`.
+
+`_full_clean=True` runs Django's `full_clean()` before each save, exactly as
+the sync path does. Because Django (as of 5.2) has no `afull_clean`, the async
+path runs the validation on asgiref's shared sync thread — the same one
+`asave()` uses. Unlike the sync `_bulk_create=True` path, the async bulk path
+is not wrapped in a transaction (Django has no async-native atomic block), but
+validation still runs before the bulk insert, so an invalid batch never reaches
+the database.
 
 Currently unsupported (raises `NotImplementedError`): `GenericForeignKey`
 and recipes (`amake_recipe` / `aprepare_recipe`). Use sync `make()` if you

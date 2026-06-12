@@ -584,6 +584,7 @@ tests = [
     { name = "coverage", extra = ["toml"] },
     { name = "pillow" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-django" },
 ]
 typing = [
@@ -625,6 +626,7 @@ tests = [
     { name = "coverage", extras = ["toml"] },
     { name = "pillow" },
     { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "pytest-django" },
 ]
 typing = [{ name = "ty", specifier = ">=0.0.17" }]

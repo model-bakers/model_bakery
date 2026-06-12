@@ -34,6 +34,8 @@ from django.db.models.fields.reverse_related import (
     OneToOneRel,
 )
 
+from asgiref.sync import sync_to_async
+
 from . import generators, random_gen
 from ._types import M, NewM
 from .content_types import BAKER_CONTENTTYPES
@@ -243,6 +245,7 @@ async def amake(
     _using: str = "",
     _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> M: ...
 
@@ -258,6 +261,7 @@ async def amake(
     _using: str = "",
     _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> list[M]: ...
 
@@ -272,6 +276,7 @@ async def amake(
     _using: str = "",
     _bulk_create: bool = False,
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ):
     """Async variant of `make` — persists via Django's async ORM (`asave`)."""
@@ -285,14 +290,21 @@ async def amake(
 
     if _bulk_create:
         result = await abulk_create(
-            baker, _quantity or 1, _save_kwargs=_save_kwargs, **attrs
+            baker,
+            _quantity or 1,
+            _save_kwargs=_save_kwargs,
+            _full_clean=_full_clean,
+            **attrs,
         )
         return result if _quantity else result[0]
-    elif _quantity:
+
+    full_clean_kwargs = {"_full_clean": True} if _full_clean else {}
+    if _quantity:
         return [
             await baker.amake(
                 _save_kwargs=_save_kwargs,
                 _refresh_after_create=_refresh_after_create,
+                **full_clean_kwargs,
                 **attrs,
             )
             for _ in range(_quantity)
@@ -301,6 +313,7 @@ async def amake(
     return await baker.amake(
         _save_kwargs=_save_kwargs,
         _refresh_after_create=_refresh_after_create,
+        **full_clean_kwargs,
         **attrs,
     )
 
@@ -312,6 +325,7 @@ async def aprepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> M: ...
 
@@ -323,6 +337,7 @@ async def aprepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ) -> list[M]: ...
 
@@ -333,6 +348,7 @@ async def aprepare(
     _save_related: bool = False,
     _using: str = "",
     _fill_optional: list[str] | bool = False,
+    _full_clean: bool = False,
     **attrs: Any,
 ):
     """Async variant of `prepare` — builds instances without persisting."""
@@ -345,10 +361,13 @@ async def aprepare(
     if _valid_quantity(_quantity):
         raise InvalidQuantityException
 
+    full_clean_kwargs = {"_full_clean": True} if _full_clean else {}
     if _quantity:
-        return [await baker.aprepare(**attrs) for _ in range(_quantity)]
+        return [
+            await baker.aprepare(**full_clean_kwargs, **attrs) for _ in range(_quantity)
+        ]
 
-    return await baker.aprepare(**attrs)
+    return await baker.aprepare(**full_clean_kwargs, **attrs)
 
 
 def _recipe(name: str) -> Any:
@@ -595,6 +614,7 @@ class Baker(Generic[M]):
         _refresh_after_create: bool = False,
         _from_manager=None,
         _fill_optional: list[str] | bool = False,
+        _full_clean: bool = False,
         **attrs: Any,
     ):
         """Create and persist an instance using Django's async ORM."""
@@ -605,6 +625,7 @@ class Baker(Generic[M]):
             "_refresh_after_create": _refresh_after_create,
             "_from_manager": _from_manager,
             "_fill_optional": _fill_optional,
+            "_full_clean": _full_clean,
         }
         params.update(attrs)
         return await self._amake(**params)
@@ -612,6 +633,7 @@ class Baker(Generic[M]):
     async def aprepare(
         self,
         _fill_optional: list[str] | bool = False,
+        _full_clean: bool = False,
         **attrs: Any,
     ) -> M:
         """Build (but do not persist) an instance using async-compatible flow."""
@@ -619,6 +641,7 @@ class Baker(Generic[M]):
             "commit": False,
             "commit_related": False,
             "_fill_optional": _fill_optional,
+            "_full_clean": _full_clean,
         }
         params.update(attrs)
         return await self._amake(**params)
@@ -715,6 +738,7 @@ class Baker(Generic[M]):
         _save_kwargs=None,
         _refresh_after_create=False,
         _from_manager=None,
+        _full_clean=False,
         **attrs: Any,
     ) -> M:
         # Async parallel of `_make` — kept in lockstep, update both together.
@@ -725,6 +749,11 @@ class Baker(Generic[M]):
             _save_kwargs["using"] = self._using
 
         self._clean_attrs(attrs)
+        agenerate_value_kwargs = (
+            {"_full_clean": True}
+            if _full_clean and accepts_kwarg(self.agenerate_value, "_full_clean")
+            else {}
+        )
         for field in self.get_fields():
             if self._skip_field(field):
                 continue
@@ -754,7 +783,9 @@ class Baker(Generic[M]):
                     and field.attname not in self.model_attrs
                 ):
                     self.model_attrs[field.name] = await self.agenerate_value(
-                        field, commit_related
+                        field,
+                        commit_related,
+                        **agenerate_value_kwargs,
                     )
             elif callable(self.model_attrs[field.name]):
                 self.model_attrs[field.name] = self.model_attrs[field.name]()
@@ -769,6 +800,7 @@ class Baker(Generic[M]):
             _commit=commit,
             _from_manager=_from_manager,
             _save_kwargs=_save_kwargs,
+            _full_clean=_full_clean,
         )
         if commit:
             for related in self.model._meta.related_objects:
@@ -799,7 +831,12 @@ class Baker(Generic[M]):
         await amake(related.field.model, **kwargs)
 
     async def ainstance(
-        self, attrs: dict[str, Any], _commit, _save_kwargs, _from_manager
+        self,
+        attrs: dict[str, Any],
+        _commit,
+        _save_kwargs,
+        _from_manager,
+        _full_clean=False,
     ) -> M:
         # Async parallel of `instance` — kept in lockstep. GFK still rejected
         # (no public `aget_for_model` until Django 5.0, and GFK is rare).
@@ -823,6 +860,15 @@ class Baker(Generic[M]):
                 )
 
         instance = self.model(**attrs)
+        if using := _save_kwargs.get("using"):
+            instance._state.db = using
+
+        if _full_clean:
+            # Django (5.2) ships no `afull_clean`, and `full_clean` runs
+            # unique/constraint validation queries. Dispatch it to asgiref's
+            # shared sync thread (the same one `asave` uses) so those queries
+            # land on the connection the instance is persisted through.
+            await sync_to_async(instance.full_clean)()
 
         if _commit:
             await instance.asave(**_save_kwargs)
@@ -904,7 +950,7 @@ class Baker(Generic[M]):
                     )
 
     async def agenerate_value(  # noqa: C901
-        self, field: Field, commit: bool = True
+        self, field: Field, commit: bool = True, _full_clean: bool = False
     ) -> Any:
         # Async parallel of `generate_value` — kept in lockstep. Sync logic
         # for scalars/choices/defaults; forward FK / OneToOne recursion is
@@ -957,6 +1003,8 @@ class Baker(Generic[M]):
             and not is_content_type_fk
         ):
             generator_attrs["_create_files"] = self.create_files
+            if _full_clean:
+                generator_attrs["_full_clean"] = True
 
         if not commit:
             # `prepare` mode: no I/O — fall back to the generator's sync
@@ -1418,7 +1466,7 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
                 setattr(obj, fk.name, fk_obj)
 
 
-async def _asave_related_objs(model, objects, _using=None) -> None:
+async def _asave_related_objs(model, objects, _using=None, _full_clean=False) -> None:
     # Async parallel of `_save_related_objs` — kept in lockstep.
     _save_kwargs = {"using": _using} if _using else {}
 
@@ -1427,17 +1475,27 @@ async def _asave_related_objs(model, objects, _using=None) -> None:
     ]
 
     for fk in fk_fields:
-        fk_objects = []
+        fk_targets = []
         for obj in objects:
             fk_obj = getattr(obj, fk.name, None)
             if fk_obj and not fk_obj.pk:
-                fk_objects.append(fk_obj)
+                fk_targets.append((obj, fk_obj))
 
-        if fk_objects:
-            await _asave_related_objs(fk.related_model, fk_objects)
-            for i, fk_obj in enumerate(fk_objects):
+        if fk_targets:
+            fk_objects = [fk_obj for _, fk_obj in fk_targets]
+            await _asave_related_objs(
+                fk.related_model,
+                fk_objects,
+                _using=_using,
+                _full_clean=_full_clean,
+            )
+            for obj, fk_obj in fk_targets:
+                if _using:
+                    fk_obj._state.db = _using
+                if _full_clean:
+                    await sync_to_async(fk_obj.full_clean)()
                 await fk_obj.asave(**_save_kwargs)
-                setattr(objects[i], fk.name, fk_obj)
+                setattr(obj, fk.name, fk_obj)
 
 
 def bulk_create(  # noqa: C901
@@ -1555,7 +1613,7 @@ def bulk_create(  # noqa: C901
 
 
 async def abulk_create(  # noqa: C901
-    baker: Baker[M], quantity: int, **kwargs
+    baker: Baker[M], quantity: int, _full_clean: bool = False, **kwargs
 ) -> list[M]:
     """Async parallel of `bulk_create` — kept in lockstep.
 
@@ -1566,14 +1624,25 @@ async def abulk_create(  # noqa: C901
     """
     entries = [await baker.aprepare(**kwargs) for _ in range(quantity)]
 
-    await _asave_related_objs(baker.model, entries, _using=baker._using)
-
     if baker._using:
         manager = baker.model._base_manager.using(baker._using)
     else:
         manager = baker.model._base_manager
 
-    created_entries = await manager.abulk_create(entries)
+    # Sync `bulk_create` wraps the `_full_clean` branch in `transaction.atomic`;
+    # Django (5.2) has no async-native atomic block, so the async path validates
+    # and inserts without an explicit transaction — consistent with the rest of
+    # the async flow, which is already non-transactional.
+    if _full_clean:
+        await _asave_related_objs(
+            baker.model, entries, _using=baker._using, _full_clean=True
+        )
+        for entry in entries:
+            await sync_to_async(entry.full_clean)()
+        created_entries = await manager.abulk_create(entries)
+    else:
+        await _asave_related_objs(baker.model, entries, _using=baker._using)
+        created_entries = await manager.abulk_create(entries)
 
     for entry in created_entries:
         for field in baker.model._meta.many_to_many:

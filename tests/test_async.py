@@ -12,6 +12,8 @@ covers any connection.
 
 from datetime import datetime
 
+from django.core.exceptions import ValidationError
+
 import pytest
 
 from model_bakery import baker
@@ -153,9 +155,7 @@ class TestAmakeM2M:
 class TestAmakeKwargs:
     async def test_refresh_after_create(self):
         # Smoke-test: creating with refresh re-reads from DB.
-        profile = await baker.amake(
-            Profile, email="x@y.z", _refresh_after_create=True
-        )
+        profile = await baker.amake(Profile, email="x@y.z", _refresh_after_create=True)
         assert profile.pk is not None
         assert profile.email == "x@y.z"
 
@@ -232,6 +232,103 @@ class TestAmakeWithCustomGenerator:
         instance = await baker.amake(CustomFieldViaSettingsModel)
         assert instance.custom_value == "always the same text"
         assert instance.pk is not None
+
+
+@pytest.mark.django_db(transaction=True)
+class TestAFullClean:
+    # Async parallel of sync `TestFullClean`. Django (5.2) has no
+    # `afull_clean`, so the async path runs `full_clean` on asgiref's shared
+    # sync thread; behaviour should otherwise match `make(..., _full_clean=True)`.
+    async def test_amake_with_full_clean_valid(self):
+        profile = await baker.amake(Profile, _full_clean=True)
+        assert profile.pk is not None
+
+    async def test_amake_with_full_clean_raises_on_invalid(self):
+        with pytest.raises(ValidationError):
+            await baker.amake(Profile, email="not-an-email", _full_clean=True)
+
+    async def test_amake_with_full_clean_no_db_entry_on_error(self):
+        with pytest.raises(ValidationError):
+            await baker.amake(Profile, email="not-an-email", _full_clean=True)
+        assert await Profile.objects.acount() == 0
+
+    async def test_amake_with_full_clean_validates_generated_related_objects(self):
+        with pytest.raises(ValidationError):
+            await baker.amake(
+                PaymentBill,
+                user__profile__email="not-an-email",
+                _full_clean=True,
+            )
+        assert await Profile.objects.acount() == 0
+        assert await User.objects.acount() == 0
+        assert await PaymentBill.objects.acount() == 0
+
+    async def test_aprepare_with_full_clean_raises_on_invalid(self):
+        with pytest.raises(ValidationError):
+            await baker.aprepare(Profile, email="not-an-email", _full_clean=True)
+        assert await Profile.objects.acount() == 0
+
+    async def test_bulk_create_with_full_clean_valid(self):
+        profiles = await baker.amake(
+            Profile,
+            _quantity=3,
+            _bulk_create=True,
+            _full_clean=True,
+        )
+        assert len(profiles) == 3
+        assert await Profile.objects.acount() == 3
+
+    async def test_bulk_create_with_full_clean_no_entry_on_error(self):
+        # The async path has no `transaction.atomic` (unsupported by Django's
+        # async ORM), but validation runs before the bulk insert, so an invalid
+        # batch never reaches the DB.
+        with pytest.raises(ValidationError):
+            await baker.amake(
+                Profile,
+                email="not-an-email",
+                _quantity=5,
+                _bulk_create=True,
+                _full_clean=True,
+            )
+        assert await Profile.objects.acount() == 0
+
+    async def test_bulk_create_with_full_clean_validates_generated_related_objects(
+        self,
+    ):
+        with pytest.raises(ValidationError):
+            await baker.amake(
+                PaymentBill,
+                user__profile__email="not-an-email",
+                _quantity=2,
+                _bulk_create=True,
+                _full_clean=True,
+            )
+        assert await Profile.objects.acount() == 0
+        assert await User.objects.acount() == 0
+        assert await PaymentBill.objects.acount() == 0
+
+    async def test_bulk_create_with_full_clean_does_not_validate_existing_related(self):
+        profile = await baker.amake(Profile, email="not-an-email")
+        users = await baker.amake(
+            User,
+            profile=profile,
+            _quantity=2,
+            _bulk_create=True,
+            _full_clean=True,
+        )
+        assert len(users) == 2
+        assert await User.objects.acount() == 2
+
+    async def test_bulk_create_with_full_clean_handles_generated_required_fk(self):
+        bills = await baker.amake(
+            PaymentBill,
+            _quantity=2,
+            _bulk_create=True,
+            _full_clean=True,
+        )
+        assert len(bills) == 2
+        assert await PaymentBill.objects.acount() == 2
+        assert await User.objects.acount() == 2
 
 
 class TestAprepareNoDb:
