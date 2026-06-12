@@ -53,14 +53,29 @@ docs = [
 ]
 
 [dependency-groups]
-dev = [
-    "coverage",
+tests = [
+    "coverage[toml]",
     "pillow",
     "pytest",
     "pytest-django",
+]
+typing = [
+    "ty>=0.0.17",
+]
+lint = [
     "black",
     "ruff",
-    "ty>=0.0.17",
+    "pre-commit",
+]
+docs = [
+    "Sphinx",
+    "sphinx-rtd-theme",
+    "myst-parser",
+]
+dev = [
+    { include-group = "tests" },
+    { include-group = "typing" },
+    { include-group = "lint" },
 ]
 
 [project.urls]
