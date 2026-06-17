@@ -744,8 +744,10 @@ class Baker(Generic[M]):
             manager = getattr(instance, key)
 
             if callable(values):
-                if isinstance(values, types.MethodType) and isinstance(
-                    values.__self__, related
+                if (
+                    isinstance(values, types.MethodType)
+                    and isinstance(values.__self__, related)
+                    and hasattr(manager, "field")
                 ):
                     fk_field_name = manager.field.name
                     values = values(**{fk_field_name: instance})
