@@ -535,6 +535,15 @@ class TestM2MField:
         assert len(friend.friends_with.all()) == 2
 
 
+    @pytest.mark.django_db
+    def test_create_related_many_to_many(self):
+        dog = baker.make_recipe("tests.generic.village_dog")
+        assert len(dog.home_set.all()) == 3
+        for home in dog.home_set.all():
+            assert home.dogs.count() == 1
+            assert home.dogs.first() == dog
+
+
 class TestSequences:
     @pytest.mark.django_db
     def test_increment_for_strings(self):
