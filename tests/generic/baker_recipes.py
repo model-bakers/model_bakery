@@ -10,6 +10,7 @@ from tests.generic.models import (
     Dog,
     DummyDefaultFieldsModel,
     DummyUniqueIntegerFieldModel,
+    Home,
     LonelyPerson,
     Person,
     School,
@@ -56,12 +57,16 @@ serial_datetime = Recipe(
     default_time_field=seq(TEST_TIME.time(), timedelta(seconds=15), start="xpto"),
 )
 
+home = Recipe(Home)
+
 dog = Recipe(Dog, breed="Pug", owner=foreign_key(person))
 
 homeless_dog = Recipe(
     Dog,
     breed="Pug",
 )
+
+village_dog = Recipe(Dog, home_set=related(home, home, home))
 
 other_dog = Recipe(Dog, breed="Basset", owner=foreign_key("person"))
 
