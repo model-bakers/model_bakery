@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Fix `related()` with reverse M2M relations raising `AttributeError` ([#601](https://github.com/model-bakers/model_bakery/issues/601))
 - [dev] Modernize tox and CI around `tox-uv`, dependency groups, reusable coverage/docs tox environments, and docs validation in CI
 - When using `baker.make(..., _bulk_create=True, _full_clean=True)`, the operation is wrapped in a transaction to ensure atomic rollback if validation fails
 - Use the requested `_using` database consistently for generated related objects in `baker.make(..., _bulk_create=True)`
