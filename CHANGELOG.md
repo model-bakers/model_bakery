@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
+## [1.24.0](https://pypi.org/project/model-bakery/1.24.0/)
+
 ### Added
 
 - Add `_full_clean` flag to `baker.make()` and `baker.prepare()` to run Django model validation (`False` by default), including the `baker.make(..., _bulk_create=True)` path ([#523](https://github.com/model-bakers/model_bakery/issues/523))

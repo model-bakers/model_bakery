@@ -534,7 +534,7 @@ wheels = [
 
 [[package]]
 name = "model-bakery"
-version = "1.23.5"
+version = "1.24.0"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
