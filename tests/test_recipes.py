@@ -534,7 +534,6 @@ class TestM2MField:
         friend = dog.friends_with.all()[0]
         assert len(friend.friends_with.all()) == 2
 
-
     @pytest.mark.django_db
     def test_create_reverse_many_to_many_with_related(self):
         dog = baker.make_recipe("tests.generic.village_dog")
