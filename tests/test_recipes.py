@@ -536,7 +536,7 @@ class TestM2MField:
 
 
     @pytest.mark.django_db
-    def test_create_related_many_to_many(self):
+    def test_create_reverse_many_to_many_with_related(self):
         dog = baker.make_recipe("tests.generic.village_dog")
         assert len(dog.home_set.all()) == 3
         for home in dog.home_set.all():
