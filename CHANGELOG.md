@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
+### Changed
+
+- [dev] Extract the attr-partitioning logic out of `Baker.instance()` into a pure, database-free `Baker._classify_attrs()` helper, with direct unit tests asserting it runs zero queries
+
 ## [1.24.0](https://pypi.org/project/model-bakery/1.24.0/)
 
 ### Added
