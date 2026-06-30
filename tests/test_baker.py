@@ -794,6 +794,59 @@ class TestHandlingContentTypeFieldNoQueries:
         assert isinstance(dummy.content_type, ContentType)
 
 
+class TestClassifyAttrs(TestCase):
+    """``Baker._classify_attrs`` partitions attrs without touching the database.
+
+    It inspects the model's field descriptors to route reverse-FK, auto-now and
+    GFK entries, and is asserted DB-free via ``assertNumQueries(0)``.
+    """
+
+    def test_plain_fields_are_left_untouched(self):
+        b = baker.Baker(models.Person)
+        attrs = {"name": "foo"}
+        with self.assertNumQueries(0):
+            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+        assert attrs == {"name": "foo"}
+        assert one_to_many == {}
+        assert auto_now == {}
+        assert gfks == {}
+
+    def test_reverse_fk_is_popped(self):
+        b = baker.Baker(models.Person)
+        sentinel = [object()]
+        attrs = {"name": "foo", "fk_related": sentinel}
+        with self.assertNumQueries(0):
+            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+        # reverse one-to-many entries are removed from attrs (applied post-save)
+        assert "fk_related" not in attrs
+        assert one_to_many == {"fk_related": sentinel}
+
+    def test_auto_now_is_copied_not_popped(self):
+        b = baker.Baker(models.ModelWithAutoNowFields)
+        now = datetime.datetime(2023, 1, 1)
+        attrs = {"sent_date": now, "created": now, "updated": now}
+        with self.assertNumQueries(0):
+            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+        # auto_now/auto_now_add values are copied out for the post-save UPDATE
+        # but left on attrs for the constructor; plain DateTimeFields are not.
+        assert auto_now == {"created": now, "updated": now}
+        assert attrs == {"sent_date": now, "created": now, "updated": now}
+
+    @pytest.mark.skipif(
+        not BAKER_CONTENTTYPES, reason="Django contenttypes is not installed"
+    )
+    def test_generic_foreign_key_is_popped(self):
+        b = baker.Baker(models.DummyGenericForeignKeyModel)
+        sentinel = object()
+        attrs = {"content_object": sentinel}
+        with self.assertNumQueries(0):
+            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+        assert "content_object" not in attrs
+        assert gfks["content_object"]["value"] is sentinel
+        assert gfks["content_object"]["content_type_field"] == "content_type"
+        assert gfks["content_object"]["object_id_field"] == "object_id"
+
+
 class TestSkipNullsTestCase:
     @pytest.mark.django_db
     def test_skip_null(self):

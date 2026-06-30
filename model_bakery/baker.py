@@ -560,14 +560,21 @@ class Baker(Generic[M]):
             return []
         return self.generate_value(field)
 
-    def instance(
-        self,
-        attrs: dict[str, Any],
-        _commit,
-        _save_kwargs,
-        _from_manager,
-        _full_clean=False,
-    ) -> M:
+    def _classify_attrs(
+        self, attrs: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """Partition ``attrs`` into reverse-FK, auto-now, and GFK groups.
+
+        Pure logic, no database access: inspects the model's field descriptors
+        and routes entries that cannot be passed straight to the model
+        constructor. Reverse one-to-many and generic-foreign-key entries are
+        *popped* out of ``attrs`` (they are applied after the instance exists);
+        auto-now entries are *copied* out (the value is also kept on ``attrs``
+        and re-applied via an UPDATE after save, since Django overwrites
+        ``auto_now``/``auto_now_add`` fields on save).
+
+        Returns ``(one_to_many_keys, auto_now_keys, generic_foreign_keys)``.
+        """
         one_to_many_keys = {}
         auto_now_keys = {}
         generic_foreign_keys = {}
@@ -591,6 +598,20 @@ class Baker(Generic[M]):
                     "object_id_field": field.fk_field,
                     "for_concrete_model": field.for_concrete_model,
                 }
+
+        return one_to_many_keys, auto_now_keys, generic_foreign_keys
+
+    def instance(
+        self,
+        attrs: dict[str, Any],
+        _commit,
+        _save_kwargs,
+        _from_manager,
+        _full_clean=False,
+    ) -> M:
+        one_to_many_keys, auto_now_keys, generic_foreign_keys = self._classify_attrs(
+            attrs
+        )
 
         instance = self.model(**attrs)
         if using := _save_kwargs.get("using"):
