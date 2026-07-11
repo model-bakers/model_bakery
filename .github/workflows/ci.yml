@@ -39,13 +39,17 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        django-version: ["5.2", "6.0"]
+        django-version: ["5.2", "6.0", "6.1"]
         exclude:
-          # Django 6.0 supports Python 3.12+
+          # Django 6.x supports Python 3.12+
           - python-version: "3.10"
             django-version: "6.0"
           - python-version: "3.11"
             django-version: "6.0"
+          - python-version: "3.10"
+            django-version: "6.1"
+          - python-version: "3.11"
+            django-version: "6.1"
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -77,18 +81,22 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        django-version: ["5.2", "6.0"]
+        django-version: ["5.2", "6.0", "6.1"]
         variant: ["postgresql", "postgresql-psycopg3"]
         exclude:
-          # Django 6.0 supports Python 3.12+
+          # Django 6.x supports Python 3.12+
           - python-version: "3.10"
             django-version: "6.0"
           - python-version: "3.11"
             django-version: "6.0"
+          - python-version: "3.10"
+            django-version: "6.1"
+          - python-version: "3.11"
+            django-version: "6.1"
         include:
           # Latest Python/Django with contenttypes disabled
           - python-version: "3.14"
-            django-version: "6.0"
+            django-version: "6.1"
             variant: "postgresql-no-contenttypes"
 
     env:

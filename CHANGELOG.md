@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - [dev] Extract the attr-partitioning logic out of `Baker.instance()` into a pure, database-free `Baker._classify_attrs()` helper, with direct unit tests asserting it runs zero queries
+- [dev] Add Django 6.1 support and CI coverage
 
 ## [1.24.0](https://pypi.org/project/model-bakery/1.24.0/)
 
