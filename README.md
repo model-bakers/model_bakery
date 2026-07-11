@@ -75,9 +75,18 @@ on how to set up your local environment.
 - [Rustem Saiargaliev](https://github.com/amureki/)
 - [Tim Klein](https://github.com/timjklein36)
 
-## Creator
+## Contributors
 
-- [Vanderson Mota](https://github.com/vandersonmota/)
+Model Bakery is built by its community. See the
+[full list of contributors](https://github.com/model-bakers/model_bakery/graphs/contributors).
+
+## Project history
+
+Model Bakery was originally created by
+[Vanderson Mota](https://github.com/vandersonmota/) as Model Mommy.
+The project was previously maintained in the
+[berinhard/model_mommy](https://github.com/berinhard/model_mommy) repository
+before being renamed and moved here.
 
 ## Sponsors
 
