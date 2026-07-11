@@ -565,12 +565,12 @@ class Baker(Generic[M]):
     ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
         """Partition ``attrs`` into reverse-FK, auto-now, and GFK groups.
 
-        Pure logic, no database access: inspects the model's field descriptors
-        and routes entries that cannot be passed straight to the model
-        constructor. Reverse one-to-many and generic-foreign-key entries are
-        *popped* out of ``attrs`` (they are applied after the instance exists);
-        auto-now entries are *copied* out (the value is also kept on ``attrs``
-        and re-applied via an UPDATE after save, since Django overwrites
+        Pure logic, no database access: normalizes the model's field descriptors
+        to their backing fields and routes entries that cannot be passed straight
+        to the model constructor. Reverse one-to-many and generic-foreign-key
+        entries are *popped* out of ``attrs`` (they are applied after the instance
+        exists); auto-now entries are *copied* out (the value is also kept on
+        ``attrs`` and re-applied via an UPDATE after save, since Django overwrites
         ``auto_now``/``auto_now_add`` fields on save).
 
         Returns ``(one_to_many_keys, auto_now_keys, generic_foreign_keys)``.
@@ -579,21 +579,22 @@ class Baker(Generic[M]):
         auto_now_keys = {}
         generic_foreign_keys = {}
 
-        for k in tuple(attrs.keys()):
-            field = getattr(self.model, k, None)
+        for name in tuple(attrs):
+            descriptor = getattr(self.model, name, None)
 
-            if not field:
+            if descriptor is None:
                 continue
 
-            if isinstance(field, ForeignRelatedObjectsDescriptor):
-                one_to_many_keys[k] = attrs.pop(k)
+            if isinstance(descriptor, ForeignRelatedObjectsDescriptor):
+                one_to_many_keys[name] = attrs.pop(name)
 
-            if hasattr(field, "field") and _is_auto_datetime_field(field.field):
-                auto_now_keys[k] = attrs[k]
+            field = getattr(descriptor, "field", descriptor)
+            if _is_auto_datetime_field(field):
+                auto_now_keys[name] = attrs[name]
 
             if BAKER_CONTENTTYPES and isinstance(field, GenericForeignKey):
-                generic_foreign_keys[k] = {
-                    "value": attrs.pop(k),
+                generic_foreign_keys[name] = {
+                    "value": attrs.pop(name),
                     "content_type_field": field.ct_field,
                     "object_id_field": field.fk_field,
                     "for_concrete_model": field.for_concrete_model,
