@@ -28,6 +28,7 @@ from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
+from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.db.models.fields.reverse_related import (
     ForeignObjectRel,
     ManyToOneRel,
@@ -562,20 +563,24 @@ class Baker(Generic[M]):
 
     def _classify_attrs(
         self, attrs: dict[str, Any]
-    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-        """Partition ``attrs`` into reverse-FK, auto-now, and GFK groups.
+    ) -> tuple[
+        dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]
+    ]:
+        """Partition ``attrs`` into reverse-FK, reverse-one-to-one, auto-now, and GFK groups.
 
         Pure logic, no database access: normalizes the model's field descriptors
         to their backing fields and routes entries that cannot be passed straight
-        to the model constructor. Reverse one-to-many and generic-foreign-key
-        entries are *popped* out of ``attrs`` (they are applied after the instance
-        exists); auto-now entries are *copied* out (the value is also kept on
-        ``attrs`` and re-applied via an UPDATE after save, since Django overwrites
-        ``auto_now``/``auto_now_add`` fields on save).
+        to the model constructor. Reverse one-to-many, reverse-one-to-one, and
+        generic-foreign-key entries are *popped* out of ``attrs`` (they are applied
+        after the instance exists); auto-now entries are *copied* out (the value is
+        also kept on ``attrs`` and re-applied via an UPDATE after save, since Django
+        overwrites ``auto_now``/``auto_now_add`` fields on save).
 
-        Returns ``(one_to_many_keys, auto_now_keys, generic_foreign_keys)``.
+        Returns ``(one_to_many_keys, reverse_one_to_one_keys, auto_now_keys,
+        generic_foreign_keys)``.
         """
         one_to_many_keys = {}
+        reverse_one_to_one_keys = {}
         auto_now_keys = {}
         generic_foreign_keys = {}
 
@@ -587,6 +592,8 @@ class Baker(Generic[M]):
 
             if isinstance(descriptor, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[name] = attrs.pop(name)
+            elif isinstance(descriptor, ReverseOneToOneDescriptor):
+                reverse_one_to_one_keys[name] = attrs.pop(name)
 
             field = getattr(descriptor, "field", descriptor)
             if _is_auto_datetime_field(field):
@@ -600,7 +607,7 @@ class Baker(Generic[M]):
                     "for_concrete_model": field.for_concrete_model,
                 }
 
-        return one_to_many_keys, auto_now_keys, generic_foreign_keys
+        return one_to_many_keys, reverse_one_to_one_keys, auto_now_keys, generic_foreign_keys
 
     def instance(
         self,
@@ -610,9 +617,12 @@ class Baker(Generic[M]):
         _from_manager,
         _full_clean=False,
     ) -> M:
-        one_to_many_keys, auto_now_keys, generic_foreign_keys = self._classify_attrs(
-            attrs
-        )
+        (
+            one_to_many_keys,
+            reverse_one_to_one_keys,
+            auto_now_keys,
+            generic_foreign_keys,
+        ) = self._classify_attrs(attrs)
 
         instance = self.model(**attrs)
         if using := _save_kwargs.get("using"):
@@ -628,6 +638,7 @@ class Baker(Generic[M]):
         if _commit:
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
+            self._handle_reverse_one_to_one(instance, reverse_one_to_one_keys)
             self._handle_m2m(instance)
             self._handle_auto_now(instance, auto_now_keys)
 
@@ -794,6 +805,26 @@ class Baker(Generic[M]):
             except TypeError:
                 # for many-to-many relationships the bulk keyword argument doesn't exist
                 manager.set(values, clear=True)
+
+    def _handle_reverse_one_to_one(
+        self, instance: Model, attrs: dict[str, Any]
+    ) -> None:
+        """Handle reverse one-to-one relationships.
+
+        Sets the FK on the related object to point to instance and saves it.
+        This mirrors what Django would do if the relation were set via the
+        forward FK, but on the reverse side.
+        """
+        for key, value in attrs.items():
+            if callable(value):
+                value = value()
+            if value is None:
+                continue
+            descriptor = getattr(self.model, key)
+            fk_field_name = descriptor.related.field.name
+            setattr(value, fk_field_name, instance)
+            save_kwargs = {"using": self._using} if self._using else {}
+            value.save(**save_kwargs)
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
