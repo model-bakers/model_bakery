@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.24.1
+    rev: v1.27.0
     hooks:
       - id: zizmor
   - repo: https://github.com/pre-commit/pre-commit-hooks
