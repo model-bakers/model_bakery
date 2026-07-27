@@ -305,7 +305,7 @@ class ModelFinder:
 
     def _populate(self) -> None:
         """Cache models for faster self._get_model."""
-        unique_models = {}
+        unique_models: dict[str, type[Model]] = {}
         ambiguous_models = []
 
         all_models = apps.all_models
@@ -712,7 +712,9 @@ class Baker(Generic[M]):
         ]
 
         if BAKER_CONTENTTYPES:
-            other_fields_to_skip.extend([GenericRelation, GenericForeignKey])  # type: ignore[list-item]
+            other_fields_to_skip.extend(
+                cast(list[type], [GenericRelation, GenericForeignKey])
+            )
 
         if isinstance(field, tuple(other_fields_to_skip)):
             return True
@@ -957,19 +959,18 @@ def get_required_values(
     and return.
     """
     required_values = {}  # type: dict[str, Any]
-    if hasattr(generator, "required"):
-        for item in generator.required:  # type: ignore[attr-defined]
-            if callable(item):  # baker can deal with the nasty hacking too!
-                key, value = item(field)
-                required_values[key] = value
+    for item in cast(Iterable[Any], getattr(generator, "required", ())):
+        if callable(item):  # baker can deal with the nasty hacking too!
+            key, value = item(field)
+            required_values[key] = value
 
-            elif isinstance(item, str):
-                required_values[item] = getattr(field, item)
+        elif isinstance(item, str):
+            required_values[item] = getattr(field, item)
 
-            else:
-                raise ValueError(
-                    f"Required value '{item}' is of wrong type. Don't make baker sad."
-                )
+        else:
+            raise ValueError(
+                f"Required value '{item}' is of wrong type. Don't make baker sad."
+            )
 
     return required_values
 
