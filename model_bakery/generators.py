@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 from django.db.models import (
     AutoField,
@@ -43,13 +43,13 @@ try:
     # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import ArrayField
 except ImportError:
-    ArrayField = None  # type: ignore[misc,assignment]
+    ArrayField: type | None = None
 
 try:
     # PostgreSQL-specific field (only available when psycopg is installed)
     from django.contrib.postgres.fields import HStoreField
 except ImportError:
-    HStoreField = None  # type: ignore[misc,assignment]
+    HStoreField: type | None = None
 
 try:
     # PostgreSQL-specific fields (only available when psycopg is installed)
@@ -59,9 +59,9 @@ try:
         CITextField,
     )
 except ImportError:
-    CICharField = None  # type: ignore[misc,assignment]
-    CIEmailField = None  # type: ignore[misc,assignment]
-    CITextField = None  # type: ignore[misc,assignment]
+    CICharField: type | None = None
+    CIEmailField: type | None = None
+    CITextField: type | None = None
 
 
 try:
@@ -74,11 +74,11 @@ try:
         IntegerRangeField,
     )
 except ImportError:
-    BigIntegerRangeField = None  # type: ignore[misc,assignment]
-    DateRangeField = None  # type: ignore[misc,assignment]
-    DateTimeRangeField = None  # type: ignore[misc,assignment]
-    DecimalRangeField = None  # type: ignore[misc,assignment]
-    IntegerRangeField = None  # type: ignore[misc,assignment]
+    BigIntegerRangeField: type | None = None
+    DateRangeField: type | None = None
+    DateTimeRangeField: type | None = None
+    DecimalRangeField: type | None = None
+    IntegerRangeField: type | None = None
 
 
 default_mapping: dict[type, Callable] = {
@@ -145,8 +145,8 @@ def get_type_mapping() -> dict[type, Callable]:
     from .gis import default_gis_mapping
 
     mapping = default_mapping.copy()
-    mapping.update(default_contenttypes_mapping)
-    mapping.update(default_gis_mapping)
+    mapping.update(cast(dict[type, Callable], default_contenttypes_mapping))
+    mapping.update(cast(dict[type, Callable], default_gis_mapping))
     return mapping.copy()
 
 
