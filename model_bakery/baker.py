@@ -809,11 +809,10 @@ class Baker(Generic[M]):
     def _handle_reverse_one_to_one(
         self, instance: Model, attrs: dict[str, Any]
     ) -> None:
-        """Handle reverse one-to-one relationships.
+        """Persist related objects defined through a reverse OneToOne relation.
 
-        Sets the FK on the related object to point to instance and saves it.
-        This mirrors what Django would do if the relation were set via the
-        forward FK, but on the reverse side.
+        Sets the FK on the related object to point to ``instance`` and saves it,
+        consistent with how ``_handle_one_to_many`` persists reverse relations.
         """
         for key, value in attrs.items():
             if callable(value):

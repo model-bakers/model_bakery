@@ -681,8 +681,6 @@ class TestBakerCreatesAssociatedModels(TestCase):
         Reverse OneToOne relations passed as kwargs must be saved to the DB,
         not just exist in memory on the created instance.
         """
-        # RelatedNamesModel.one_to_one = OneToOneField(Person, related_name="one_related")
-        # Person.one_related is the reverse accessor — this is the bug scenario.
         placeholder = baker.make(models.Person)
         related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
 
