@@ -829,9 +829,15 @@ class TestClassifyAttrs(TestCase):
         b = baker.Baker(models.Person)
         attrs = {"name": "foo"}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         assert attrs == {"name": "foo"}
         assert one_to_many == {}
+        assert reverse_one_to_one == {}
         assert auto_now == {}
         assert gfks == {}
 
@@ -840,17 +846,30 @@ class TestClassifyAttrs(TestCase):
         sentinel = [object()]
         attrs = {"name": "foo", "fk_related": sentinel}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         # reverse one-to-many entries are removed from attrs (applied post-save)
         assert "fk_related" not in attrs
         assert one_to_many == {"fk_related": sentinel}
+        assert reverse_one_to_one == {}
+        assert auto_now == {}
+        assert gfks == {}
 
     def test_auto_now_is_copied_not_popped(self):
         b = baker.Baker(models.ModelWithAutoNowFields)
         now = datetime.datetime(2023, 1, 1)
         attrs = {"sent_date": now, "created": now, "updated": now}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         # auto_now/auto_now_add values are copied out for the post-save UPDATE
         # but left on attrs for the constructor; plain DateTimeFields are not.
         assert auto_now == {"created": now, "updated": now}
@@ -864,7 +883,12 @@ class TestClassifyAttrs(TestCase):
         sentinel = object()
         attrs = {"content_object": sentinel}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         assert "content_object" not in attrs
         assert gfks["content_object"]["value"] is sentinel
         assert gfks["content_object"]["content_type_field"] == "content_type"

@@ -563,9 +563,7 @@ class Baker(Generic[M]):
 
     def _classify_attrs(
         self, attrs: dict[str, Any]
-    ) -> tuple[
-        dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]
-    ]:
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
         """Partition ``attrs`` into reverse-FK, reverse-one-to-one, auto-now, and GFK groups.
 
         Pure logic, no database access: normalizes the model's field descriptors
@@ -607,7 +605,12 @@ class Baker(Generic[M]):
                     "for_concrete_model": field.for_concrete_model,
                 }
 
-        return one_to_many_keys, reverse_one_to_one_keys, auto_now_keys, generic_foreign_keys
+        return (
+            one_to_many_keys,
+            reverse_one_to_one_keys,
+            auto_now_keys,
+            generic_foreign_keys,
+        )
 
     def instance(
         self,
