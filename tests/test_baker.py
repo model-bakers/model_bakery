@@ -281,6 +281,14 @@ class TestBakerPrepareSavingRelatedInstances:
         assert dog.owner is not None
         assert dog.owner.pk is None
 
+    def test_prepare_preserves_reverse_one_to_one(self):
+        related = models.RelatedNamesModel()
+
+        person = baker.prepare(models.Person, one_related=related)
+
+        assert person.one_related is related
+        assert related.one_to_one is person
+
     def test_access_reverse_fk_on_unsaved_instance(self):
         """Reverse FK and M2M access on unsaved instances raises ValueError."""
         dog = baker.prepare(models.Dog)
