@@ -635,13 +635,21 @@ class Baker(Generic[M]):
             instance, generic_foreign_keys, commit=_commit
         )
 
+        # Connect reverse one-to-one relations in memory both for make()
+        # (where they are also saved below) and for prepare() (where the
+        # supplied related object must be wired to the unsaved instance).
+        resolved_reverse_one_to_one = self._resolve_reverse_one_to_one(
+            reverse_one_to_one_keys
+        )
+        self._connect_reverse_one_to_one(instance, resolved_reverse_one_to_one)
+
         if _full_clean:
             instance.full_clean()
 
         if _commit:
             instance.save(**_save_kwargs)
             self._handle_one_to_many(instance, one_to_many_keys)
-            self._handle_reverse_one_to_one(instance, reverse_one_to_one_keys)
+            self._save_reverse_one_to_one(resolved_reverse_one_to_one)
             self._handle_m2m(instance)
             self._handle_auto_now(instance, auto_now_keys)
 
@@ -815,22 +823,38 @@ class Baker(Generic[M]):
                 # for many-to-many relationships the bulk keyword argument doesn't exist
                 manager.set(values, clear=True)
 
-    def _handle_reverse_one_to_one(
-        self, instance: Model, attrs: dict[str, Any]
-    ) -> None:
-        """Persist related objects defined through a reverse OneToOne relation.
-
-        Sets the FK on the related object to point to ``instance`` and saves it,
-        consistent with how ``_handle_one_to_many`` persists reverse relations.
-        """
+    def _resolve_reverse_one_to_one(self, attrs: dict[str, Any]) -> dict[str, Model]:
+        """Resolve callables and drop ``None`` values from reverse OneToOne attrs."""
+        resolved: dict[str, Model] = {}
         for key, value in attrs.items():
             if callable(value):
                 value = value()
-            if value is None:
-                continue
+            if value is not None:
+                resolved[key] = value
+        return resolved
+
+    def _connect_reverse_one_to_one(
+        self, instance: Model, attrs: dict[str, Model]
+    ) -> None:
+        """Wire reverse OneToOne related objects to ``instance`` in memory.
+
+        Sets the FK on the related object to point to ``instance`` and caches
+        the related object on ``instance`` so the relationship is usable both
+        for ``prepare()`` (no DB save) and before the related object is saved
+        during ``make()``.
+        """
+        for key, value in attrs.items():
             descriptor = getattr(self.model, key)
             fk_field_name = descriptor.related.field.name
             setattr(value, fk_field_name, instance)
+            instance.__dict__[key] = value
+
+    def _save_reverse_one_to_one(self, attrs: dict[str, Model]) -> None:
+        """Persist related objects defined through a reverse OneToOne relation.
+
+        Must be called after ``instance`` has been saved so the FK is valid.
+        """
+        for value in attrs.values():
             save_kwargs = {"using": self._using} if self._using else {}
             value.save(**save_kwargs)
 

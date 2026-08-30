@@ -698,6 +698,19 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert related.one_to_one == person
         assert models.RelatedNamesModel.objects.filter(one_to_one=person).exists()
 
+    def test_prepare_reverse_one_to_one_is_connected_in_memory(self):
+        """Reverse OneToOne relations passed to prepare() must wire both sides
+        in memory without persisting either object.
+        """
+        placeholder = baker.make(models.Person)
+        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
+
+        person = baker.prepare(models.Person, one_related=related)
+
+        assert person.pk is None
+        assert person.one_related == related
+        assert related.one_to_one == person
+
     @pytest.mark.django_db
     def test_field_lookup_for_related_field_does_not_work_with_prepare(self):
         person = baker.prepare(
