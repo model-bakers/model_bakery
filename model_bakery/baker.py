@@ -748,7 +748,11 @@ class Baker(Generic[M]):
             return
 
         # use .update() to force update auto_now fields
-        instance.__class__.objects.filter(pk=instance.pk).update(**attrs)
+        manager = instance.__class__._base_manager
+        db = self._using or instance._state.db
+        if db:
+            manager = manager.using(db)
+        manager.filter(pk=instance.pk).update(**attrs)
 
         # to make the resulting instance has the specified values
         for k, v in attrs.items():
