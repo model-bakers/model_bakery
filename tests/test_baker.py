@@ -1387,10 +1387,6 @@ class TestBakerSeeded:
         assert baker.Baker._global_seed is baker.Baker.SENTINEL
 
 
-def _auto_now_tzinfo():
-    return datetime.timezone.utc if settings.USE_TZ else None
-
-
 class TestAutoNowFields:
     @pytest.mark.django_db
     @pytest.mark.parametrize("use_tz", [False, True])
@@ -1437,7 +1433,7 @@ class TestAutoNowFields:
 
     @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
     def test_make_with_auto_now_on_non_default_database(self):
-        sent_date = datetime.datetime(2023, 10, 20, 15, 30, tzinfo=_auto_now_tzinfo())
+        sent_date = tz_aware(datetime.datetime(2023, 10, 20, 15, 30))
 
         instance = baker.make(
             models.ModelWithAutoNowFields,
@@ -1458,7 +1454,7 @@ class TestAutoNowFields:
 
     @pytest.mark.django_db
     def test_make_with_auto_now_and_custom_manager_name(self):
-        created = datetime.datetime(2023, 10, 20, 15, 30, tzinfo=_auto_now_tzinfo())
+        created = tz_aware(datetime.datetime(2023, 10, 20, 15, 30))
 
         instance = baker.make(
             models.ModelWithAutoNowAndCustomManagerName,
@@ -1472,7 +1468,7 @@ class TestAutoNowFields:
 
     @pytest.mark.django_db
     def test_make_with_auto_now_and_filtered_default_manager(self):
-        created = datetime.datetime(2023, 10, 20, 15, 30, tzinfo=_auto_now_tzinfo())
+        created = tz_aware(datetime.datetime(2023, 10, 20, 15, 30))
 
         instance = baker.make(
             models.ModelWithAutoNowAndFilteredManager,
