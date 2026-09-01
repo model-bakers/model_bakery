@@ -1392,9 +1392,7 @@ class TestAutoNowFields:
     @pytest.mark.parametrize("use_tz", [False, True])
     def test_make_with_auto_now(self, use_tz, settings):
         settings.USE_TZ = use_tz
-        tzinfo = datetime.timezone.utc if use_tz else None
-
-        now = datetime.datetime(2023, 10, 20, 15, 30).replace(tzinfo=tzinfo)
+        now = tz_aware(datetime.datetime(2023, 10, 20, 15, 30))
 
         instance = baker.make(
             models.ModelWithAutoNowFields,
