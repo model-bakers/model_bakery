@@ -545,3 +545,27 @@ class ModelWithAutoNowFields(models.Model):
     sent_date = models.DateTimeField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+
+class ExcludeAllManager(models.Manager):
+    """A default manager that filters out every row, like a soft-delete manager."""
+
+    def get_queryset(self):
+        return super().get_queryset().none()
+
+
+class ModelWithAutoNowAndCustomManagerName(models.Model):
+    """`auto_now` model whose only manager is *not* called ``objects``."""
+
+    created = models.DateTimeField(auto_now_add=True)
+
+    entries = models.Manager()
+
+
+class ModelWithAutoNowAndFilteredManager(models.Model):
+    """`auto_now` model whose default manager hides rows from `objects`."""
+
+    created = models.DateTimeField(auto_now_add=True)
+
+    objects = ExcludeAllManager()
+    all_objects = models.Manager()

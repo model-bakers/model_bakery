@@ -1431,6 +1431,55 @@ class TestAutoNowFields:
         assert instance.updated == updated
         assert instance.sent_date == sent_date
 
+    @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
+    def test_make_with_auto_now_on_non_default_database(self):
+        sent_date = tz_aware(datetime.datetime(2023, 10, 20, 15, 30))
+
+        instance = baker.make(
+            models.ModelWithAutoNowFields,
+            created=sent_date,
+            updated=sent_date,
+            sent_date=sent_date,
+            _using=settings.EXTRA_DB,
+        )
+
+        # Values should be persisted on the requested database, not just set on
+        # the in-memory instance
+        persisted = models.ModelWithAutoNowFields.objects.using(settings.EXTRA_DB).get(
+            pk=instance.pk
+        )
+        assert persisted.created == sent_date
+        assert persisted.updated == sent_date
+        assert persisted.sent_date == sent_date
+
+    @pytest.mark.django_db
+    def test_make_with_auto_now_and_custom_manager_name(self):
+        created = tz_aware(datetime.datetime(2023, 10, 20, 15, 30))
+
+        instance = baker.make(
+            models.ModelWithAutoNowAndCustomManagerName,
+            created=created,
+        )
+
+        persisted = models.ModelWithAutoNowAndCustomManagerName.entries.get(
+            pk=instance.pk
+        )
+        assert persisted.created == created
+
+    @pytest.mark.django_db
+    def test_make_with_auto_now_and_filtered_default_manager(self):
+        created = tz_aware(datetime.datetime(2023, 10, 20, 15, 30))
+
+        instance = baker.make(
+            models.ModelWithAutoNowAndFilteredManager,
+            created=created,
+        )
+
+        persisted = models.ModelWithAutoNowAndFilteredManager.all_objects.get(
+            pk=instance.pk
+        )
+        assert persisted.created == created
+
 
 class TestFieldSpecificIntegerGenerators:
     @pytest.mark.django_db

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Fix explicit `auto_now`/`auto_now_add` values being written to the wrong database when `_using` is set, and route the follow-up `UPDATE` through `_base_manager` so it also works on models without an `objects` manager or with a filtered default manager
 - [dev] Extract the attr-partitioning logic out of `Baker.instance()` into a pure, database-free `Baker._classify_attrs()` helper, with direct unit tests asserting it runs zero queries
 - [dev] Add Django 6.1 support and CI coverage
 - [dev] Align uv and Dependabot dependency cooldowns, enforce Zizmor in CI, and update pre-commit hooks with Dependabot
