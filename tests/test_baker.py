@@ -699,9 +699,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.RelatedNamesModel.objects.filter(one_to_one=person).exists()
 
     def test_prepare_reverse_one_to_one_is_connected_in_memory(self):
-        """Reverse OneToOne relations passed to prepare() must wire both sides
-        in memory without persisting either object.
-        """
+        """Reverse OneToOne relations passed to prepare() must wire both sides in memory without persisting either object."""
         placeholder = baker.make(models.Person)
         related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
 
