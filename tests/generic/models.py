@@ -84,6 +84,14 @@ class User(models.Model):
     username = models.CharField(max_length=32)
 
 
+class ProfileDetails(models.Model):
+    profile = models.OneToOneField(
+        Profile, related_name="details", on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=32)
+
+
 class PaymentBill(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.FloatField()

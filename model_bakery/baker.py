@@ -1,5 +1,6 @@
 import collections
 from collections.abc import Callable, Iterable, Iterator
+from contextlib import nullcontext
 from inspect import Parameter, signature
 from os.path import dirname, join
 from typing import (
@@ -641,15 +642,25 @@ class Baker(Generic[M]):
         resolved_reverse_one_to_one = self._resolve_reverse_one_to_one(
             reverse_one_to_one_keys
         )
-        self._connect_reverse_one_to_one(instance, resolved_reverse_one_to_one)
+        for key, value in resolved_reverse_one_to_one.items():
+            setattr(instance, key, value)
 
         if _full_clean:
             instance.full_clean()
 
         if _commit:
-            instance.save(**_save_kwargs)
-            self._handle_one_to_many(instance, one_to_many_keys)
-            self._save_reverse_one_to_one(resolved_reverse_one_to_one)
+            with (
+                transaction.atomic(
+                    using=_save_kwargs.get("using") or instance._state.db
+                )
+                if _full_clean and resolved_reverse_one_to_one
+                else nullcontext()
+            ):
+                instance.save(**_save_kwargs)
+                self._handle_one_to_many(instance, one_to_many_keys)
+                self._save_reverse_one_to_one(
+                    instance, resolved_reverse_one_to_one, _full_clean=_full_clean
+                )
             self._handle_m2m(instance)
             self._handle_auto_now(instance, auto_now_keys)
 
@@ -824,39 +835,37 @@ class Baker(Generic[M]):
                 manager.set(values, clear=True)
 
     def _resolve_reverse_one_to_one(self, attrs: dict[str, Any]) -> dict[str, Model]:
-        """Resolve callables and drop ``None`` values from reverse OneToOne attrs."""
+        """Resolve callables and iterators, omitting absent reverse relations."""
         resolved: dict[str, Model] = {}
         for key, value in attrs.items():
             if callable(value):
                 value = value()
+            if is_iterator(value):
+                try:
+                    value = next(value)
+                except StopIteration:
+                    raise RecipeIteratorEmpty(f"{key} iterator is empty.")
             if value is not None:
                 resolved[key] = value
         return resolved
 
-    def _connect_reverse_one_to_one(
-        self, instance: Model, attrs: dict[str, Model]
+    def _save_reverse_one_to_one(
+        self, instance: Model, keys: Iterable[str], _full_clean: bool = False
     ) -> None:
-        """Wire reverse OneToOne related objects to ``instance`` in memory.
-
-        Sets the FK on the related object to point to ``instance`` and caches
-        the related object on ``instance`` so the relationship is usable both
-        for ``prepare()`` (no DB save) and before the related object is saved
-        during ``make()``.
-        """
-        for key, value in attrs.items():
+        save_kwargs = {"using": self._using} if self._using else {}
+        # Read the values resolved during prepare(), without consuming inputs again.
+        for key in keys:
             descriptor = getattr(self.model, key)
-            fk_field_name = descriptor.related.field.name
-            setattr(value, fk_field_name, instance)
-            instance.__dict__[key] = value
-
-    def _save_reverse_one_to_one(self, attrs: dict[str, Model]) -> None:
-        """Persist related objects defined through a reverse OneToOne relation.
-
-        Must be called after ``instance`` has been saved so the FK is valid.
-        """
-        for value in attrs.values():
-            save_kwargs = {"using": self._using} if self._using else {}
-            value.save(**save_kwargs)
+            value = descriptor.related.get_cached_value(instance, default=None)
+            if value is not None:
+                # The parent's PK may only have become available after bulk_create().
+                setattr(instance, key, value)
+                _save_related_objs(
+                    type(value), [value], _using=self._using, _full_clean=_full_clean
+                )
+                if _full_clean and value._state.adding:
+                    value.full_clean()
+                value.save(**save_kwargs)
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
@@ -1106,23 +1115,28 @@ def bulk_create(  # noqa: C901
     else:
         manager = baker.model._base_manager
 
-    if _full_clean:
-        with transaction.atomic(using=baker._using or None):
-            _save_related_objs(
-                baker.model,
-                entries,
-                _using=baker._using,
-                _full_clean=True,
-            )
+    reverse_one_to_one_keys = [
+        key
+        for key in kwargs
+        if isinstance(getattr(baker.model, key, None), ReverseOneToOneDescriptor)
+    ]
+    with (
+        transaction.atomic(using=baker._using or None) if _full_clean else nullcontext()
+    ):
+        _save_related_objs(
+            baker.model, entries, _using=baker._using, _full_clean=_full_clean
+        )
+        if _full_clean:
             for entry in entries:
                 entry.full_clean()
-            created_entries = manager.bulk_create(entries)
-    else:
-        _save_related_objs(baker.model, entries, _using=baker._using)
         created_entries = manager.bulk_create(entries)
+        for entry in created_entries:
+            baker._save_reverse_one_to_one(
+                entry, reverse_one_to_one_keys, _full_clean=_full_clean
+            )
 
-    # set many-to-many relations from kwargs
     for entry in created_entries:
+        # set many-to-many relations from kwargs
         for field in baker.model._meta.many_to_many:
             if field.name in kwargs:
                 through_model = getattr(entry, field.name).through
