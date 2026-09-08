@@ -283,14 +283,6 @@ class TestBakerPrepareSavingRelatedInstances:
         assert dog.owner is not None
         assert dog.owner.pk is None
 
-    def test_prepare_preserves_reverse_one_to_one(self):
-        related = models.RelatedNamesModel()
-
-        person = baker.prepare(models.Person, one_related=related)
-
-        assert person.one_related is related
-        assert related.one_to_one is person
-
     def test_access_reverse_fk_on_unsaved_instance(self):
         """Reverse FK and M2M access on unsaved instances raises ValueError."""
         dog = baker.prepare(models.Dog)
@@ -685,33 +677,6 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert person.fk_related.get().name == "Bar"
 
     @pytest.mark.django_db
-    def test_reverse_one_to_one_is_persisted(self):
-        """Regression test for issue #473.
-
-        Reverse OneToOne relations passed as kwargs must be saved to the DB,
-        not just exist in memory on the created instance.
-        """
-        placeholder = baker.make(models.Person)
-        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
-
-        person = baker.make(models.Person, one_related=related)
-
-        related.refresh_from_db()
-        assert related.one_to_one == person
-        assert models.RelatedNamesModel.objects.filter(one_to_one=person).exists()
-
-    def test_prepare_reverse_one_to_one_is_connected_in_memory(self):
-        """Reverse OneToOne relations passed to prepare() must wire both sides in memory without persisting either object."""
-        placeholder = baker.make(models.Person)
-        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
-
-        person = baker.prepare(models.Person, one_related=related)
-
-        assert person.pk is None
-        assert person.one_related == related
-        assert related.one_to_one == person
-
-    @pytest.mark.django_db
     def test_field_lookup_for_related_field_does_not_work_with_prepare(self):
         person = baker.prepare(
             models.Person,
@@ -741,6 +706,63 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
 
 class TestReverseOneToOne:
+    @pytest.mark.django_db
+    def test_reverse_one_to_one_is_persisted(self):
+        """Regression test for issue #473.
+
+        Reverse OneToOne relations passed as kwargs must be saved to the DB,
+        not just exist in memory on the created instance.
+        """
+        placeholder = baker.make(models.Person)
+        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
+
+        person = baker.make(models.Person, one_related=related)
+
+        related.refresh_from_db()
+        assert related.one_to_one == person
+        assert models.RelatedNamesModel.objects.filter(one_to_one=person).exists()
+
+    def test_prepare_preserves_reverse_one_to_one(self):
+        related = models.RelatedNamesModel()
+
+        person = baker.prepare(models.Person, one_related=related)
+
+        assert person.one_related is related
+        assert related.one_to_one is person
+
+    @pytest.mark.django_db
+    def test_prepare_keeps_saved_relation_unchanged(self):
+        placeholder = baker.make(models.Person)
+        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
+
+        person = baker.prepare(models.Person, one_related=related)
+
+        assert person.pk is None
+        assert person.one_related is related
+        assert related.one_to_one is person
+        related.refresh_from_db()
+        assert related.one_to_one == placeholder
+
+    @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
+    def test_reverse_one_to_one_respects_using_kwarg(self):
+        """Reverse OneToOne handler must save related object to the correct DB."""
+        placeholder = baker.make(models.Person, _using=settings.EXTRA_DB)
+        related = baker.make(
+            models.RelatedNamesModel,
+            one_to_one=placeholder,
+            _using=settings.EXTRA_DB,
+        )
+        person = baker.make(
+            models.Person, one_related=related, _using=settings.EXTRA_DB
+        )
+        related.refresh_from_db(using=settings.EXTRA_DB)
+        assert related.one_to_one == person
+        assert (
+            models.RelatedNamesModel.objects.using(settings.EXTRA_DB)
+            .filter(one_to_one=person)
+            .exists()
+        )
+
     @pytest.mark.django_db
     @pytest.mark.parametrize("bulk_create", [False, True])
     def test_iterator_is_persisted(self, bulk_create):
@@ -773,10 +795,21 @@ class TestReverseOneToOne:
         assert related.one_to_one == person
 
     @pytest.mark.django_db
-    @pytest.mark.parametrize("saved", [False, True])
-    def test_bulk_create_persists_related_object(self, saved):
-        factory = baker.make if saved else baker.prepare
-        related = factory(models.RelatedNamesModel)
+    def test_bulk_create_relinks_existing_related_object(self):
+        related = baker.make(models.RelatedNamesModel)
+
+        person = baker.make(models.Person, one_related=related, _bulk_create=True)
+
+        related.refresh_from_db()
+        person.refresh_from_db()
+        assert related.one_to_one == person
+        assert person.one_related == related
+
+    @pytest.mark.django_db
+    def test_bulk_create_saves_prepared_object_with_unsaved_dependencies(self):
+        related = baker.prepare(models.RelatedNamesModel)
+        assert related.pk is None
+        assert related.foreign_key.pk is None
 
         person = baker.make(models.Person, one_related=related, _bulk_create=True)
 
@@ -1474,25 +1507,6 @@ class TestBakerSupportsMultiDatabase(TestCase):
         assert not models.School.objects.exists()
         assert not models.SchoolEnrollment.objects.exists()
         assert not models.Person.objects.exists()
-
-    def test_reverse_one_to_one_respects_using_kwarg(self):
-        """Reverse OneToOne handler must save related object to the correct DB."""
-        placeholder = baker.make(models.Person, _using=settings.EXTRA_DB)
-        related = baker.make(
-            models.RelatedNamesModel,
-            one_to_one=placeholder,
-            _using=settings.EXTRA_DB,
-        )
-        person = baker.make(
-            models.Person, one_related=related, _using=settings.EXTRA_DB
-        )
-        related.refresh_from_db(using=settings.EXTRA_DB)
-        assert related.one_to_one == person
-        assert (
-            models.RelatedNamesModel.objects.using(settings.EXTRA_DB)
-            .filter(one_to_one=person)
-            .exists()
-        )
 
 
 class TestBakerAutomaticallyRefreshFromDB:
