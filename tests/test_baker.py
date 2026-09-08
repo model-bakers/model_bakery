@@ -18,7 +18,9 @@ from model_bakery.exceptions import (
     AmbiguousModelName,
     InvalidQuantityException,
     ModelNotFound,
+    RecipeIteratorEmpty,
 )
+from model_bakery.recipe import Recipe, foreign_key
 from model_bakery.timezone import tz_aware
 from tests.generic import baker_recipes, models
 from tests.generic.forms import DummyGenericIPAddressFieldForm
@@ -280,14 +282,6 @@ class TestBakerPrepareSavingRelatedInstances:
         assert dog.pk is None
         assert dog.owner is not None
         assert dog.owner.pk is None
-
-    def test_prepare_preserves_reverse_one_to_one(self):
-        related = models.RelatedNamesModel()
-
-        person = baker.prepare(models.Person, one_related=related)
-
-        assert person.one_related is related
-        assert related.one_to_one is person
 
     def test_access_reverse_fk_on_unsaved_instance(self):
         """Reverse FK and M2M access on unsaved instances raises ValueError."""
@@ -711,6 +705,244 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert related_2.name == "custom name"
 
 
+class TestReverseOneToOne:
+    @pytest.mark.django_db
+    def test_reverse_one_to_one_is_persisted(self):
+        """Regression test for issue #473.
+
+        Reverse OneToOne relations passed as kwargs must be saved to the DB,
+        not just exist in memory on the created instance.
+        """
+        placeholder = baker.make(models.Person)
+        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
+
+        person = baker.make(models.Person, one_related=related)
+
+        related.refresh_from_db()
+        assert related.one_to_one == person
+        assert models.RelatedNamesModel.objects.filter(one_to_one=person).exists()
+
+    def test_prepare_preserves_reverse_one_to_one(self):
+        related = models.RelatedNamesModel()
+
+        person = baker.prepare(models.Person, one_related=related)
+
+        assert person.one_related is related
+        assert related.one_to_one is person
+
+    @pytest.mark.django_db
+    def test_prepare_keeps_saved_relation_unchanged(self):
+        placeholder = baker.make(models.Person)
+        related = baker.make(models.RelatedNamesModel, one_to_one=placeholder)
+
+        person = baker.prepare(models.Person, one_related=related)
+
+        assert person.pk is None
+        assert person.one_related is related
+        assert related.one_to_one is person
+        related.refresh_from_db()
+        assert related.one_to_one == placeholder
+
+    @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
+    def test_reverse_one_to_one_respects_using_kwarg(self):
+        """Reverse OneToOne handler must save related object to the correct DB."""
+        placeholder = baker.make(models.Person, _using=settings.EXTRA_DB)
+        related = baker.make(
+            models.RelatedNamesModel,
+            one_to_one=placeholder,
+            _using=settings.EXTRA_DB,
+        )
+        person = baker.make(
+            models.Person, one_related=related, _using=settings.EXTRA_DB
+        )
+        related.refresh_from_db(using=settings.EXTRA_DB)
+        assert related.one_to_one == person
+        assert (
+            models.RelatedNamesModel.objects.using(settings.EXTRA_DB)
+            .filter(one_to_one=person)
+            .exists()
+        )
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("bulk_create", [False, True])
+    def test_iterator_is_persisted(self, bulk_create):
+        related = baker.make(models.RelatedNamesModel, _quantity=2)
+
+        people = baker.make(
+            models.Person,
+            one_related=iter(related),
+            _quantity=2,
+            _bulk_create=bulk_create,
+        )
+
+        for person, relation in zip(people, related, strict=True):
+            assert person.one_related is relation
+            relation.refresh_from_db()
+            person.refresh_from_db()
+            assert relation.one_to_one == person
+            assert person.one_related == relation
+
+    @pytest.mark.django_db
+    def test_bulk_create_resolves_callable_once(self):
+        related = baker.make(models.RelatedNamesModel)
+        values = iter([related])
+
+        person = baker.make(
+            models.Person, one_related=lambda: next(values), _bulk_create=True
+        )
+
+        related.refresh_from_db()
+        assert related.one_to_one == person
+
+    @pytest.mark.django_db
+    def test_bulk_create_relinks_existing_related_object(self):
+        related = baker.make(models.RelatedNamesModel)
+
+        person = baker.make(models.Person, one_related=related, _bulk_create=True)
+
+        related.refresh_from_db()
+        person.refresh_from_db()
+        assert related.one_to_one == person
+        assert person.one_related == related
+
+    @pytest.mark.django_db
+    def test_bulk_create_saves_prepared_object_with_unsaved_dependencies(self):
+        related = baker.prepare(models.RelatedNamesModel)
+        assert related.pk is None
+        assert related.foreign_key.pk is None
+
+        person = baker.make(models.Person, one_related=related, _bulk_create=True)
+
+        related.refresh_from_db()
+        person.refresh_from_db()
+        assert related.one_to_one == person
+        assert person.one_related == related
+        assert models.Person.objects.filter(pk=related.foreign_key_id).exists()
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("bulk_create", [False, True])
+    def test_full_clean_rolls_back_invalid_reverse_object(self, bulk_create):
+        details = baker.prepare(models.ProfileDetails, name="")
+
+        with pytest.raises(ValidationError) as exc:
+            baker.make(
+                models.Profile,
+                details=details,
+                _bulk_create=bulk_create,
+                _full_clean=True,
+            )
+
+        assert "name" in exc.value.message_dict
+        assert not models.Profile.objects.exists()
+        assert not models.User.objects.exists()
+        assert not models.ProfileDetails.objects.exists()
+
+    @pytest.mark.django_db
+    def test_full_clean_validates_unsaved_reverse_dependencies(self):
+        details = baker.prepare(
+            models.ProfileDetails, user__profile__email="not-an-email"
+        )
+
+        with pytest.raises(ValidationError) as exc:
+            baker.make(
+                models.Profile, details=details, _bulk_create=True, _full_clean=True
+            )
+
+        assert "email" in exc.value.message_dict
+        assert not models.Profile.objects.exists()
+        assert not models.User.objects.exists()
+        assert not models.ProfileDetails.objects.exists()
+
+    @pytest.mark.django_db
+    def test_full_clean_rolls_back_reverse_save_failure(self):
+        details = baker.prepare(models.ProfileDetails)
+
+        with (
+            patch.object(details, "save", side_effect=RuntimeError("save failed")),
+            pytest.raises(RuntimeError, match="save failed"),
+        ):
+            baker.make(
+                models.Profile, details=details, _bulk_create=True, _full_clean=True
+            )
+
+        assert not models.Profile.objects.exists()
+        assert not models.User.objects.exists()
+        assert not models.ProfileDetails.objects.exists()
+
+    @pytest.mark.django_db
+    def test_full_clean_does_not_validate_saved_reverse_object(self):
+        details = baker.make(models.ProfileDetails, name="")
+
+        profile = baker.make(
+            models.Profile, details=details, _bulk_create=True, _full_clean=True
+        )
+
+        details.refresh_from_db()
+        assert details.profile == profile
+        assert details.name == ""
+
+    @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
+    def test_full_clean_saves_reverse_dependencies_on_selected_database(self):
+        details = baker.prepare(
+            models.ProfileDetails,
+            user__profile__email="valid@example.com",
+            _using=settings.EXTRA_DB,
+        )
+
+        profile = baker.make(
+            models.Profile,
+            details=details,
+            _bulk_create=True,
+            _full_clean=True,
+            _using=settings.EXTRA_DB,
+        )
+
+        details.refresh_from_db(using=settings.EXTRA_DB)
+        assert details.profile == profile
+        assert details.user.profile.email == "valid@example.com"
+        assert models.Profile.objects.using(settings.EXTRA_DB).count() == 2
+        assert models.User.objects.using(settings.EXTRA_DB).count() == 1
+        assert not models.Profile.objects.exists()
+        assert not models.User.objects.exists()
+        assert not models.ProfileDetails.objects.exists()
+
+    @pytest.mark.django_db
+    def test_bulk_create_recipe_with_quantity(self):
+        recipe = Recipe(
+            models.Person,
+            one_related=foreign_key(Recipe(models.RelatedNamesModel), one_to_one=True),
+        )
+
+        people = recipe.make(_quantity=2, _bulk_create=True)
+
+        for person in people:
+            person.refresh_from_db()
+            assert person.one_related.one_to_one == person
+        assert people[0].one_related.pk != people[1].one_related.pk
+
+    def test_prepare_preserves_iterator_relations_without_queries(self):
+        related = [models.RelatedNamesModel(), models.RelatedNamesModel()]
+
+        people = baker.prepare(models.Person, one_related=iter(related), _quantity=2)
+
+        for person, relation in zip(people, related, strict=True):
+            assert person.pk is None
+            assert relation.pk is None
+            assert person.one_related is relation
+            assert relation.one_to_one is person
+
+    def test_empty_iterator_raises_recipe_error(self):
+        with pytest.raises(RecipeIteratorEmpty, match="one_related iterator is empty"):
+            baker.prepare(models.Person, one_related=iter(()))
+
+    @pytest.mark.django_db
+    def test_bulk_create_accepts_absent_relation(self):
+        person = baker.make(models.Person, one_related=None, _bulk_create=True)
+
+        person.refresh_from_db()
+        assert not models.RelatedNamesModel.objects.filter(one_to_one=person).exists()
+
+
 class TestHandlingUnsupportedModels:
     @pytest.mark.django_db
     def test_unsupported_model_raises_an_explanatory_exception(self):
@@ -813,9 +1045,15 @@ class TestClassifyAttrs(TestCase):
         b = baker.Baker(models.Person)
         attrs = {"name": "foo"}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         assert attrs == {"name": "foo"}
         assert one_to_many == {}
+        assert reverse_one_to_one == {}
         assert auto_now == {}
         assert gfks == {}
 
@@ -824,17 +1062,30 @@ class TestClassifyAttrs(TestCase):
         sentinel = [object()]
         attrs = {"name": "foo", "fk_related": sentinel}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         # reverse one-to-many entries are removed from attrs (applied post-save)
         assert "fk_related" not in attrs
         assert one_to_many == {"fk_related": sentinel}
+        assert reverse_one_to_one == {}
+        assert auto_now == {}
+        assert gfks == {}
 
     def test_auto_now_is_copied_not_popped(self):
         b = baker.Baker(models.ModelWithAutoNowFields)
         now = datetime.datetime(2023, 1, 1)
         attrs = {"sent_date": now, "created": now, "updated": now}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         # auto_now/auto_now_add values are copied out for the post-save UPDATE
         # but left on attrs for the constructor; plain DateTimeFields are not.
         assert auto_now == {"created": now, "updated": now}
@@ -848,7 +1099,12 @@ class TestClassifyAttrs(TestCase):
         sentinel = object()
         attrs = {"content_object": sentinel}
         with self.assertNumQueries(0):
-            one_to_many, auto_now, gfks = b._classify_attrs(attrs)
+            (
+                one_to_many,
+                reverse_one_to_one,
+                auto_now,
+                gfks,
+            ) = b._classify_attrs(attrs)
         assert "content_object" not in attrs
         assert gfks["content_object"]["value"] is sentinel
         assert gfks["content_object"]["content_type_field"] == "content_type"

@@ -1,5 +1,6 @@
 import collections
 from collections.abc import Callable, Iterable, Iterator
+from contextlib import nullcontext
 from inspect import Parameter, signature
 from os.path import dirname, join
 from typing import (
@@ -28,6 +29,7 @@ from django.db.models.fields.proxy import OrderWrt
 from django.db.models.fields.related import (
     ReverseManyToOneDescriptor as ForeignRelatedObjectsDescriptor,
 )
+from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.db.models.fields.reverse_related import (
     ForeignObjectRel,
     ManyToOneRel,
@@ -562,20 +564,22 @@ class Baker(Generic[M]):
 
     def _classify_attrs(
         self, attrs: dict[str, Any]
-    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-        """Partition ``attrs`` into reverse-FK, auto-now, and GFK groups.
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """Partition ``attrs`` into reverse-FK, reverse-one-to-one, auto-now, and GFK groups.
 
         Pure logic, no database access: normalizes the model's field descriptors
         to their backing fields and routes entries that cannot be passed straight
-        to the model constructor. Reverse one-to-many and generic-foreign-key
-        entries are *popped* out of ``attrs`` (they are applied after the instance
-        exists); auto-now entries are *copied* out (the value is also kept on
-        ``attrs`` and re-applied via an UPDATE after save, since Django overwrites
-        ``auto_now``/``auto_now_add`` fields on save).
+        to the model constructor. Reverse one-to-many, reverse-one-to-one, and
+        generic-foreign-key entries are *popped* out of ``attrs`` (they are applied
+        after the instance exists); auto-now entries are *copied* out (the value is
+        also kept on ``attrs`` and re-applied via an UPDATE after save, since Django
+        overwrites ``auto_now``/``auto_now_add`` fields on save).
 
-        Returns ``(one_to_many_keys, auto_now_keys, generic_foreign_keys)``.
+        Returns ``(one_to_many_keys, reverse_one_to_one_keys, auto_now_keys,
+        generic_foreign_keys)``.
         """
         one_to_many_keys = {}
+        reverse_one_to_one_keys = {}
         auto_now_keys = {}
         generic_foreign_keys = {}
 
@@ -587,6 +591,8 @@ class Baker(Generic[M]):
 
             if isinstance(descriptor, ForeignRelatedObjectsDescriptor):
                 one_to_many_keys[name] = attrs.pop(name)
+            elif isinstance(descriptor, ReverseOneToOneDescriptor):
+                reverse_one_to_one_keys[name] = attrs.pop(name)
 
             field = getattr(descriptor, "field", descriptor)
             if _is_auto_datetime_field(field):
@@ -600,7 +606,12 @@ class Baker(Generic[M]):
                     "for_concrete_model": field.for_concrete_model,
                 }
 
-        return one_to_many_keys, auto_now_keys, generic_foreign_keys
+        return (
+            one_to_many_keys,
+            reverse_one_to_one_keys,
+            auto_now_keys,
+            generic_foreign_keys,
+        )
 
     def instance(
         self,
@@ -610,9 +621,12 @@ class Baker(Generic[M]):
         _from_manager,
         _full_clean=False,
     ) -> M:
-        one_to_many_keys, auto_now_keys, generic_foreign_keys = self._classify_attrs(
-            attrs
-        )
+        (
+            one_to_many_keys,
+            reverse_one_to_one_keys,
+            auto_now_keys,
+            generic_foreign_keys,
+        ) = self._classify_attrs(attrs)
 
         instance = self.model(**attrs)
         if using := _save_kwargs.get("using"):
@@ -622,12 +636,31 @@ class Baker(Generic[M]):
             instance, generic_foreign_keys, commit=_commit
         )
 
+        # Connect reverse one-to-one relations in memory both for make()
+        # (where they are also saved below) and for prepare() (where the
+        # supplied related object must be wired to the unsaved instance).
+        resolved_reverse_one_to_one = self._resolve_reverse_one_to_one(
+            reverse_one_to_one_keys
+        )
+        for key, value in resolved_reverse_one_to_one.items():
+            setattr(instance, key, value)
+
         if _full_clean:
             instance.full_clean()
 
         if _commit:
-            instance.save(**_save_kwargs)
-            self._handle_one_to_many(instance, one_to_many_keys)
+            with (
+                transaction.atomic(
+                    using=_save_kwargs.get("using") or instance._state.db
+                )
+                if _full_clean and resolved_reverse_one_to_one
+                else nullcontext()
+            ):
+                instance.save(**_save_kwargs)
+                self._handle_one_to_many(instance, one_to_many_keys)
+                self._save_reverse_one_to_one(
+                    instance, resolved_reverse_one_to_one, _full_clean=_full_clean
+                )
             self._handle_m2m(instance)
             self._handle_auto_now(instance, auto_now_keys)
 
@@ -800,6 +833,39 @@ class Baker(Generic[M]):
             except TypeError:
                 # for many-to-many relationships the bulk keyword argument doesn't exist
                 manager.set(values, clear=True)
+
+    def _resolve_reverse_one_to_one(self, attrs: dict[str, Any]) -> dict[str, Model]:
+        """Resolve callables and iterators, omitting absent reverse relations."""
+        resolved: dict[str, Model] = {}
+        for key, value in attrs.items():
+            if callable(value):
+                value = value()
+            if is_iterator(value):
+                try:
+                    value = next(value)
+                except StopIteration:
+                    raise RecipeIteratorEmpty(f"{key} iterator is empty.")
+            if value is not None:
+                resolved[key] = value
+        return resolved
+
+    def _save_reverse_one_to_one(
+        self, instance: Model, keys: Iterable[str], _full_clean: bool = False
+    ) -> None:
+        save_kwargs = {"using": self._using} if self._using else {}
+        # Read the values resolved during prepare(), without consuming inputs again.
+        for key in keys:
+            descriptor = getattr(self.model, key)
+            value = descriptor.related.get_cached_value(instance, default=None)
+            if value is not None:
+                # The parent's PK may only have become available after bulk_create().
+                setattr(instance, key, value)
+                _save_related_objs(
+                    type(value), [value], _using=self._using, _full_clean=_full_clean
+                )
+                if _full_clean and value._state.adding:
+                    value.full_clean()
+                value.save(**save_kwargs)
 
     def _handle_m2m(self, instance: Model):
         for key, values in self.m2m_dict.items():
@@ -1049,23 +1115,28 @@ def bulk_create(  # noqa: C901
     else:
         manager = baker.model._base_manager
 
-    if _full_clean:
-        with transaction.atomic(using=baker._using or None):
-            _save_related_objs(
-                baker.model,
-                entries,
-                _using=baker._using,
-                _full_clean=True,
-            )
+    reverse_one_to_one_keys = [
+        key
+        for key in kwargs
+        if isinstance(getattr(baker.model, key, None), ReverseOneToOneDescriptor)
+    ]
+    with (
+        transaction.atomic(using=baker._using or None) if _full_clean else nullcontext()
+    ):
+        _save_related_objs(
+            baker.model, entries, _using=baker._using, _full_clean=_full_clean
+        )
+        if _full_clean:
             for entry in entries:
                 entry.full_clean()
-            created_entries = manager.bulk_create(entries)
-    else:
-        _save_related_objs(baker.model, entries, _using=baker._using)
         created_entries = manager.bulk_create(entries)
+        for entry in created_entries:
+            baker._save_reverse_one_to_one(
+                entry, reverse_one_to_one_keys, _full_clean=_full_clean
+            )
 
-    # set many-to-many relations from kwargs
     for entry in created_entries:
+        # set many-to-many relations from kwargs
         for field in baker.model._meta.many_to_many:
             if field.name in kwargs:
                 through_model = getattr(entry, field.name).through
