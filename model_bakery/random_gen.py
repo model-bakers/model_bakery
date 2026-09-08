@@ -309,12 +309,28 @@ def gen_null_boolean():
     return baker_random.choice((True, False, None))
 
 
-def gen_url() -> str:
-    return f"http://www.{gen_string(30)}.com/"
+_URL_PREFIX = "http://www."
+_URL_SUFFIX = ".com/"
+_EMAIL_DOMAIN = "@example.com"
 
 
-def gen_email() -> str:
-    return f"{gen_string(10)}@example.com"
+def gen_url(max_length: int = MAX_LENGTH) -> str:
+    fixed = len(_URL_PREFIX) + len(_URL_SUFFIX)
+    return (
+        f"{_URL_PREFIX}{gen_string(max(1, min(30, max_length - fixed)))}{_URL_SUFFIX}"
+    )
+
+
+gen_url.required = [_gen_string_get_max_length]  # type: ignore[attr-defined]
+
+
+def gen_email(max_length: int = MAX_LENGTH) -> str:
+    return (
+        f"{gen_string(max(1, min(10, max_length - len(_EMAIL_DOMAIN))))}{_EMAIL_DOMAIN}"
+    )
+
+
+gen_email.required = [_gen_string_get_max_length]  # type: ignore[attr-defined]
 
 
 def gen_ipv6() -> str:
