@@ -134,12 +134,22 @@ history = Recipe(PurchaseHistory,
 
 Notice that `customer` is a *recipe*.
 
-You may be thinking: "I can put the Customer model instance directly in the owner field". That's not recommended.
+Using `foreign_key(customer)` delays creation of the customer until the recipe is used.
+Avoid creating database objects in module-level recipe definitions, since that would
+run database queries when the recipe module is imported.
 
-Using the `foreign_key` is important for 2 reasons:
+To reuse an existing customer, pass the instance when calling `make_recipe`.
+With the recipes above saved in `shop/baker_recipes.py`:
 
-- Semantics. You'll know that attribute is a foreign key when you're reading;
-- The associated instance will be created only when you call `make_recipe` and not during recipe definition;
+```python
+from model_bakery import baker
+
+existing_customer = baker.make_recipe('shop.customer')
+history = baker.make_recipe('shop.history', owner=existing_customer)
+```
+
+The `owner` argument overrides `foreign_key(customer)`, so no new customer is created
+for this purchase history. You can also pass an instance retrieved from the database.
 
 You can also use `related`, when you want two or more models to share the same parent:
 
