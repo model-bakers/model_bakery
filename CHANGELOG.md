@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+## [1.24.1](https://pypi.org/project/model-bakery/1.24.1/)
+
+### Added
+
 - Add Django 6.1 support, including compatible generic foreign key handling ([#617](https://github.com/model-bakers/model_bakery/pull/617))
 - [dev] Add experimental Python 3.15 CI coverage; failures do not block CI ([#652](https://github.com/model-bakers/model_bakery/pull/652))
 
