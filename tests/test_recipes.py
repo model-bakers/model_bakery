@@ -4,6 +4,8 @@ from decimal import Decimal
 from random import choice  # noqa
 from unittest.mock import patch
 
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.utils.timezone import now
 
@@ -11,7 +13,7 @@ import pytest
 
 from model_bakery import baker
 from model_bakery.exceptions import InvalidQuantityException, RecipeIteratorEmpty
-from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key, seq
+from model_bakery.recipe import Recipe, RecipeForeignKey, foreign_key, related, seq
 from model_bakery.timezone import tz_aware
 from tests.generic.baker_recipes import SmallDogRecipe, pug
 from tests.generic.models import (
@@ -24,6 +26,8 @@ from tests.generic.models import (
     ModelWithAutoNowFields,
     Person,
     Profile,
+    ProfileDetails,
+    ProfileDetailsExtra,
     User,
 )
 
@@ -516,6 +520,207 @@ class TestForeignKey:
         lonely_people = baker.make_recipe("tests.generic.lonely_person", _quantity=2)
         friend_ids = {x.only_friend.id for x in lonely_people}
         assert len(friend_ids) == 2
+
+
+class TestReverseOneToOneRecipes:
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        ("quantity", "bulk_create", "one_to_one"),
+        [(None, False, False), (2, False, False), (2, True, True)],
+    )
+    def test_make_reuses_parent(self, bulk_create, quantity, one_to_one):
+        details = Recipe(
+            ProfileDetails,
+            profile=foreign_key(Recipe(Profile)),
+            name="Alice",
+        )
+        recipe = Recipe("generic.Profile", details=foreign_key(details, one_to_one))
+
+        result = recipe.make(_quantity=quantity, _bulk_create=bulk_create)
+
+        profiles = result if quantity else [result]
+        assert Profile.objects.count() == len(profiles)
+        assert ProfileDetails.objects.count() == len(profiles)
+        assert User.objects.count() == len(profiles)
+        for profile in profiles:
+            profile.refresh_from_db()
+            assert profile.details.profile_id == profile.pk
+            assert profile.details.name == "Alice"
+
+    def test_prepare_builds_distinct_relations_without_queries(self):
+        details = Recipe(ProfileDetails, profile=foreign_key(Recipe(Profile)))
+        recipe = Recipe(Profile, details=foreign_key(details))
+
+        profiles = recipe.prepare(_quantity=2)
+
+        assert profiles[0].details is not profiles[1].details
+        for profile in profiles:
+            assert profile.pk is None
+            assert profile.details.pk is None
+            assert profile.details.profile is profile
+            assert profile.details.user.pk is None
+
+    @pytest.mark.django_db
+    def test_prepare_save_related_keeps_reverse_child_unsaved(self):
+        details = Recipe(
+            ProfileDetails,
+            _bulk_create=False,
+            _save_kwargs={"force_insert": True},
+        )
+        recipe = Recipe(Profile, details=foreign_key(details))
+
+        profile = recipe.prepare(_save_related=True)
+
+        assert profile.details.profile is profile
+        assert profile.pk is None
+        assert profile.details.pk is None
+        assert profile.details.user.pk is not None
+        assert not Profile.objects.exists()
+        assert not ProfileDetails.objects.exists()
+        assert User.objects.count() == 1
+
+    @pytest.mark.django_db
+    def test_quantity_from_recipe_defaults(self):
+        recipe = Recipe(
+            Profile,
+            details=foreign_key(Recipe(ProfileDetails)),
+            _quantity=2,
+        )
+
+        profiles = recipe.make()
+
+        assert len(profiles) == 2
+        assert Profile.objects.count() == 2
+        assert ProfileDetails.objects.count() == 2
+        assert profiles[0].details.pk != profiles[1].details.pk
+
+    @pytest.mark.django_db
+    def test_nested_override_does_not_change_recipe(self):
+        details = Recipe(ProfileDetails, name="Alice")
+        recipe = Recipe(Profile, details=foreign_key(details))
+
+        overridden = recipe.make(details__name="Bob")
+        original = recipe.make()
+
+        overridden.refresh_from_db()
+        original.refresh_from_db()
+        assert overridden.details.name == "Bob"
+        assert original.details.name == "Alice"
+        assert Profile.objects.count() == 2
+        assert ProfileDetails.objects.count() == 2
+
+    @pytest.mark.django_db
+    def test_bulk_quantity_advances_child_sequence(self):
+        details = Recipe(ProfileDetails, name=seq("Name"))
+        recipe = Recipe(Profile, details=foreign_key(details))
+
+        profiles = recipe.make(_quantity=2, _bulk_create=True)
+
+        assert [profile.details.name for profile in profiles] == ["Name1", "Name2"]
+
+    @pytest.mark.django_db
+    def test_nested_override_preserves_child_sequence_state(self):
+        details = Recipe(ProfileDetails, name=seq("Name"))
+        recipe = Recipe(Profile, details=foreign_key(details))
+
+        first = recipe.make(details__user__username="alice")
+        assert first.details.name == "Name1"
+        Profile.objects.all().delete()
+
+        restarted = recipe.make(details__user__username="bob")
+        following = recipe.make()
+
+        assert restarted.details.name == "Name1"
+        assert restarted.details.user.username == "bob"
+        assert following.details.name == "Name2"
+
+    @pytest.mark.django_db
+    def test_explicit_override_skips_related_recipe(self):
+        recipe = Recipe(Profile, details=foreign_key(Recipe(ProfileDetails)))
+
+        recipe.make(details=None)
+
+        assert Profile.objects.count() == 1
+        assert not ProfileDetails.objects.exists()
+        assert not User.objects.exists()
+
+    @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
+    def test_make_uses_selected_database(self):
+        recipe = Recipe(Profile, details=foreign_key(Recipe(ProfileDetails)))
+
+        profile = recipe.make(_using=settings.EXTRA_DB, _bulk_create=True)
+
+        profile.refresh_from_db(using=settings.EXTRA_DB)
+        assert profile.details.profile_id == profile.pk
+        for model in (Profile, ProfileDetails, User):
+            assert model.objects.using(settings.EXTRA_DB).count() == 1
+            assert not model.objects.exists()
+
+    @pytest.mark.django_db
+    def test_full_clean_rolls_back_invalid_related_recipe(self):
+        recipe = Recipe(
+            Profile,
+            email="valid@example.com",
+            details=foreign_key(Recipe(ProfileDetails, name="")),
+        )
+
+        with pytest.raises(ValidationError) as exc:
+            recipe.make(_full_clean=True)
+
+        assert "name" in exc.value.message_dict
+        for model in (Profile, ProfileDetails, User):
+            assert not model.objects.exists()
+
+    @pytest.mark.django_db
+    def test_child_recipe_saves_many_to_many(self):
+        extra = Recipe(ProfileDetailsExtra, friends=related(Recipe(User)))
+        recipe = Recipe(ProfileDetails, extra=foreign_key(extra))
+
+        details = recipe.make()
+
+        details.refresh_from_db()
+        assert details.extra.friends.count() == 1
+
+    @pytest.mark.django_db
+    def test_bulk_child_recipe_saves_nested_reverse_relation(self):
+        details = Recipe(ProfileDetails, extra=foreign_key(Recipe(ProfileDetailsExtra)))
+        recipe = Recipe(Profile, details=foreign_key(details))
+
+        profile = recipe.make(_bulk_create=True)
+
+        profile.refresh_from_db()
+        assert profile.details.extra.pk is not None
+        assert ProfileDetails.objects.count() == 1
+        assert ProfileDetailsExtra.objects.count() == 1
+
+    @pytest.mark.django_db
+    def test_quantity_keeps_nested_one_to_one_objects_distinct(self):
+        extra = Recipe(
+            ProfileDetailsExtra, user=foreign_key(Recipe(User), one_to_one=True)
+        )
+        recipe = Recipe(ProfileDetails, extra=foreign_key(extra, one_to_one=True))
+
+        details = recipe.make(_quantity=2)
+
+        assert len({obj.extra.user_id for obj in details}) == 2
+        assert ProfileDetailsExtra.objects.count() == 2
+
+    @pytest.mark.django_db
+    def test_child_recipe_keeps_make_options_and_saves_once(self):
+        details = Recipe(
+            ProfileDetails,
+            _bulk_create=False,
+            _save_kwargs={"force_insert": True},
+        )
+        recipe = Recipe(Profile, details=foreign_key(details))
+
+        with patch.object(
+            ProfileDetails, "save", autospec=True, side_effect=ProfileDetails.save
+        ) as save:
+            profile = recipe.make()
+
+        save.assert_called_once_with(profile.details, force_insert=True)
+        assert profile.details.profile_id == profile.pk
 
 
 class TestM2MField:
