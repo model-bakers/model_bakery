@@ -2,9 +2,9 @@
 
 By default, Model Bakery skips fields with `null=True` or `blank=True`. Also if a field has a `default` value, it will be used.
 
-You can override this behavior by:
+You can control which fields are filled in the following ways:
 
-1. Explicitly defining values
+1. Explicitly defining values, which override field defaults
 
 ```python
 # from "Basic Usage" page, assume all fields either null=True or blank=True
@@ -13,17 +13,38 @@ from model_bakery import baker
 customer = baker.make('shop.Customer', enjoy_jards_macale=True, bio="A fan of Jards Malacé")
 ```
 
-2. Passing `_fill_optional` with a list of fields to fill with random data
+2. Passing `_fill_optional` with a list of optional fields to include
 
 ```python
 customer = baker.make('shop.Customer', _fill_optional=['enjoy_jards_macale', 'bio'])
 ```
 
-3. Passing `_fill_optional=True` to fill all fields with random data
+3. Passing `_fill_optional=True` to include all optional fields on the model
 
 ```python
 customer = baker.make('shop.Customer', _fill_optional=True)
 ```
+
+The `_fill_optional` options preserve field defaults. For example, `default=None`
+remains `None`, and `default=list` produces `[]`. Fields without defaults use their
+generators. File and image fields also keep their defaults when `_create_files=True`.
+
+To replace a default, pass an explicit value or callable. For example, for a model
+with a `career` array field and a `main_image` image field:
+
+```python
+from model_bakery import baker
+from model_bakery.random_gen import gen_image_field
+
+employee = baker.make(
+    'shop.Employee',
+    career=['Developer'],
+    main_image=gen_image_field,
+    _create_files=True,
+)
+```
+
+See [Creating Files](basic_usage.md#creating-files) for file creation and cleanup.
 
 ## When shouldn't you let Baker generate things for you?
 
