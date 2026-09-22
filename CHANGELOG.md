@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased](https://github.com/model-bakers/model_bakery/tree/main)
 
+### Added
+
+- Add Django 6.1 support, including compatible generic foreign key handling ([#617](https://github.com/model-bakers/model_bakery/pull/617))
+- [dev] Add experimental Python 3.15 CI coverage; failures do not block CI ([#652](https://github.com/model-bakers/model_bakery/pull/652))
+
 ### Changed
 
 - Fix reverse `OneToOneField` relations not being persisted to the database when passed as kwargs to `baker.make()`, including iterators and bulk creation ([#473](https://github.com/model-bakers/model_bakery/issues/473))
+- Validate unsaved reverse one-to-one objects and their unsaved dependencies when `_full_clean=True`, and roll back the parent and related writes if validation or saving fails ([#592](https://github.com/model-bakers/model_bakery/pull/592))
 - Make the `URLField` and `EmailField` generators respect `max_length` when the configured limit is at least 17 and 13 characters, respectively; smaller limits still produce values that exceed `max_length`
 - Fix explicit `auto_now`/`auto_now_add` values being written to the wrong database when `_using` is set, and route the follow-up `UPDATE` through `_base_manager` so it also works on models without an `objects` manager or with a filtered default manager
 - [dev] Extract the attr-partitioning logic out of `Baker.instance()` into a pure, database-free `Baker._classify_attrs()` helper, with direct unit tests asserting it runs zero queries
-- [dev] Add Django 6.1 support and CI coverage
 - [dev] Align uv and Dependabot dependency cooldowns, enforce Zizmor in CI, and update pre-commit hooks with Dependabot
 
 ## [1.24.0](https://pypi.org/project/model-bakery/1.24.0/)
