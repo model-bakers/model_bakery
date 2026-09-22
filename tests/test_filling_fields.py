@@ -7,6 +7,8 @@ from tempfile import gettempdir
 import django
 from django.conf import settings
 from django.core.validators import (
+    URLValidator,
+    validate_email,
     validate_ipv4_address,
     validate_ipv6_address,
     validate_ipv46_address,
@@ -279,12 +281,24 @@ class TestURLFieldsFilling:
         assert isinstance(blog_field, fields.URLField)
         assert isinstance(person.blog, str)
 
+    def test_fill_URLField_respects_max_length(self, person):
+        field = models.Person._meta.get_field("short_blog")
+        assert field.max_length == 40
+        assert len(person.short_blog) <= field.max_length
+        URLValidator()(person.short_blog)
+
 
 class TestFillingEmailField:
     def test_filling_EmailField(self, person):
         field = models.Person._meta.get_field("email")
         assert isinstance(field, fields.EmailField)
         assert isinstance(person.email, str)
+
+    def test_filling_EmailField_respects_max_length(self, person):
+        field = models.Person._meta.get_field("short_email")
+        assert field.max_length == 20
+        assert len(person.short_email) <= field.max_length
+        validate_email(person.short_email)
 
 
 class TestFillingIPAddressField:

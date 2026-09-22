@@ -35,6 +35,9 @@ Model Bakery should handle fields that:
 2. don't require special validation (like unique, etc);
 3. are required to create the object.
 
+The default generators for `URLField` and `EmailField` produce values of at least 17 and 13 characters, respectively.
+For fields with smaller `max_length` values, supply a value explicitly or use a [custom generator](#custom-fields).
+
 ## Currently supported fields
 
 - `BooleanField`, `IntegerField`, `BigIntegerField`, `SmallIntegerField`, `PositiveIntegerField`, `PositiveBigIntegerField`, `PositiveSmallIntegerField`, `FloatField`, `DecimalField`

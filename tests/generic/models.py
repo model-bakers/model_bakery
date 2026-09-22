@@ -111,6 +111,7 @@ class Person(models.Model):
     birth_time = models.TimeField()
     appointment = models.DateTimeField()
     blog = models.URLField()
+    short_blog = models.URLField(max_length=40)
     occupation = models.CharField(max_length=10, choices=OCCUPATION_CHOICES)
     uuid = models.UUIDField(primary_key=False)
     name_hash = models.BinaryField(max_length=16)
@@ -118,6 +119,7 @@ class Person(models.Model):
     days_since_account_creation = models.BigIntegerField()
     duration_of_sleep = models.DurationField()
     email = models.EmailField()
+    short_email = models.EmailField(max_length=20)
     id_document = models.CharField(unique=True, max_length=10)
     data = models.JSONField()
     if django.VERSION >= (5, 0):
