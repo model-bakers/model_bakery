@@ -653,7 +653,7 @@ class Baker(Generic[M]):
                 transaction.atomic(
                     using=_save_kwargs.get("using") or instance._state.db
                 )
-                if _full_clean and reverse_one_to_one_keys
+                if reverse_one_to_one_keys
                 else nullcontext()
             ):
                 instance.save(**_save_kwargs)
@@ -1151,7 +1151,9 @@ def bulk_create(  # noqa: C901
         manager = baker.model._base_manager
 
     with (
-        transaction.atomic(using=baker._using or None) if _full_clean else nullcontext()
+        transaction.atomic(using=baker._using or None)
+        if _full_clean or reverse_one_to_one_attrs
+        else nullcontext()
     ):
         _save_related_objs(
             baker.model, entries, _using=baker._using, _full_clean=_full_clean
