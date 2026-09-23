@@ -206,6 +206,37 @@ dogs = dog.make_recipe(_quantity=2)
 assert dogs[0].owner.id != dogs[1].owner.id
 ```
 
+### Reverse one-to-one relations
+
+Use `foreign_key` with the relation's reverse accessor to include a related recipe.
+For example, if `RelatedNamesModel.one_to_one` points to `Person` with
+`related_name='one_related'`:
+
+```python
+from model_bakery.recipe import Recipe, foreign_key
+from shop.models import Person, RelatedNamesModel
+
+person = Recipe(Person)
+name = Recipe(RelatedNamesModel, name='Alice')
+person_with_names = person.extend(one_related=foreign_key(name))
+
+instance = person_with_names.make()
+assert instance.one_related.one_to_one == instance
+```
+
+The related recipe uses the person being created, so it does not create an extra
+person. With `_quantity`, each person gets its own related object, without needing
+`one_to_one=True`. Calling `prepare()` connects the objects without saving them.
+You can override related fields, for example
+`person_with_names.make(one_related__name='Bob')`.
+
+The parent is validated and saved before the related recipe runs. Parent validation
+and save hooks must not depend on the reverse object already existing.
+
+With `prepare(_save_related=True)`, the reverse object still remains unsaved because
+its parent is unsaved; its forward dependencies can be saved. Recipe `prepare()`
+ignores creation-only options such as `_bulk_create` and `_save_kwargs`.
+
 ## Recipes with callables
 
 It's possible to use `callables` as recipe's attribute value.

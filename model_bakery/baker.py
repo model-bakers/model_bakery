@@ -640,7 +640,7 @@ class Baker(Generic[M]):
         # (where they are also saved below) and for prepare() (where the
         # supplied related object must be wired to the unsaved instance).
         resolved_reverse_one_to_one = self._resolve_reverse_one_to_one(
-            reverse_one_to_one_keys
+            instance, reverse_one_to_one_keys, _commit=_commit
         )
         for key, value in resolved_reverse_one_to_one.items():
             setattr(instance, key, value)
@@ -653,13 +653,13 @@ class Baker(Generic[M]):
                 transaction.atomic(
                     using=_save_kwargs.get("using") or instance._state.db
                 )
-                if _full_clean and resolved_reverse_one_to_one
+                if reverse_one_to_one_keys
                 else nullcontext()
             ):
                 instance.save(**_save_kwargs)
                 self._handle_one_to_many(instance, one_to_many_keys)
                 self._save_reverse_one_to_one(
-                    instance, resolved_reverse_one_to_one, _full_clean=_full_clean
+                    instance, reverse_one_to_one_keys, _full_clean=_full_clean
                 )
             self._handle_m2m(instance)
             self._handle_auto_now(instance, auto_now_keys)
@@ -834,11 +834,24 @@ class Baker(Generic[M]):
                 # for many-to-many relationships the bulk keyword argument doesn't exist
                 manager.set(values, clear=True)
 
-    def _resolve_reverse_one_to_one(self, attrs: dict[str, Any]) -> dict[str, Model]:
-        """Resolve callables and iterators, omitting absent reverse relations."""
+    def _resolve_reverse_one_to_one(
+        self, instance: Model, attrs: dict[str, Any], _commit: bool
+    ) -> dict[str, Model]:
+        """Resolve inputs, deferring recipe creation until the parent is saved."""
+        from .recipe import _ReverseOneToOneRecipe
+
         resolved: dict[str, Model] = {}
         for key, value in attrs.items():
-            if callable(value):
+            if isinstance(value, _ReverseOneToOneRecipe):
+                if _commit:
+                    continue
+                descriptor = getattr(self.model, key)
+                value = value.recipe.prepare(
+                    _using=self._using,
+                    _save_related=True,
+                    **{**value.attrs, descriptor.related.field.name: instance},
+                )
+            elif callable(value):
                 value = value()
             if is_iterator(value):
                 try:
@@ -850,12 +863,21 @@ class Baker(Generic[M]):
         return resolved
 
     def _save_reverse_one_to_one(
-        self, instance: Model, keys: Iterable[str], _full_clean: bool = False
+        self, instance: Model, attrs: dict[str, Any], _full_clean: bool = False
     ) -> None:
+        from .recipe import _ReverseOneToOneRecipe
+
         save_kwargs = {"using": self._using} if self._using else {}
-        # Read the values resolved during prepare(), without consuming inputs again.
-        for key in keys:
+        for key, value in attrs.items():
             descriptor = getattr(self.model, key)
+            if isinstance(value, _ReverseOneToOneRecipe):
+                recipe_attrs = {**value.attrs, descriptor.related.field.name: instance}
+                if _full_clean:
+                    recipe_attrs["_full_clean"] = True
+                value = value.recipe.make(_using=self._using, **recipe_attrs)
+                setattr(instance, key, value)
+                continue
+            # Read resolved values without consuming callables or iterators again.
             value = descriptor.related.get_cached_value(instance, default=None)
             if value is not None:
                 # The parent's PK may only have become available after bulk_create().
@@ -1100,11 +1122,24 @@ def bulk_create(  # noqa: C901
     Important: there's no way to avoid save calls since Django does
     not return the created objects after a bulk_insert call.
     """
+    from .recipe import _ReverseOneToOneRecipe
+
+    reverse_one_to_one_attrs = {
+        key: value
+        for key, value in kwargs.items()
+        if isinstance(getattr(baker.model, key, None), ReverseOneToOneDescriptor)
+    }
+    # Deferred recipes need persisted parents before their make() calls can run.
+    prepare_kwargs = {
+        key: value
+        for key, value in kwargs.items()
+        if not isinstance(value, _ReverseOneToOneRecipe)
+    }
     # Create a list of entries by calling the prepare method of the Baker instance
     # quantity number of times, passing in the additional keyword arguments
     entries = [
         baker.prepare(
-            **kwargs,
+            **prepare_kwargs,
         )
         for _ in range(quantity)
     ]
@@ -1115,13 +1150,10 @@ def bulk_create(  # noqa: C901
     else:
         manager = baker.model._base_manager
 
-    reverse_one_to_one_keys = [
-        key
-        for key in kwargs
-        if isinstance(getattr(baker.model, key, None), ReverseOneToOneDescriptor)
-    ]
     with (
-        transaction.atomic(using=baker._using or None) if _full_clean else nullcontext()
+        transaction.atomic(using=baker._using or None)
+        if _full_clean or reverse_one_to_one_attrs
+        else nullcontext()
     ):
         _save_related_objs(
             baker.model, entries, _using=baker._using, _full_clean=_full_clean
@@ -1132,7 +1164,7 @@ def bulk_create(  # noqa: C901
         created_entries = manager.bulk_create(entries)
         for entry in created_entries:
             baker._save_reverse_one_to_one(
-                entry, reverse_one_to_one_keys, _full_clean=_full_clean
+                entry, reverse_one_to_one_attrs, _full_clean=_full_clean
             )
 
     for entry in created_entries:
