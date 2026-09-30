@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import connection
+from django.db import connection, router
 from django.utils.timezone import now
 
 import pytest
@@ -609,12 +609,14 @@ class TestReverseOneToOneRecipes:
         assert Profile.objects.count() == 2
         assert ProfileDetails.objects.count() == 2
 
-    @pytest.mark.django_db
-    def test_bulk_quantity_advances_child_sequence(self):
+    @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
+    @pytest.mark.parametrize("using", ["default", settings.EXTRA_DB])
+    @pytest.mark.parametrize("bulk_create", [False, True])
+    def test_quantity_advances_child_sequence(self, using, bulk_create):
         details = Recipe(ProfileDetails, name=seq("Name"))
         recipe = Recipe(Profile, details=foreign_key(details))
 
-        profiles = recipe.make(_quantity=2, _bulk_create=True)
+        profiles = recipe.make(_quantity=2, _bulk_create=bulk_create, _using=using)
 
         assert [profile.details.name for profile in profiles] == ["Name1", "Name2"]
 
@@ -670,6 +672,57 @@ class TestReverseOneToOneRecipes:
         assert "name" in exc.value.message_dict
         for model in (Profile, ProfileDetails, User):
             assert not model.objects.exists()
+
+    @pytest.mark.django_db(databases=["default", settings.EXTRA_DB])
+    @pytest.mark.parametrize("bulk_create", [False, True])
+    def test_invalid_child_rolls_back_on_routed_database(self, bulk_create):
+        recipe = Recipe(
+            Profile,
+            email="valid@example.com",
+            details=foreign_key(Recipe(ProfileDetails, name="")),
+        )
+
+        with (
+            patch.object(router, "db_for_read", return_value=settings.EXTRA_DB),
+            patch.object(router, "db_for_write", return_value=settings.EXTRA_DB),
+            pytest.raises(ValidationError) as exc,
+        ):
+            recipe.make(_full_clean=True, _bulk_create=bulk_create)
+
+        assert "name" in exc.value.message_dict
+        for model in (Profile, ProfileDetails, User):
+            for using in ("default", settings.EXTRA_DB):
+                assert not model.objects.using(using).exists()
+
+    @pytest.mark.django_db
+    def test_parent_hooks_run_before_child_recipe(self):
+        events = []
+        save = Profile.save
+
+        def save_parent(instance, **kwargs):
+            events.append("save")
+            save(instance, **kwargs)
+
+        recipe = Recipe(
+            Profile,
+            details=foreign_key(
+                Recipe(ProfileDetails, name=lambda: events.append("child") or "Alice")
+            ),
+        )
+
+        with (
+            patch.object(
+                Profile,
+                "clean",
+                autospec=True,
+                side_effect=lambda _: events.append("clean"),
+            ),
+            patch.object(Profile, "save", autospec=True, side_effect=save_parent),
+        ):
+            profile = recipe.make(_full_clean=True)
+
+        assert events == ["clean", "save", "child"]
+        assert profile.details.profile_id == profile.pk
 
     @pytest.mark.django_db
     def test_child_recipe_saves_many_to_many(self):

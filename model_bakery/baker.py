@@ -13,7 +13,7 @@ from typing import (
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist
-from django.db import transaction
+from django.db import router, transaction
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -651,7 +651,8 @@ class Baker(Generic[M]):
         if _commit:
             with (
                 transaction.atomic(
-                    using=_save_kwargs.get("using") or instance._state.db
+                    using=_save_kwargs.get("using")
+                    or router.db_for_write(self.model, instance=instance)
                 )
                 if reverse_one_to_one_keys
                 else nullcontext()
@@ -1151,7 +1152,7 @@ def bulk_create(  # noqa: C901
         manager = baker.model._base_manager
 
     with (
-        transaction.atomic(using=baker._using or None)
+        transaction.atomic(using=baker._using or router.db_for_write(baker.model))
         if _full_clean or reverse_one_to_one_attrs
         else nullcontext()
     ):

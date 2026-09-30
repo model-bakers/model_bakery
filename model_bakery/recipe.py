@@ -49,7 +49,10 @@ class Recipe(Generic[M]):
             if k in new_attrs:
                 continue
             elif isinstance(v, collections.abc.Iterator):
-                if k not in self._iterator_backups or not model.objects.exists():
+                if (
+                    k not in self._iterator_backups
+                    or not model.objects.using(_using or None).exists()
+                ):
                     self._iterator_backups[k] = itertools.tee(
                         self._iterator_backups.get(k, [v])[0]
                     )

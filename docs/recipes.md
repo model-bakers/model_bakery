@@ -180,29 +180,29 @@ history_with_prods = history.extend(
 )
 ```
 
-When creating models based on a `foreign_key` recipe using the `_quantity` argument, only one related model will be created for all new instances.
+For forward relations, creating models based on a `foreign_key` recipe with `_quantity` creates one shared related object by default.
 
 ```python
-from model_baker.recipe import foreign_key, Recipe
+from model_bakery.recipe import foreign_key, Recipe
 
 person = Recipe(Person, name='Albert')
 dog = Recipe(Dog, owner=foreign_key(person))
 
 # All dogs share the same owner
-dogs = dog.make_recipe(_quantity=2)
+dogs = dog.make(_quantity=2)
 assert dogs[0].owner.id == dogs[1].owner.id
 ```
 
 This will cause an issue if your models use `OneToOneField`. In that case, you can provide `one_to_one=True` to the recipe to make sure every instance created by `_quantity` has a unique id.
 
 ```python
-from model_baker.recipe import foreign_key, Recipe
+from model_bakery.recipe import foreign_key, Recipe
 
 person = Recipe(Person, name='Albert')
 dog = Recipe(Dog, owner=foreign_key(person, one_to_one=True))
 
 # Each dog has a unique owner
-dogs = dog.make_recipe(_quantity=2)
+dogs = dog.make(_quantity=2)
 assert dogs[0].owner.id != dogs[1].owner.id
 ```
 
@@ -230,8 +230,9 @@ person. With `_quantity`, each person gets its own related object, without needi
 You can override related fields, for example
 `person_with_names.make(one_related__name='Bob')`.
 
-The parent is validated and saved before the related recipe runs. Parent validation
-and save hooks must not depend on the reverse object already existing.
+The parent is saved before the related recipe runs. With `_full_clean=True`, parent
+validation also runs first. Parent validation and save hooks must not depend on the
+reverse object already existing.
 
 With `prepare(_save_related=True)`, the reverse object still remains unsaved because
 its parent is unsaved; its forward dependencies can be saved. Recipe `prepare()`
