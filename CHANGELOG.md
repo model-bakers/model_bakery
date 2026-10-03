@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Fix reverse one-to-one recipes creating extra parent objects. Each parent gets a distinct related object, with nested recipe behavior preserved. Parent validation (with `_full_clean=True`) and save hooks run before the reverse object exists. With `prepare(_save_related=True)`, reverse children remain unsaved; recipe preparation ignores creation-only options ([#97](https://github.com/model-bakers/model_bakery/issues/97)).
+
 ### Removed
 
 ## [1.24.1](https://pypi.org/project/model-bakery/1.24.1/)
