@@ -854,16 +854,15 @@ class TestReverseOneToOne:
         assert not models.ProfileDetails.objects.exists()
 
     @pytest.mark.django_db
-    def test_full_clean_rolls_back_reverse_save_failure(self):
+    @pytest.mark.parametrize("bulk_create", [False, True])
+    def test_rolls_back_reverse_save_failure(self, bulk_create):
         details = baker.prepare(models.ProfileDetails)
 
         with (
             patch.object(details, "save", side_effect=RuntimeError("save failed")),
             pytest.raises(RuntimeError, match="save failed"),
         ):
-            baker.make(
-                models.Profile, details=details, _bulk_create=True, _full_clean=True
-            )
+            baker.make(models.Profile, details=details, _bulk_create=bulk_create)
 
         assert not models.Profile.objects.exists()
         assert not models.User.objects.exists()
@@ -1987,7 +1986,7 @@ class TestFullClean:
         with pytest.raises(ValidationError):
             baker.make(
                 models.PaymentBill,
-                user__profile__email="not-an-email",
+                user__profile__email=iter(["valid@example.com", "not-an-email"]),
                 _quantity=2,
                 _bulk_create=True,
                 _full_clean=True,

@@ -92,6 +92,14 @@ class ProfileDetails(models.Model):
     name = models.CharField(max_length=32)
 
 
+class ProfileDetailsExtra(models.Model):
+    details = models.OneToOneField(
+        ProfileDetails, related_name="extra", on_delete=models.CASCADE
+    )
+    user = models.OneToOneField(User, related_name="+", on_delete=models.CASCADE)
+    friends = models.ManyToManyField(User, related_name="+")
+
+
 class PaymentBill(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     value = models.FloatField()
