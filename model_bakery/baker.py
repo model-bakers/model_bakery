@@ -517,6 +517,7 @@ class Baker(Generic[M]):
                 and hasattr(field, "attname")
                 and field.attname in self.iterator_attrs
             ):
+                print("OneToOneField")
                 self.model_attrs[field.attname] = next(
                     self.iterator_attrs[field.attname]
                 )
@@ -526,11 +527,23 @@ class Baker(Generic[M]):
                     or hasattr(field, "attname")
                     and field.attname not in self.model_attrs
                 ):
-                    self.model_attrs[field.name] = self.generate_value(
+                    value = self.generate_value(
                         field,
                         commit_related,
                         **generate_value_kwargs,
                     )
+                    # A field default for a forward relation is a raw pk, not a
+                    # model instance, so it must be assigned via attname (e.g.
+                    # "related_id") instead of name (e.g. "related"), which
+                    # Django's descriptor would reject as not being an instance.
+                    if (
+                        isinstance(field, (OneToOneField, ForeignKey))
+                        and hasattr(field, "attname")
+                        and not isinstance(value, Model)
+                    ):
+                        self.model_attrs[field.attname] = value
+                    else:
+                        self.model_attrs[field.name] = value
             elif callable(self.model_attrs[field.name]):
                 self.model_attrs[field.name] = self.model_attrs[field.name]()
             elif field.name in self.iterator_attrs:
