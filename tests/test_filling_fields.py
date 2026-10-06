@@ -468,6 +468,13 @@ class TestFillingForeignKeyFieldWithDefaultFunctionReturningId:
         assert dummy.cake.id == dummy.cake.__class__.objects.get().id
         assert dummy.cake.name == "Baumkuchen"
 
+    @pytest.mark.django_db
+    def test_filling_foreignkey_with_default_id_and_fill_optional(self):
+        dummy = baker.make(models.RelatedNamesWithDefaultsModel, _fill_optional=True)
+        assert dummy.cake.__class__.objects.count() == 1
+        assert dummy.cake.id == models.get_default_cake_id()
+        assert dummy.cake.name == "Muffin"
+
 
 class TestFillingOptionalForeignKeyField:
     @pytest.mark.django_db
