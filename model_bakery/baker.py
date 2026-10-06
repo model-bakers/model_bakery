@@ -517,7 +517,6 @@ class Baker(Generic[M]):
                 and hasattr(field, "attname")
                 and field.attname in self.iterator_attrs
             ):
-                print("OneToOneField")
                 self.model_attrs[field.attname] = next(
                     self.iterator_attrs[field.attname]
                 )
