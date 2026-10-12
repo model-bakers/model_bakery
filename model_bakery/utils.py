@@ -73,7 +73,7 @@ def _seq_datetime(
     increment_seconds = increment_by.total_seconds()
     for n in itertools.count(increment_seconds, increment_seconds):
         series_date = tz_aware(
-            datetime.datetime.fromtimestamp(start_seconds + n, tz=datetime.timezone.utc)
+            datetime.datetime.fromtimestamp(start_seconds + n, tz=datetime.UTC)
         )
 
         if type(value) is datetime.time:
