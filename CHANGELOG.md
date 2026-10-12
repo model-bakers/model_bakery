@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Add Python 3.15 support
+
 ### Changed
 
 ### Removed
+
+- Drop EOL Python 3.10 support; Python 3.11 or later is required
 
 ## [1.24.2](https://pypi.org/project/model-bakery/1.24.2/)
 
