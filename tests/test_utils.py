@@ -150,7 +150,7 @@ class TestSeq:
     @pytest.mark.parametrize("use_tz", [False, True])
     def test_datetime(self, settings, use_tz):
         settings.USE_TZ = use_tz
-        tzinfo = datetime.timezone.utc if use_tz else None
+        tzinfo = datetime.UTC if use_tz else None
 
         # Starting with tz-unaware (naive) datetime
         sequence = seq(
