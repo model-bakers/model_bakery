@@ -1,6 +1,11 @@
 import collections
 from collections.abc import Callable, Iterable, Iterator
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
+from copy import copy
+from dataclasses import (
+    dataclass,
+    field as dataclass_field,
+)
 from inspect import Parameter, signature
 from os.path import dirname, join
 from typing import (
@@ -369,6 +374,18 @@ def _custom_baker_class() -> type | None:
         )
 
 
+@dataclass
+class _BakeState:
+    model_attrs: dict[str, Any] = dataclass_field(default_factory=dict)
+    iterator_attrs: dict[str, Iterator] = dataclass_field(default_factory=dict)
+    rel_attrs: dict[str, Any] = dataclass_field(default_factory=dict)
+    rel_fields: list[str] = dataclass_field(default_factory=list)
+    m2m_dict: dict[str, M2MInput] = dataclass_field(default_factory=dict)
+    fill_in_optional: list[str] | bool = False
+    current_field: Field | None = None
+    active: bool = False
+
+
 class Baker(Generic[M]):
     SENTINEL = object()
 
@@ -409,11 +426,7 @@ class Baker(Generic[M]):
     ) -> None:
         self.make_m2m = make_m2m
         self.create_files = create_files
-        self.m2m_dict: dict[str, M2MInput] = {}
-        self.iterator_attrs: dict[str, Iterator] = {}
-        self.model_attrs: dict[str, Any] = {}
-        self.rel_attrs: dict[str, Any] = {}
-        self.rel_fields: list[str] = []
+        self._state = _BakeState()
         self._using = _using
 
         if isinstance(_model, str):
@@ -422,6 +435,54 @@ class Baker(Generic[M]):
             self.model = _model
 
         self.init_type_mapping()
+
+    @property
+    def model_attrs(self) -> dict[str, Any]:
+        return self._state.model_attrs
+
+    @model_attrs.setter
+    def model_attrs(self, value: dict[str, Any]) -> None:
+        self._state.model_attrs = value
+
+    @property
+    def iterator_attrs(self) -> dict[str, Iterator]:
+        return self._state.iterator_attrs
+
+    @iterator_attrs.setter
+    def iterator_attrs(self, value: dict[str, Iterator]) -> None:
+        self._state.iterator_attrs = value
+
+    @property
+    def rel_attrs(self) -> dict[str, Any]:
+        return self._state.rel_attrs
+
+    @rel_attrs.setter
+    def rel_attrs(self, value: dict[str, Any]) -> None:
+        self._state.rel_attrs = value
+
+    @property
+    def rel_fields(self) -> list[str]:
+        return self._state.rel_fields
+
+    @rel_fields.setter
+    def rel_fields(self, value: list[str]) -> None:
+        self._state.rel_fields = value
+
+    @property
+    def m2m_dict(self) -> dict[str, M2MInput]:
+        return self._state.m2m_dict
+
+    @m2m_dict.setter
+    def m2m_dict(self, value: dict[str, M2MInput]) -> None:
+        self._state.m2m_dict = value
+
+    @property
+    def fill_in_optional(self) -> list[str] | bool:
+        return self._state.fill_in_optional
+
+    @fill_in_optional.setter
+    def fill_in_optional(self, value: list[str] | bool) -> None:
+        self._state.fill_in_optional = value
 
     def init_type_mapping(self) -> None:
         self.type_mapping = generators.get_type_mapping()
@@ -477,6 +538,22 @@ class Baker(Generic[M]):
             *self.model._meta.private_fields,
         )
 
+    @contextmanager
+    def _object_state(self) -> Iterator[None]:
+        # Only _make owns this scope; public wrappers run outside it.
+        # Keep completed outermost state for ordinary post-super inspection.
+        previous = self._state
+        self._state = _BakeState(active=True)
+        completed = False
+        try:
+            yield
+            completed = True
+        finally:
+            self._state.current_field = None
+            self._state.active = False
+            if previous.active or not completed:
+                self._state = previous
+
     def _make(  # noqa: C901
         self,
         commit=True,
@@ -487,85 +564,93 @@ class Baker(Generic[M]):
         _full_clean=False,
         **attrs: Any,
     ) -> M:
-        _save_kwargs = _save_kwargs or {}
-        if self._using:
-            _save_kwargs["using"] = self._using
+        with self._object_state():
+            _save_kwargs = _save_kwargs or {}
+            if self._using:
+                _save_kwargs["using"] = self._using
 
-        self._clean_attrs(attrs)
-        generate_value_kwargs = (
-            {"_full_clean": True}
-            if _full_clean and accepts_kwarg(self.generate_value, "_full_clean")
-            else {}
-        )
-        for field in self.get_fields():
-            if self._skip_field(field):
-                continue
-
-            if isinstance(field, ManyToManyField):
-                if field.name not in self.model_attrs:
-                    self.m2m_dict[field.name] = self.m2m_value(field)
-                else:
-                    if field.name in self.iterator_attrs:
-                        self.model_attrs[field.name] = [
-                            next(self.iterator_attrs[field.name])
-                        ]
-                    else:
-                        self.m2m_dict[field.name] = self.model_attrs.pop(field.name)
-            # is an _id relation that has a sequence defined
-            elif (
-                isinstance(field, (OneToOneField, ForeignKey))
-                and hasattr(field, "attname")
-                and field.attname in self.iterator_attrs
-            ):
-                self.model_attrs[field.attname] = next(
-                    self.iterator_attrs[field.attname]
+            self._clean_attrs(attrs)
+            generate_value_kwargs = (
+                {"_full_clean": True}
+                if _full_clean and accepts_kwarg(self.generate_value, "_full_clean")
+                else {}
+            )
+            for field in self.get_fields():
+                field = _field_with_context(
+                    field, self._using, self._fill_optional(field)
                 )
-            elif field.name not in self.model_attrs:
-                if (
-                    not isinstance(field, ForeignKey)
-                    or hasattr(field, "attname")
-                    and field.attname not in self.model_attrs
-                ):
-                    value = self.generate_value(
-                        field,
-                        commit_related,
-                        **generate_value_kwargs,
-                    )
-                    # A field default for a forward relation is a raw pk, not a
-                    # model instance, so it must be assigned via attname (e.g.
-                    # "related_id") instead of name (e.g. "related"), which
-                    # Django's descriptor would reject as not being an instance.
-                    if (
-                        isinstance(field, (OneToOneField, ForeignKey))
-                        and hasattr(field, "attname")
-                        and not isinstance(value, Model)
-                    ):
-                        self.model_attrs[field.attname] = value
+                self._state.current_field = field
+                if self._skip_field(field):
+                    continue
+
+                field_name = cast(str, field.name)
+                if isinstance(field, ManyToManyField):
+                    if field_name not in self.model_attrs:
+                        self.m2m_dict[field_name] = self.m2m_value(field)
                     else:
-                        self.model_attrs[field.name] = value
-            elif callable(self.model_attrs[field.name]):
-                self.model_attrs[field.name] = self.model_attrs[field.name]()
-            elif field.name in self.iterator_attrs:
-                try:
-                    self.model_attrs[field.name] = next(self.iterator_attrs[field.name])
-                except StopIteration:
-                    raise RecipeIteratorEmpty(f"{field.name} iterator is empty.")
+                        if field_name in self.iterator_attrs:
+                            self.model_attrs[field_name] = [
+                                next(self.iterator_attrs[field_name])
+                            ]
+                        else:
+                            self.m2m_dict[field_name] = self.model_attrs.pop(field_name)
+                # is an _id relation that has a sequence defined
+                elif (
+                    isinstance(field, (OneToOneField, ForeignKey))
+                    and hasattr(field, "attname")
+                    and field.attname in self.iterator_attrs
+                ):
+                    self.model_attrs[field.attname] = next(
+                        self.iterator_attrs[field.attname]
+                    )
+                elif field_name not in self.model_attrs:
+                    if (
+                        not isinstance(field, ForeignKey)
+                        or hasattr(field, "attname")
+                        and field.attname not in self.model_attrs
+                    ):
+                        value = self.generate_value(
+                            field,
+                            commit_related,
+                            **generate_value_kwargs,
+                        )
+                        # A field default for a forward relation is a raw pk, not a
+                        # model instance, so it must be assigned via attname (e.g.
+                        # "related_id") instead of name (e.g. "related"), which
+                        # Django's descriptor would reject as not being an instance.
+                        if (
+                            isinstance(field, (OneToOneField, ForeignKey))
+                            and hasattr(field, "attname")
+                            and not isinstance(value, Model)
+                        ):
+                            self.model_attrs[field.attname] = value
+                        else:
+                            self.model_attrs[field_name] = value
+                elif callable(self.model_attrs[field_name]):
+                    self.model_attrs[field_name] = self.model_attrs[field_name]()
+                elif field_name in self.iterator_attrs:
+                    try:
+                        self.model_attrs[field_name] = next(
+                            self.iterator_attrs[field_name]
+                        )
+                    except StopIteration:
+                        raise RecipeIteratorEmpty(f"{field_name} iterator is empty.")
 
-        instance = self.instance(
-            self.model_attrs,
-            _commit=commit,
-            _from_manager=_from_manager,
-            _save_kwargs=_save_kwargs,
-            _full_clean=_full_clean,
-        )
-        if commit:
-            for related in self.model._meta.related_objects:
-                self.create_by_related_name(instance, related)
+            instance = self.instance(
+                self.model_attrs,
+                _commit=commit,
+                _from_manager=_from_manager,
+                _save_kwargs=_save_kwargs,
+                _full_clean=_full_clean,
+            )
+            if commit:
+                for related in self.model._meta.related_objects:
+                    self.create_by_related_name(instance, related)
 
-        if _refresh_after_create:
-            instance.refresh_from_db()
+            if _refresh_after_create:
+                instance.refresh_from_db()
 
-        return instance
+            return instance
 
     def m2m_value(self, field: ManyToManyField) -> list[Any]:
         if field.name in self.rel_fields:
@@ -723,12 +808,14 @@ class Baker(Generic[M]):
         self.rel_attrs = {k: v for k, v in attrs.items() if is_rel_field(k)}
         self.rel_fields = [x.split("__")[0] for x in self.rel_attrs if is_rel_field(x)]
 
+    def _fill_optional(self, field: Field) -> bool:
+        optional = self.fill_in_optional
+        return optional if isinstance(optional, bool) else field.name in optional
+
     def _skip_field(self, field: Field) -> bool:  # noqa: C901
         # check for fill optional argument
-        if isinstance(self.fill_in_optional, bool):
-            field.fill_optional = self.fill_in_optional
-        else:
-            field.fill_optional = field.name in self.fill_in_optional
+        fill_optional = self._fill_optional(field)
+        field.fill_optional = fill_optional
 
         if isinstance(field, FileField) and not self.create_files:
             return True
@@ -774,7 +861,7 @@ class Baker(Generic[M]):
         ):
             # Django is quirky in that BooleanFields are always "blank",
             # but have no default.
-            if not field.fill_optional and (
+            if not fill_optional and (
                 not issubclass(field.__class__, Field)
                 or field.has_default()
                 or (field.blank and not isinstance(field, BooleanField))
@@ -782,9 +869,7 @@ class Baker(Generic[M]):
                 return True
 
         if field.name not in self.model_attrs:  # noqa: SIM102
-            if field.name not in self.rel_fields and (
-                not field.fill_optional and field.null
-            ):
+            if field.name not in self.rel_fields and (not fill_optional and field.null):
                 return True
 
         return False
@@ -1033,6 +1118,9 @@ class Baker(Generic[M]):
 
         # attributes like max_length, decimal_places are taken into account when
         # generating the value.
+        # Reuse the field passed to hooks; direct calls still need their own copy.
+        if field is not self._state.current_field:
+            field = _field_with_context(field, self._using, self._fill_optional(field))
         field._using = self._using
         generator_attrs = get_required_values(generator, field)
 
@@ -1052,6 +1140,14 @@ class Baker(Generic[M]):
             generator = getattr(generator, "prepare", generator)
 
         return generator(**generator_attrs)
+
+
+def _field_with_context(field: Field, using: str, fill_optional: bool) -> Field:
+    # Hooks and generator callbacks can read context without changing model metadata.
+    field = copy(field)
+    field._using = using
+    field.fill_optional = fill_optional
+    return field
 
 
 def get_required_values(

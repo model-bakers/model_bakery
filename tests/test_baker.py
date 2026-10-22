@@ -299,6 +299,87 @@ class TestBakerIteratorConsumption:
         assert next(addresses) == "unused"
 
 
+class TestBakerStateIsolation:
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("prepare_first", [False, True])
+    def test_optional_m2m_does_not_leak_between_calls(self, prepare_first):
+        supplier = baker.make(models.Person)
+        factory = baker.Baker(models.Store)
+        if prepare_first:
+            factory.prepare(suppliers=[supplier])
+        else:
+            first = factory.make(suppliers=[supplier])
+            assert list(first.suppliers.all()) == [supplier]
+
+        second = factory.make()
+
+        assert not second.suppliers.exists()
+
+    def test_nested_call_preserves_outer_values_and_iterator(self):
+        factory = baker.Baker(models.Person)
+        names = iter(["outer", "next", "unused"])
+        nested = []
+
+        def make_inner():
+            nested.append(factory.prepare(name="inner", age=10))
+            return 20
+
+        outer = factory.prepare(name=names, age=make_inner)
+        following = factory.prepare(name=names, age=30)
+
+        assert (outer.name, outer.age) == ("outer", 20)
+        assert (nested[0].name, nested[0].age) == ("inner", 10)
+        assert (following.name, following.age) == ("next", 30)
+        assert next(names) == "unused"
+
+    @pytest.mark.django_db
+    def test_failed_call_does_not_leak_pending_m2m(self):
+        supplier = baker.make(models.Person)
+        factory = baker.Baker(models.Store)
+
+        def fail():
+            raise RuntimeError("relation failed")
+
+        with pytest.raises(RuntimeError, match="relation failed"):
+            factory.make(customers=fail, suppliers=[supplier])
+
+        following = factory.make()
+
+        assert not following.suppliers.exists()
+
+    def test_related_overrides_do_not_leak(self):
+        factory = baker.Baker(models.Dog)
+        first = factory.prepare(owner__name="first", _fill_optional=True)
+        second = factory.prepare(owner__name="second")
+        third = factory.prepare(owner=None)
+
+        assert first.owner.name == "first"
+        assert second.owner.name == "second"
+        assert third.owner_id is None
+
+    @pytest.mark.parametrize("optional", [True, ["blank_char_field"]])
+    def test_optional_policy_does_not_leak(self, optional):
+        factory = baker.Baker(models.DummyBlankFieldsModel)
+
+        first = factory.prepare(_fill_optional=optional)
+        second = factory.prepare()
+
+        assert first.blank_char_field
+        assert second.blank_char_field == ""
+        assert second.blank_text_field == ""
+
+    def test_creation_does_not_store_options_on_model_fields(self):
+        fields = models.Dog._meta.fields
+        before = [field.__dict__.copy() for field in fields]
+
+        baker.prepare(models.Dog, _fill_optional=True)
+
+        for field, original in zip(fields, before, strict=True):
+            for option in ("fill_optional", "_using"):
+                assert (option in field.__dict__) == (option in original)
+                assert field.__dict__.get(option) == original.get(option)
+
+
 class TestBakerPrepareSavingRelatedInstances:
     def test_default_behaviour_for_fk(self):
         dog = baker.prepare(models.Dog)
