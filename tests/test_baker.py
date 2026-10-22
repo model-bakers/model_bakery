@@ -368,16 +368,19 @@ class TestBakerStateIsolation:
         assert second.blank_char_field == ""
         assert second.blank_text_field == ""
 
-    def test_creation_does_not_store_options_on_model_fields(self):
-        fields = models.Dog._meta.fields
-        before = [field.__dict__.copy() for field in fields]
+    @pytest.mark.parametrize("model", [models.Dog, models.Classroom])
+    def test_creation_does_not_store_options_on_model_fields(self, model, monkeypatch):
+        fields = (*model._meta.fields, *model._meta.many_to_many)
+        original = object()
+        for field in fields:
+            monkeypatch.setattr(field, "fill_optional", original, raising=False)
+            monkeypatch.setattr(field, "_using", original, raising=False)
 
-        baker.prepare(models.Dog, _fill_optional=True)
+        baker.prepare(model, _fill_optional=True)
 
-        for field, original in zip(fields, before, strict=True):
-            for option in ("fill_optional", "_using"):
-                assert (option in field.__dict__) == (option in original)
-                assert field.__dict__.get(option) == original.get(option)
+        for field in fields:
+            assert field.fill_optional is original
+            assert field._using is original
 
 
 class TestBakerPrepareSavingRelatedInstances:

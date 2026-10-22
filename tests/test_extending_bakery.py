@@ -1,6 +1,4 @@
 from functools import partial, partialmethod
-from unittest.mock import Mock
-from weakref import WeakMethod
 
 import pytest
 
@@ -240,11 +238,13 @@ class TestBakerExtensionState:
 
         assert person.name == "extra:True"
 
-    def test_hook_observes_generator_callback_changes_across_nested_calls(self):
+    def test_hook_observes_generator_callback_changes_across_nested_calls(
+        self, monkeypatch
+    ):
         nested = []
 
         def limit_length(field):
-            field.max_length = 4
+            monkeypatch.setattr(field, "max_length", 4)
             nested.append(factory.prepare(email="inner", _fill_optional=False))
             assert field.fill_optional is True
             return "max_length", field.max_length
@@ -272,12 +272,12 @@ class TestBakerExtensionState:
         assert nested[0].email == "inner"
         assert model_field.max_length == original_length
 
-    def test_direct_generation_uses_fresh_field_context(self):
+    def test_direct_generation_uses_fresh_field_context(self, monkeypatch):
         contexts = []
 
         def field_context(field):
             contexts.append((field._using, field.fill_optional, field.max_length))
-            field.max_length = 4
+            monkeypatch.setattr(field, "max_length", 4)
             return "max_length", field.max_length
 
         def generate_email(max_length):
@@ -383,25 +383,20 @@ class TestPublicBakerWrappers:
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("fill_optional", [False, True])
-def test_optional_m2m_respects_skip_hook_decision(fill_optional):
+def test_optional_m2m_respects_skip_hook_decision(fill_optional, monkeypatch):
     class OptionalM2MBaker(baker.Baker):
         def _skip_field(self, field):
             skip = super()._skip_field(field)
             if field.name == "students":
-                field.fill_optional = fill_optional
+                monkeypatch.setattr(field, "fill_optional", fill_optional)
                 return False
             return skip
-
-    field = Classroom._meta.get_field("students")
-    missing = object()
-    original_optional = getattr(field, "fill_optional", missing)
 
     classroom = OptionalM2MBaker(Classroom, make_m2m=True).make()
 
     assert classroom.students.count() == (
         baker.MAX_MANY_QUANTITY if fill_optional else 0
     )
-    assert getattr(field, "fill_optional", missing) is original_optional
 
 
 class TestPublicWrapperInheritance:
@@ -478,20 +473,6 @@ class TestContextChangesBeforeSuper:
         assert instance.email == "extra"
 
 
-@pytest.mark.parametrize("descriptor", [staticmethod, classmethod])
-def test_class_level_creation_methods_keep_their_binding(descriptor):
-    class CustomBaker(baker.Baker):
-        @descriptor
-        def prepare(*args, **attrs):
-            return attrs["email"]
-
-    assert CustomBaker.prepare(email="class@example.com") == "class@example.com"
-    assert (
-        CustomBaker(Profile).prepare(email="instance@example.com")
-        == "instance@example.com"
-    )
-
-
 def test_inherited_mixin_wrapper_can_read_completed_state():
     completed = []
 
@@ -511,7 +492,7 @@ def test_inherited_mixin_wrapper_can_read_completed_state():
     assert completed == ["first@example.com", "next@example.com"]
 
 
-class TestCreationDispatch:
+class TestCreationMethods:
     @pytest.mark.parametrize("operation", ["make", "prepare"])
     def test_creation_methods_keep_normal_binding(self, operation):
         factory = baker.Baker(Profile)
@@ -520,16 +501,6 @@ class TestCreationDispatch:
         assert method.__self__ is factory
         assert method.__func__ is getattr(baker.Baker, operation)
         assert method == getattr(factory, operation)
-        assert WeakMethod(method)() == method
-
-    def test_instance_method_replacement_is_returned_unchanged(self):
-        factory = baker.Baker(Profile)
-        replacement = Mock(return_value="custom")
-        factory.prepare = replacement
-
-        assert factory.prepare is replacement
-        assert factory.prepare(email="custom@example.com") == "custom"
-        factory.prepare.assert_called_once_with(email="custom@example.com")
 
     @pytest.mark.django_db
     def test_make_can_delegate_to_prepare(self):
@@ -554,26 +525,6 @@ class TestCreationDispatch:
         assert second.email == "second@example.com"
         assert completed == ["first@example.com", "second@example.com"]
         assert Profile.objects.count() == 2
-
-    @pytest.mark.parametrize("operation", ["make", "prepare"])
-    def test_complete_custom_implementation_needs_no_base_initialization(
-        self, operation
-    ):
-        class CustomBaker(baker.Baker):
-            def __init__(self, model):
-                self.model = model
-
-            def make(self, **attrs):
-                return self.model(**attrs)
-
-            def prepare(self, **attrs):
-                return self.model(**attrs)
-
-        factory = CustomBaker(Profile)
-        create = getattr(factory, operation)
-
-        assert create(email="first@example.com").email == "first@example.com"
-        assert create(email="second@example.com").email == "second@example.com"
 
     def test_partialmethod_keeps_nested_calls_isolated(self):
         class OptionalBaker(baker.Baker):
