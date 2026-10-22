@@ -277,8 +277,10 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
 
 class TestBakerIteratorConsumption:
     @pytest.mark.django_db
-    @pytest.mark.parametrize("bulk", [False, True])
-    def test_quantity_consumes_scalar_and_fk_iterators_once_per_object(self, bulk):
+    @pytest.mark.parametrize("bulk_create", [False, True])
+    def test_quantity_consumes_scalar_and_fk_iterators_once_per_object(
+        self, bulk_create
+    ):
         owners = baker.make(models.Person, _quantity=3)
         owner_ids = iter(owner.pk for owner in owners)
         addresses = iter(["first", "second", "unused"])
@@ -286,7 +288,7 @@ class TestBakerIteratorConsumption:
         homes = baker.make(
             models.Home,
             _quantity=2,
-            _bulk_create=bulk,
+            _bulk_create=bulk_create,
             owner_id=owner_ids,
             address=addresses,
         )

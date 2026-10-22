@@ -181,6 +181,58 @@ class TestBakerExtensionState:
         assert next(ages) == 20
         assert next(replacement_ages) == 31
 
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("operation", ["make", "prepare"])
+    def test_public_wrapper_can_read_completed_state_after_super(self, operation):
+        completed = []
+
+        class AuditingBaker(baker.Baker):
+            def make(self, **attrs):
+                instance = super().make(**attrs)
+                completed.append(self.model_attrs["email"])
+                return instance
+
+            def prepare(self, **attrs):
+                instance = super().prepare(**attrs)
+                completed.append(self.model_attrs["email"])
+                return instance
+
+        factory = AuditingBaker(Profile)
+        create = getattr(factory, operation)
+
+        first = create(email="first@example.com")
+        second = create(email="second@example.com")
+
+        assert first.email == "first@example.com"
+        assert second.email == "second@example.com"
+        assert completed == ["first@example.com", "second@example.com"]
+
+    @pytest.mark.django_db
+    def test_make_can_delegate_to_prepare(self):
+        completed = []
+
+        class StagedBaker(baker.Baker):
+            def make(self, **attrs):
+                instance = super().prepare(**attrs)
+                assert self.model_attrs["email"] == instance.email
+                completed.append(self.model_attrs["email"])
+                instance.save()
+                return instance
+
+        factory = StagedBaker(Profile)
+
+        first = factory.make(email="first@example.com")
+        second = factory.make(email="second@example.com")
+
+        assert first.pk is not None
+        assert second.pk is not None
+        assert first.email == "first@example.com"
+        assert second.email == "second@example.com"
+        assert completed == ["first@example.com", "second@example.com"]
+        assert Profile.objects.count() == 2
+
+
+class TestGeneratorContext:
     @pytest.mark.parametrize("optional", [False, True])
     def test_generator_callbacks_receive_field_context(self, optional):
         def field_context(field):
@@ -205,56 +257,8 @@ class TestBakerExtensionState:
 
         assert person.name == f"extra:{optional}"
 
-
-class TestPublicBakerWrappers:
-    @pytest.mark.django_db
-    @pytest.mark.parametrize("operation", ["make", "prepare"])
-    def test_wrapper_can_read_completed_state(self, operation):
-        completed = []
-
-        class AuditingBaker(baker.Baker):
-            def make(self, **attrs):
-                instance = super().make(**attrs)
-                completed.append(self.model_attrs["email"])
-                return instance
-
-            def prepare(self, **attrs):
-                instance = super().prepare(**attrs)
-                completed.append(self.model_attrs["email"])
-                return instance
-
-        factory = AuditingBaker(Profile)
-        create = getattr(factory, operation)
-
-        first = create(email="first@example.com")
-        second = create(email="second@example.com")
-
-        assert first.email == "first@example.com"
-        assert second.email == "second@example.com"
-        assert completed == ["first@example.com", "second@example.com"]
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("fill_optional", [False, True])
-def test_optional_m2m_respects_skip_hook_decision(fill_optional, monkeypatch):
-    class OptionalM2MBaker(baker.Baker):
-        def _skip_field(self, field):
-            skip = super()._skip_field(field)
-            if field.name == "students":
-                monkeypatch.setattr(field, "fill_optional", fill_optional)
-                return False
-            return skip
-
-    classroom = OptionalM2MBaker(Classroom, make_m2m=True).make()
-
-    assert classroom.students.count() == (
-        baker.MAX_MANY_QUANTITY if fill_optional else 0
-    )
-
-
-class TestContextChangesBeforeSuper:
     @pytest.mark.parametrize("optional", [False, True])
-    def test_skip_hook_updates_generator_optional_context(self, optional):
+    def test_skip_hook_updates_generator_optional_context_before_super(self, optional):
         def field_context(field):
             return "optional", field.fill_optional
 
@@ -276,7 +280,7 @@ class TestContextChangesBeforeSuper:
 
         assert instance.email == str(optional)
 
-    def test_generator_hook_updates_database_context(self):
+    def test_generator_hook_updates_database_context_before_super(self):
         def field_context(field):
             return "using", field._using
 
@@ -298,27 +302,22 @@ class TestContextChangesBeforeSuper:
         assert instance.email == "extra"
 
 
-class TestCreationMethods:
+class TestOptionalM2MHook:
     @pytest.mark.django_db
-    def test_make_can_delegate_to_prepare(self):
-        completed = []
+    @pytest.mark.parametrize("fill_optional", [False, True])
+    def test_optional_m2m_respects_fill_optional_set_by_hook(
+        self, fill_optional, monkeypatch
+    ):
+        class OptionalM2MBaker(baker.Baker):
+            def _skip_field(self, field):
+                skip = super()._skip_field(field)
+                if field.name == "students":
+                    monkeypatch.setattr(field, "fill_optional", fill_optional)
+                    return False
+                return skip
 
-        class StagedBaker(baker.Baker):
-            def make(self, **attrs):
-                instance = super().prepare(**attrs)
-                assert self.model_attrs["email"] == instance.email
-                completed.append(self.model_attrs["email"])
-                instance.save()
-                return instance
+        classroom = OptionalM2MBaker(Classroom, make_m2m=True).make()
 
-        factory = StagedBaker(Profile)
-
-        first = factory.make(email="first@example.com")
-        second = factory.make(email="second@example.com")
-
-        assert first.pk is not None
-        assert second.pk is not None
-        assert first.email == "first@example.com"
-        assert second.email == "second@example.com"
-        assert completed == ["first@example.com", "second@example.com"]
-        assert Profile.objects.count() == 2
+        assert classroom.students.count() == (
+            baker.MAX_MANY_QUANTITY if fill_optional else 0
+        )
