@@ -7,7 +7,7 @@ on:
   pull_request:
 
 concurrency:
-  group: ${{ github.head_ref || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -16,13 +16,7 @@ permissions:
 jobs:
   linters:
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        lint-command:
-          - ruff check --output-format=github .
-          - black --check --diff .
-          - ty check model_bakery
-          - pre-commit run zizmor --all-files
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -31,11 +25,22 @@ jobs:
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
           python-version: "3.13"
-      - run: uv run --frozen ${{ matrix.lint-command }}
+      - name: Ruff
+        run: uv run --frozen ruff check --output-format=github .
+      - name: Black
+        if: ${{ !cancelled() }}
+        run: uv run --frozen black --check --diff .
+      - name: ty
+        if: ${{ !cancelled() }}
+        run: uv run --frozen ty check model_bakery
+      - name: zizmor
+        if: ${{ !cancelled() }}
+        run: uv run --frozen pre-commit run zizmor --all-files
 
   sqlite-tests:
     name: SQLite - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
@@ -72,25 +77,13 @@ jobs:
           if-no-files-found: ignore
 
   postgresql-tests:
-    name: PostgreSQL - Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, ${{ matrix.variant }}
+    name: PostgreSQL - Python ${{ matrix.python-version }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
-        django-version: ["5.2", "6.0", "6.1"]
-        variant: ["postgresql", "postgresql-psycopg3"]
-        exclude:
-          # Django 6.x supports Python 3.12+
-          - python-version: "3.11"
-            django-version: "6.0"
-          - python-version: "3.11"
-            django-version: "6.1"
-        include:
-          # Latest Python/Django with contenttypes disabled
-          - python-version: "3.14"
-            django-version: "6.1"
-            variant: "postgresql-no-contenttypes"
 
     env:
       PGUSER: postgres
@@ -111,8 +104,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Set TOX_ENV
-        run: echo "TOX_ENV=py$(echo ${{ matrix.python-version }} | tr -d .)-django$(echo ${{ matrix.django-version }} | tr -d .)-${{ matrix.variant }}" >> $GITHUB_ENV
+      - name: Set TOX_FACTOR
+        run: echo "TOX_FACTOR=py$(echo ${{ matrix.python-version }} | tr -d .)" >> $GITHUB_ENV
 
       - name: Set up PostgreSQL
         run: |
@@ -128,12 +121,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run tox targets for ${{ matrix.python-version }}
-        run: uvx --with tox-uv tox run -e ${TOX_ENV}
+        run: uvx --with tox-uv tox run -f "${TOX_FACTOR}" postgresql
 
       - name: Upload coverage data
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: coverage-data-${{ env.TOX_ENV }}
+          name: coverage-data-postgresql-${{ matrix.python-version }}
           include-hidden-files: true
           path: '.coverage.*'
           if-no-files-found: ignore
@@ -141,6 +134,7 @@ jobs:
   coverage:
     name: Coverage
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     needs: [sqlite-tests, postgresql-tests]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -171,6 +165,7 @@ jobs:
   docs:
     name: Docs
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
