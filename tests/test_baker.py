@@ -275,6 +275,28 @@ class TestsBakerRepeatedCreatesSimpleModel(TestCase):
         assert u3.username == "c"
 
 
+class TestBakerIteratorConsumption:
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("bulk", [False, True])
+    def test_quantity_consumes_scalar_and_fk_iterators_once_per_object(self, bulk):
+        owners = baker.make(models.Person, _quantity=3)
+        owner_ids = iter(owner.pk for owner in owners)
+        addresses = iter(["first", "second", "unused"])
+
+        homes = baker.make(
+            models.Home,
+            _quantity=2,
+            _bulk_create=bulk,
+            owner_id=owner_ids,
+            address=addresses,
+        )
+
+        assert [home.owner_id for home in homes] == [owner.pk for owner in owners[:2]]
+        assert [home.address for home in homes] == ["first", "second"]
+        assert next(owner_ids) == owners[2].pk
+        assert next(addresses) == "unused"
+
+
 class TestBakerPrepareSavingRelatedInstances:
     def test_default_behaviour_for_fk(self):
         dog = baker.prepare(models.Dog)
