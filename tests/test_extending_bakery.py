@@ -1,7 +1,13 @@
+from functools import partial, partialmethod
+
 import pytest
 
 from model_bakery import baker
-from model_bakery.exceptions import CustomBakerNotFound, InvalidCustomBaker
+from model_bakery.exceptions import (
+    CustomBakerNotFound,
+    InvalidCustomBaker,
+    RecipeIteratorEmpty,
+)
 from model_bakery.random_gen import gen_from_list
 from tests.generic.models import Classroom, Person, Profile
 
@@ -163,6 +169,14 @@ class TestBakerExtensionState:
         class StateAwareBaker(baker.Baker):
             def _clean_attrs(self, attrs):
                 super()._clean_attrs(attrs)
+                assert self.rel_attrs == {"unused__name": "related"}
+                assert self.rel_fields == ["unused"]
+                assert self.fill_in_optional is False
+                assert self.m2m_dict == {}
+                self.rel_attrs = {}
+                self.rel_fields = []
+                self.fill_in_optional = False
+                self.m2m_dict = {}
                 assert self.model_attrs["name"] == "original"
                 assert self.iterator_attrs["age"] is ages
                 self.model_attrs = {
@@ -174,7 +188,9 @@ class TestBakerExtensionState:
 
         ages = iter([20, 21])
         replacement_ages = iter([30, 31])
-        person = StateAwareBaker(Person).prepare(name="original", age=ages)
+        person = StateAwareBaker(Person).prepare(
+            name="original", age=ages, unused__name="related"
+        )
 
         assert person.name == "custom"
         assert person.age == 30
@@ -321,3 +337,218 @@ class TestOptionalM2MHook:
         assert classroom.students.count() == (
             baker.MAX_MANY_QUANTITY if fill_optional else 0
         )
+
+
+class TestBakerFieldIsolation:
+    def test_generator_field_context_survives_nested_generation(self):
+        def field_context(field):
+            baker.prepare(Person, _using="default", _fill_optional=False)
+            return "context", (field._using, field.fill_optional)
+
+        def generate_name(context):
+            return f"{context[0]}:{context[1]}"
+
+        generate_name.required = [field_context]
+
+        class FieldAwareBaker(baker.Baker):
+            attr_mapping = {"name": generate_name}
+
+        person = FieldAwareBaker(Person, _using="extra").prepare(_fill_optional=True)
+
+        assert person.name == "extra:True"
+
+    def test_hook_observes_generator_callback_changes_across_nested_calls(
+        self, monkeypatch
+    ):
+        nested = []
+
+        def limit_length(field):
+            monkeypatch.setattr(field, "max_length", 4)
+            nested.append(factory.prepare(email="inner", _fill_optional=False))
+            assert field.fill_optional is True
+            return "max_length", field.max_length
+
+        def generate_email(max_length):
+            return "x" * max_length
+
+        generate_email.required = [limit_length]
+
+        class FieldAwareBaker(baker.Baker):
+            attr_mapping = {"email": generate_email}
+
+            def generate_value(self, field, commit=True):
+                value = super().generate_value(field, commit)
+                assert field.max_length == 4
+                return value
+
+        model_field = Profile._meta.get_field("email")
+        original_length = model_field.max_length
+
+        factory = FieldAwareBaker(Profile)
+        profile = factory.prepare(_fill_optional=True)
+
+        assert profile.email == "xxxx"
+        assert nested[0].email == "inner"
+        assert model_field.max_length == original_length
+
+    def test_direct_generation_uses_fresh_field_context(self, monkeypatch):
+        contexts = []
+
+        def field_context(field):
+            contexts.append((field._using, field.fill_optional, field.max_length))
+            monkeypatch.setattr(field, "max_length", 4)
+            return "max_length", field.max_length
+
+        def generate_email(max_length):
+            return "x" * max_length
+
+        generate_email.required = [field_context]
+
+        class FieldAwareBaker(baker.Baker):
+            attr_mapping = {"email": generate_email}
+
+        factory = FieldAwareBaker(Profile, _using="extra")
+        model_field = Profile._meta.get_field("email")
+        original_length = model_field.max_length
+
+        assert factory.prepare().email == "xxxx"
+        assert factory.generate_value(model_field, commit=False) == "xxxx"
+        factory.fill_in_optional = True
+        assert factory.generate_value(model_field, commit=False) == "xxxx"
+
+        assert contexts == [
+            ("extra", False, original_length),
+            ("extra", False, original_length),
+            ("extra", True, original_length),
+        ]
+        assert model_field.max_length == original_length
+
+
+class TestPublicBakerWrappers:
+    def test_wrapper_failure_keeps_completed_core_state(self):
+        class RejectingBaker(baker.Baker):
+            def prepare(self, **attrs):
+                instance = super().prepare(**attrs)
+                if instance.email == "reject@example.com":
+                    raise ValueError("rejected by wrapper")
+                return instance
+
+        factory = RejectingBaker(Profile)
+        factory.prepare(email="first@example.com")
+
+        with pytest.raises(ValueError, match="rejected by wrapper"):
+            factory.prepare(email="reject@example.com")
+
+        assert factory.model_attrs["email"] == "reject@example.com"
+
+    @pytest.mark.parametrize("class_dispatch", [False, True])
+    def test_nested_success_and_failure_restore_outer_state(self, class_dispatch):
+        factory = baker.Baker(Profile)
+        nested = []
+        create = (
+            partial(baker.Baker.prepare, factory) if class_dispatch else factory.prepare
+        )
+
+        def email():
+            nested.append(create(email="inner@example.com"))
+            assert factory.model_attrs["email"] is email
+            with pytest.raises(RecipeIteratorEmpty):
+                create(email=iter(()))
+            assert factory.model_attrs["email"] is email
+            return "outer@example.com"
+
+        outer = factory.prepare(email=email)
+
+        assert outer.email == "outer@example.com"
+        assert nested[0].email == "inner@example.com"
+        assert factory.model_attrs["email"] == "outer@example.com"
+
+    def test_failed_call_restores_last_completed_state(self):
+        factory = baker.Baker(Profile)
+        factory.prepare(email="first@example.com")
+
+        with pytest.raises(RecipeIteratorEmpty):
+            factory.prepare(email=iter(()))
+
+        assert factory.model_attrs["email"] == "first@example.com"
+        assert factory.prepare(email="next@example.com").email == "next@example.com"
+
+
+class TestPublicWrapperInheritance:
+    def test_super_chain_can_read_completed_state(self):
+        completed = []
+
+        class ParentBaker(baker.Baker):
+            def prepare(self, **attrs):
+                instance = super().prepare(**attrs)
+                completed.append(("parent", self.model_attrs["email"]))
+                return instance
+
+        class ChildBaker(ParentBaker):
+            def prepare(self, **attrs):
+                instance = super().prepare(**attrs)
+                completed.append(("child", self.model_attrs["email"]))
+                return instance
+
+        factory = ChildBaker(Profile)
+
+        assert factory.prepare(email="first@example.com").email == "first@example.com"
+        assert factory.prepare(email="next@example.com").email == "next@example.com"
+        assert completed == [
+            ("parent", "first@example.com"),
+            ("child", "first@example.com"),
+            ("parent", "next@example.com"),
+            ("child", "next@example.com"),
+        ]
+
+
+def test_inherited_mixin_wrapper_can_read_completed_state():
+    completed = []
+
+    class AuditingMixin:
+        def prepare(self, **attrs):
+            instance = super().prepare(**attrs)
+            completed.append(self.model_attrs["email"])
+            return instance
+
+    class CustomBaker(AuditingMixin, baker.Baker):
+        pass
+
+    factory = CustomBaker(Profile)
+
+    assert factory.prepare(email="first@example.com").email == "first@example.com"
+    assert factory.prepare(email="next@example.com").email == "next@example.com"
+    assert completed == ["first@example.com", "next@example.com"]
+
+
+class TestCreationMethods:
+    @pytest.mark.parametrize("operation", ["make", "prepare"])
+    def test_creation_methods_keep_normal_binding(self, operation):
+        factory = baker.Baker(Profile)
+        method = getattr(factory, operation)
+
+        assert method.__self__ is factory
+        assert method.__func__ is getattr(baker.Baker, operation)
+        assert method == getattr(factory, operation)
+
+    def test_partialmethod_keeps_nested_calls_isolated(self):
+        class OptionalBaker(baker.Baker):
+            prepare = partialmethod(baker.Baker.prepare, _fill_optional=True)
+
+        factory = OptionalBaker(Person)
+        inner_objects = []
+
+        def age():
+            inner_objects.append(factory.prepare(name="inner", age=10))
+            assert factory.model_attrs["name"] == "outer"
+            with pytest.raises(RecipeIteratorEmpty):
+                factory.prepare(name=iter(()), age=10)
+            assert factory.model_attrs["name"] == "outer"
+            assert factory.fill_in_optional is True
+            return 20
+
+        outer = factory.prepare(name="outer", age=age)
+
+        assert (outer.name, outer.age) == ("outer", 20)
+        assert (inner_objects[0].name, inner_objects[0].age) == ("inner", 10)
+        assert factory.model_attrs["name"] == "outer"
