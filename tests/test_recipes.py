@@ -846,7 +846,7 @@ class TestSequences:
         bob_person = person_recipe.extend(email=seq("bob", suffix=42))
         with pytest.raises(TypeError) as exc:
             bob_person.make()
-            assert str(exc.value) == "Sequences suffix can only be a string"
+        assert str(exc.value) == "Sequences suffix can only be a string"
 
     @pytest.mark.django_db
     def test_increment_for_strings_with_suffix_and_start(self):
@@ -898,10 +898,9 @@ class TestSequences:
                 "tests.generic.serial_numbers",
                 default_int_field=seq(1, suffix="will not work"),
             )
-            assert (
-                str(exc.value)
-                == "Sequences with suffix can only be used with text values"
-            )
+        assert (
+            str(exc.value) == "Sequences with suffix can only be used with text values"
+        )
 
     @pytest.mark.django_db
     def test_creates_unique_field_recipe_using_for_iterator(self):
