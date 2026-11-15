@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Fix `_bulk_create=True` with `_using` writing many-to-many rows to the default database
+
 ### Removed
 
 - Drop EOL Python 3.10 support; Python 3.11 or later is required
