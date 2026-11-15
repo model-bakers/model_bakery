@@ -6,8 +6,9 @@ from unittest.mock import patch
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.db.models import Manager, ManyToOneRel
-from django.db.models.signals import m2m_changed
+from django.db.models.signals import m2m_changed, post_save
 from django.test import TestCase
 
 import pytest
@@ -448,7 +449,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     @pytest.mark.django_db
     def test_bulk_create_multiple_one_to_one(self):
-        query_count = 6
+        query_count = 2 if connection.features.can_return_rows_from_bulk_insert else 6
         with self.assertNumQueries(query_count):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
@@ -474,12 +475,38 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     @pytest.mark.django_db
     def test_bulk_create_multiple_fk(self):
-        query_count = 6
+        query_count = 2 if connection.features.can_return_rows_from_bulk_insert else 6
         with self.assertNumQueries(query_count):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
         assert models.PaymentBill.objects.all().count() == 5
         assert models.User.objects.all().count() == 5
+
+    @pytest.mark.django_db
+    def test_bulk_create_shared_unsaved_fk_is_inserted_once(self):
+        user = baker.prepare(models.User)
+        bills = baker.make(
+            models.PaymentBill, user=user, _quantity=3, _bulk_create=True
+        )
+
+        assert models.User.objects.count() == 1
+        assert {bill.user_id for bill in bills} == {user.pk}
+
+    @pytest.mark.django_db
+    def test_bulk_create_saves_fk_one_by_one_when_save_signals_are_connected(self):
+        saved = []
+
+        def receiver(sender, instance, created, **kwargs):
+            saved.append(instance.pk)
+
+        post_save.connect(receiver, sender=models.User)
+        try:
+            baker.make(models.PaymentBill, _quantity=3, _bulk_create=True)
+        finally:
+            post_save.disconnect(receiver, sender=models.User)
+
+        assert len(saved) == 3
+        assert models.User.objects.count() == 3
 
     @pytest.mark.django_db
     def test_create_many_to_many_if_flagged(self):
