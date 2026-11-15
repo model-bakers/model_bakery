@@ -267,7 +267,7 @@ def gen_time() -> time:
 
 
 def gen_string(max_length: int) -> str:
-    return "".join(baker_random.choice(string.ascii_letters) for _ in range(max_length))
+    return "".join(baker_random.choices(string.ascii_letters, k=max_length))
 
 
 def _gen_string_get_max_length(field: Field) -> tuple[str, int]:
@@ -282,7 +282,7 @@ gen_string.required = [_gen_string_get_max_length]  # type: ignore[attr-defined]
 
 def gen_slug(max_length: int) -> str:
     valid_chars = string.ascii_letters + string.digits + "_-"
-    return "".join(baker_random.choice(valid_chars) for _ in range(max_length))
+    return "".join(baker_random.choices(valid_chars, k=max_length))
 
 
 gen_slug.required = ["max_length"]  # type: ignore[attr-defined]

@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Generate random strings and slugs with a single `random.choices()` call, about 4x faster. Strings produced after `baker.seed()` differ from earlier versions
+
 ### Removed
 
 - Drop EOL Python 3.10 support; Python 3.11 or later is required
