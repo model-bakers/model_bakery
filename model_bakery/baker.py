@@ -1128,26 +1128,29 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
 
 
 def _insert_objs(model, objects, _using=None) -> None:
-    if _can_bulk_insert(model, objects, _using):
-        model._base_manager.using(_using or None).bulk_create(objects)
+    # A self-referencing FK may have saved some of them during the recursion.
+    objects = [obj for obj in objects if not obj.pk]
+    dbs = {_using or router.db_for_write(model, instance=obj) for obj in objects}
+    if len(dbs) == 1 and _can_bulk_insert(model, objects, db := dbs.pop()):
+        model._base_manager.using(db).bulk_create(objects)
     else:
         _save_kwargs = {"using": _using} if _using else {}
         for obj in objects:
             obj.save(**_save_kwargs)
 
 
-def _can_bulk_insert(model, objects, _using=None) -> bool:
+def _can_bulk_insert(model, objects, db) -> bool:
     """Whether ``objects`` can be inserted with one query without skipping user code.
 
     bulk_create() bypasses save() and the pre/post_save signals, and only sets
     primary keys on backends that return rows from a bulk insert.
     """
-    db = _using or router.db_for_write(model)
     return (
         connections[db].features.can_return_rows_from_bulk_insert
         and all(type(obj) is model for obj in objects)
         and model.save is Model.save
         and not model._meta.parents
+        and not model._meta.order_with_respect_to
         and not signals.pre_save.has_listeners(model)
         and not signals.post_save.has_listeners(model)
     )

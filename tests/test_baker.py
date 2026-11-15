@@ -509,6 +509,23 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert models.User.objects.count() == 3
 
     @pytest.mark.django_db
+    def test_bulk_create_self_referencing_fk_chain(self):
+        root = baker.prepare(models.Category, parent=None)
+        child = baker.prepare(models.Category, parent=root)
+        categories = baker.make(
+            models.Category, parent=iter([child, root]), _quantity=2, _bulk_create=True
+        )
+
+        assert models.Category.objects.count() == 4
+        assert categories[0].parent.parent == root
+
+    @pytest.mark.django_db
+    def test_bulk_create_fk_to_model_with_order_with_respect_to(self):
+        baker.make(models.DogWalk, _quantity=2, _bulk_create=True)
+
+        assert list(models.Dog.objects.values_list("_order", flat=True)) == [0, 0]
+
+    @pytest.mark.django_db
     def test_create_many_to_many_if_flagged(self):
         store = baker.make(models.Store, make_m2m=True)
         assert store.employees.count() == 5

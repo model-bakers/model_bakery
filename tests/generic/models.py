@@ -587,3 +587,11 @@ class ModelWithAutoNowAndFilteredManager(models.Model):
 
     objects = ExcludeAllManager()
     all_objects = models.Manager()
+
+
+class Category(models.Model):
+    parent = models.ForeignKey("self", null=True, on_delete=models.CASCADE)
+
+
+class DogWalk(models.Model):
+    dog = models.ForeignKey(Dog, on_delete=models.CASCADE)
