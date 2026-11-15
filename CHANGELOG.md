@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Fix `seq` in recipes on models without an `objects` manager (`AttributeError`) or with a filtering default manager (sequence restarted on every call)
+
 ### Removed
 
 - Drop EOL Python 3.10 support; Python 3.11 or later is required

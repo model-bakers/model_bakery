@@ -51,7 +51,7 @@ class Recipe(Generic[M]):
             elif isinstance(v, collections.abc.Iterator):
                 if (
                     k not in self._iterator_backups
-                    or not model.objects.using(_using or None).exists()
+                    or not model._base_manager.using(_using or None).exists()
                 ):
                     self._iterator_backups[k] = itertools.tee(
                         self._iterator_backups.get(k, [v])[0]
