@@ -648,7 +648,7 @@ wheels = [
 
 [[package]]
 name = "model-bakery"
-version = "1.24.2"
+version = "1.25.0"
 source = { editable = "." }
 dependencies = [
     { name = "django", version = "5.2.18", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },

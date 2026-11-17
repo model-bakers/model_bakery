@@ -595,3 +595,9 @@ class Category(models.Model):
 
 class DogWalk(models.Model):
     dog = models.ForeignKey(Dog, on_delete=models.CASCADE)
+
+
+class ModelWithFilteredManager(models.Model):
+    name = models.CharField(max_length=30)
+
+    objects = ExcludeAllManager()

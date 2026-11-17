@@ -1493,6 +1493,34 @@ class TestBakerSupportsMultiDatabase(TestCase):
         assert models.Profile.objects.using(settings.EXTRA_DB).count() == 1
         assert models.Profile.objects.using("default").count() == 0
 
+    def test_bulk_create_with_using_saves_m2m_on_same_db(self):
+        person = baker.make(models.Person, _using=settings.EXTRA_DB)
+        baker.make(
+            models.Classroom,
+            students=[person],
+            _quantity=2,
+            _bulk_create=True,
+            _using=settings.EXTRA_DB,
+        )
+
+        through = models.Classroom.students.through
+        assert through.objects.using(settings.EXTRA_DB).count() == 2
+        assert through.objects.using("default").count() == 0
+
+    def test_bulk_create_with_using_saves_fk_m2m_on_same_db(self):
+        dog = baker.make(models.Dog, _using=settings.EXTRA_DB)
+        baker.make(
+            models.HomeOwner,
+            home__dogs=[dog],
+            _quantity=2,
+            _bulk_create=True,
+            _using=settings.EXTRA_DB,
+        )
+
+        through = models.Home.dogs.through
+        assert through.objects.using(settings.EXTRA_DB).count() == 2
+        assert through.objects.using("default").count() == 0
+
     def test_allow_recipe_to_specify_database_via_using(self):
         dog = baker.make_recipe("generic.homeless_dog", _using=settings.EXTRA_DB)
         qs = models.Dog.objects.using(settings.EXTRA_DB).all()

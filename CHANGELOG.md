@@ -9,11 +9,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Changed
+
+- Insert related objects with one query per model in `_bulk_create=True` instead of one per object, falling back to `save()` when the model overrides it, has save signals or uses multi-table inheritance [#297](https://github.com/model-bakers/model_bakery/issues/297)
+
+### Removed
+
+## [1.25.0](https://pypi.org/project/model-bakery/1.25.0/)
+
+### Added
+
 - Add Python 3.15 support
 
 ### Changed
 
-- Insert related objects with one query per model in `_bulk_create=True` instead of one per object, falling back to `save()` when the model overrides it, has save signals or uses multi-table inheritance [#297](https://github.com/model-bakers/model_bakery/issues/297)
+- Fix `_bulk_create=True` with `_using` writing many-to-many rows to the default database
+- Generate random strings and slugs with a single `random.choices()` call, about 4x faster. Generated strings and slugs, and subsequent values generated from the same random state, can differ from earlier versions when using `baker.seed()`
+- Fix `seq` in recipes on models without an `objects` manager (`AttributeError`) or with a filtering default manager (sequence restarted on every call)
 
 ### Removed
 

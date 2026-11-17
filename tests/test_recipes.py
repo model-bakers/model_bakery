@@ -24,6 +24,8 @@ from tests.generic.models import (
     DummyNumbersModel,
     LonelyPerson,
     ModelWithAutoNowFields,
+    ModelWithFilteredManager,
+    NonStandardManager,
     Person,
     Profile,
     ProfileDetails,
@@ -820,6 +822,18 @@ class TestSequences:
         assert person.email == "fred2@example.com"
         person = fred_person.make()
         assert person.email == "fred3@example.com"
+
+    @pytest.mark.django_db
+    def test_increment_without_objects_manager(self):
+        recipe = Recipe(NonStandardManager, name=seq("name"))
+        assert recipe.make().name == "name1"
+        assert recipe.make().name == "name2"
+
+    @pytest.mark.django_db
+    def test_increment_with_filtered_default_manager(self):
+        recipe = Recipe(ModelWithFilteredManager, name=seq("name"))
+        assert recipe.make().name == "name1"
+        assert recipe.make().name == "name2"
 
     @pytest.mark.django_db
     def test_increment_for_fks(self):
