@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.db.models import Manager, ManyToOneRel
-from django.db.models.signals import m2m_changed, post_save
+from django.db.models.signals import m2m_changed, post_save, pre_save
 from django.test import TestCase
 
 import pytest
@@ -2090,6 +2090,40 @@ class TestFullClean:
         assert models.Profile.objects.count() == 0
         assert models.User.objects.count() == 0
         assert models.PaymentBill.objects.count() == 0
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("with_signal", [False, True])
+    def test_bulk_create_with_full_clean_rejects_duplicate_related_unique_value(
+        self, with_signal
+    ):
+        def receiver(sender, instance, **kwargs):
+            pass
+
+        if with_signal:
+            pre_save.connect(receiver, sender=models.DummyUniqueIntegerFieldModel)
+        try:
+            with pytest.raises(ValidationError):
+                baker.make(
+                    models.ModelWithFkToUniqueValue,
+                    target__value=1,
+                    _quantity=2,
+                    _bulk_create=True,
+                    _full_clean=True,
+                )
+        finally:
+            pre_save.disconnect(receiver, sender=models.DummyUniqueIntegerFieldModel)
+        assert models.DummyUniqueIntegerFieldModel.objects.count() == 0
+
+    @pytest.mark.django_db
+    def test_bulk_create_with_full_clean_saves_related_object_with_pk_set_in_clean(
+        self,
+    ):
+        obj = baker.make(
+            models.ModelWithFkToPkInClean, _bulk_create=True, _full_clean=True
+        )
+
+        assert obj.target_id == "cleaned"
+        assert models.ModelAssigningPkInClean.objects.filter(pk="cleaned").exists()
 
     @pytest.mark.django_db
     def test_bulk_create_with_full_clean_does_not_validate_existing_related_objects(

@@ -601,3 +601,19 @@ class ModelWithFilteredManager(models.Model):
     name = models.CharField(max_length=30)
 
     objects = ExcludeAllManager()
+
+
+class ModelAssigningPkInClean(models.Model):
+    id = models.CharField(primary_key=True, max_length=10, blank=True)
+
+    def clean(self):
+        if not self.pk:
+            self.pk = "cleaned"
+
+
+class ModelWithFkToPkInClean(models.Model):
+    target = models.ForeignKey(ModelAssigningPkInClean, on_delete=models.CASCADE)
+
+
+class ModelWithFkToUniqueValue(models.Model):
+    target = models.ForeignKey(DummyUniqueIntegerFieldModel, on_delete=models.CASCADE)

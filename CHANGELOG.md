@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Insert related objects with one query per model in `_bulk_create=True` instead of one per object, falling back to `save()` when the model overrides it, has save signals or uses multi-table inheritance [#297](https://github.com/model-bakers/model_bakery/issues/297)
+- Insert related objects with one query per model in `_bulk_create=True` instead of one per object, falling back to `save()` with `_full_clean=True` or when the model overrides it, has save signals or uses multi-table inheritance [#297](https://github.com/model-bakers/model_bakery/issues/297)
 
 ### Removed
 

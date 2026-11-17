@@ -1117,25 +1117,31 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
                 _using=_using,
                 _full_clean=_full_clean,
             )
-            for fk_obj in fk_objects:
-                if _using:
+            if _using:
+                for fk_obj in fk_objects:
                     fk_obj._state.db = _using
-                if _full_clean:
-                    fk_obj.full_clean()
-            _insert_objs(fk.related_model, fk_objects, _using)
+            _insert_objs(fk.related_model, fk_objects, _using, _full_clean)
             for obj, fk_obj in fk_targets:
                 setattr(obj, fk.name, fk_obj)
 
 
-def _insert_objs(model, objects, _using=None) -> None:
+def _insert_objs(model, objects, _using=None, _full_clean=False) -> None:
     # A self-referencing FK may have saved some of them during the recursion.
-    objects = [obj for obj in objects if not obj.pk]
+    # Not `obj.pk`: clean() may assign the PK of an object that was never saved.
+    objects = [obj for obj in objects if obj._state.adding]
     dbs = {_using or router.db_for_write(model, instance=obj) for obj in objects}
-    if len(dbs) == 1 and _can_bulk_insert(model, objects, db := dbs.pop()):
+    # _full_clean saves one by one, so validate_unique() sees the rows saved before.
+    if (
+        not _full_clean
+        and len(dbs) == 1
+        and _can_bulk_insert(model, objects, db := dbs.pop())
+    ):
         model._base_manager.using(db).bulk_create(objects)
     else:
         _save_kwargs = {"using": _using} if _using else {}
         for obj in objects:
+            if _full_clean:
+                obj.full_clean()
             obj.save(**_save_kwargs)
 
 
