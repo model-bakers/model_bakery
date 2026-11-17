@@ -9,12 +9,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Changed
+
+### Removed
+
+## [1.25.0](https://pypi.org/project/model-bakery/1.25.0/)
+
+### Added
+
 - Add Python 3.15 support
 
 ### Changed
 
 - Fix `_bulk_create=True` with `_using` writing many-to-many rows to the default database
-- Generate random strings and slugs with a single `random.choices()` call, about 4x faster. Strings produced after `baker.seed()` differ from earlier versions
+- Generate random strings and slugs with a single `random.choices()` call, about 4x faster. Generated strings and slugs, and subsequent values generated from the same random state, can differ from earlier versions when using `baker.seed()`
 - Fix `seq` in recipes on models without an `objects` manager (`AttributeError`) or with a filtering default manager (sequence restarted on every call)
 
 ### Removed
