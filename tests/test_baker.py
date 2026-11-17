@@ -493,6 +493,17 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert {bill.user_id for bill in bills} == {user.pk}
 
     @pytest.mark.django_db
+    def test_bulk_create_saves_loaded_fk_with_cleared_pk(self):
+        user = baker.make(models.User)
+        user.pk = None
+        user.username = "copy"
+
+        bill = baker.make(models.PaymentBill, user=user, _bulk_create=True)
+
+        assert models.User.objects.count() == 2
+        assert bill.user_id == user.pk
+
+    @pytest.mark.django_db
     def test_bulk_create_saves_fk_one_by_one_when_save_signals_are_connected(self):
         saved = []
 

@@ -1127,8 +1127,9 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
 
 def _insert_objs(model, objects, _using=None, _full_clean=False) -> None:
     # A self-referencing FK may have saved some of them during the recursion.
-    # Not `obj.pk`: clean() may assign the PK of an object that was never saved.
-    objects = [obj for obj in objects if obj._state.adding]
+    # Not `obj.pk` alone: clean() may assign the PK of an object that was never
+    # saved, and a loaded object whose PK was cleared is no longer `adding`.
+    objects = [obj for obj in objects if obj._state.adding or not obj.pk]
     dbs = {_using or router.db_for_write(model, instance=obj) for obj in objects}
     # _full_clean saves one by one, so validate_unique() sees the rows saved before.
     if (
