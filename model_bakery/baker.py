@@ -1185,7 +1185,7 @@ def bulk_create(  # noqa: C901
         for field in baker.model._meta.many_to_many:
             if field.name in kwargs:
                 through_model = getattr(entry, field.name).through
-                through_model.objects.bulk_create(
+                through_model.objects.using(baker._using or None).bulk_create(
                     [
                         through_model(
                             **{
@@ -1250,6 +1250,6 @@ def bulk_create(  # noqa: C901
                     for obj in kwarg_value
                 )
         if through_rows:
-            through_model.objects.bulk_create(through_rows)
+            through_model.objects.using(baker._using or None).bulk_create(through_rows)
 
     return created_entries
