@@ -587,3 +587,9 @@ class ModelWithAutoNowAndFilteredManager(models.Model):
 
     objects = ExcludeAllManager()
     all_objects = models.Manager()
+
+
+class ModelWithFilteredManager(models.Model):
+    name = models.CharField(max_length=30)
+
+    objects = ExcludeAllManager()
