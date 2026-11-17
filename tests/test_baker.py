@@ -504,6 +504,15 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert bill.user_id == user.pk
 
     @pytest.mark.django_db
+    def test_bulk_create_does_not_reinsert_existing_fk_with_zero_pk(self):
+        user = baker.make(models.User, pk=0)
+
+        bill = baker.make(models.PaymentBill, user=user, _bulk_create=True)
+
+        assert models.User.objects.count() == 1
+        assert bill.user_id == 0
+
+    @pytest.mark.django_db
     def test_bulk_create_saves_fk_one_by_one_when_save_signals_are_connected(self):
         saved = []
 
