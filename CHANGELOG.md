@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Generate random strings and slugs with a single `random.choices()` call, about 4x faster. Strings produced after `baker.seed()` differ from earlier versions
 - Fix `seq` in recipes on models without an `objects` manager (`AttributeError`) or with a filtering default manager (sequence restarted on every call)
 
 ### Removed
