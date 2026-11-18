@@ -1641,6 +1641,15 @@ class TestCreateM2MWhenBulkCreate(TestCase):
         )
 
     @pytest.mark.django_db
+    def test_make_using_reverse_name_with_related_query_name(self):
+        """Club.members sets related_name="clubs" and related_query_name="club"."""
+        club = baker.make(models.Club)
+
+        people = baker.make(models.Person, clubs=[club], _quantity=2, _bulk_create=True)
+        for person in people:
+            assert list(person.clubs.all()) == [club]
+
+    @pytest.mark.django_db
     def test_create_with_field_with_related_name(self):
         """Regression test for M2M fields that define an explicit related_name.
 

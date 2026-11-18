@@ -287,6 +287,12 @@ class Store(models.Model):
     )
 
 
+class Club(models.Model):
+    members = models.ManyToManyField(
+        Person, related_name="clubs", related_query_name="club"
+    )
+
+
 class DummyEmptyModel(models.Model):
     pass
 

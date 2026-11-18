@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Fix `_bulk_create=True` ignoring reverse many-to-many values when the field sets `related_query_name`
+
 ### Removed
 
 ## [1.25.0](https://pypi.org/project/model-bakery/1.25.0/)
