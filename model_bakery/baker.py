@@ -1132,8 +1132,10 @@ def _insert_objs(model, objects, _using=None, _full_clean=False) -> None:
     objects = [obj for obj in objects if obj._state.adding or not obj._is_pk_set()]
     dbs = {_using or router.db_for_write(model, instance=obj) for obj in objects}
     # _full_clean saves one by one, so validate_unique() sees the rows saved before.
+    # A preset PK (e.g. pk=0) may name an existing row: only save() updates it.
     if (
         not _full_clean
+        and not any(obj._is_pk_set() for obj in objects)
         and len(dbs) == 1
         and _can_bulk_insert(model, objects, db := dbs.pop())
     ):

@@ -513,6 +513,16 @@ class TestBakerCreatesAssociatedModels(TestCase):
         assert bill.user_id == 0
 
     @pytest.mark.django_db
+    def test_bulk_create_updates_existing_row_for_prepared_fk_with_zero_pk(self):
+        baker.make(models.User, pk=0, username="original")
+        user = baker.prepare(models.User, pk=0, username="updated")
+
+        bill = baker.make(models.PaymentBill, user=user, _bulk_create=True)
+
+        assert bill.user_id == 0
+        assert models.User.objects.get(pk=0).username == "updated"
+
+    @pytest.mark.django_db
     def test_bulk_create_saves_fk_one_by_one_when_save_signals_are_connected(self):
         saved = []
 
