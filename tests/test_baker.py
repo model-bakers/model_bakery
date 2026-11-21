@@ -6,8 +6,9 @@ from unittest.mock import patch
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.db.models import Manager, ManyToOneRel
-from django.db.models.signals import m2m_changed
+from django.db.models.signals import m2m_changed, post_save, pre_save
 from django.test import TestCase
 
 import pytest
@@ -448,7 +449,7 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     @pytest.mark.django_db
     def test_bulk_create_multiple_one_to_one(self):
-        query_count = 6
+        query_count = 2 if connection.features.can_return_rows_from_bulk_insert else 6
         with self.assertNumQueries(query_count):
             baker.make(models.LonelyPerson, _quantity=5, _bulk_create=True)
 
@@ -474,12 +475,85 @@ class TestBakerCreatesAssociatedModels(TestCase):
 
     @pytest.mark.django_db
     def test_bulk_create_multiple_fk(self):
-        query_count = 6
+        query_count = 2 if connection.features.can_return_rows_from_bulk_insert else 6
         with self.assertNumQueries(query_count):
             baker.make(models.PaymentBill, _quantity=5, _bulk_create=True)
 
         assert models.PaymentBill.objects.all().count() == 5
         assert models.User.objects.all().count() == 5
+
+    @pytest.mark.django_db
+    def test_bulk_create_shared_unsaved_fk_is_inserted_once(self):
+        user = baker.prepare(models.User)
+        bills = baker.make(
+            models.PaymentBill, user=user, _quantity=3, _bulk_create=True
+        )
+
+        assert models.User.objects.count() == 1
+        assert {bill.user_id for bill in bills} == {user.pk}
+
+    @pytest.mark.django_db
+    def test_bulk_create_saves_loaded_fk_with_cleared_pk(self):
+        user = baker.make(models.User)
+        user.pk = None
+        user.username = "copy"
+
+        bill = baker.make(models.PaymentBill, user=user, _bulk_create=True)
+
+        assert models.User.objects.count() == 2
+        assert bill.user_id == user.pk
+
+    @pytest.mark.django_db
+    def test_bulk_create_does_not_reinsert_existing_fk_with_zero_pk(self):
+        user = baker.make(models.User, pk=0)
+
+        bill = baker.make(models.PaymentBill, user=user, _bulk_create=True)
+
+        assert models.User.objects.count() == 1
+        assert bill.user_id == 0
+
+    @pytest.mark.django_db
+    def test_bulk_create_updates_existing_row_for_prepared_fk_with_zero_pk(self):
+        baker.make(models.User, pk=0, username="original")
+        user = baker.prepare(models.User, pk=0, username="updated")
+
+        bill = baker.make(models.PaymentBill, user=user, _bulk_create=True)
+
+        assert bill.user_id == 0
+        assert models.User.objects.get(pk=0).username == "updated"
+
+    @pytest.mark.django_db
+    def test_bulk_create_saves_fk_one_by_one_when_save_signals_are_connected(self):
+        saved = []
+
+        def receiver(sender, instance, created, **kwargs):
+            saved.append(instance.pk)
+
+        post_save.connect(receiver, sender=models.User)
+        try:
+            baker.make(models.PaymentBill, _quantity=3, _bulk_create=True)
+        finally:
+            post_save.disconnect(receiver, sender=models.User)
+
+        assert len(saved) == 3
+        assert models.User.objects.count() == 3
+
+    @pytest.mark.django_db
+    def test_bulk_create_self_referencing_fk_chain(self):
+        root = baker.prepare(models.Category, parent=None)
+        child = baker.prepare(models.Category, parent=root)
+        categories = baker.make(
+            models.Category, parent=iter([child, root]), _quantity=2, _bulk_create=True
+        )
+
+        assert models.Category.objects.count() == 4
+        assert categories[0].parent.parent == root
+
+    @pytest.mark.django_db
+    def test_bulk_create_fk_to_model_with_order_with_respect_to(self):
+        baker.make(models.DogWalk, _quantity=2, _bulk_create=True)
+
+        assert list(models.Dog.objects.values_list("_order", flat=True)) == [0, 0]
 
     @pytest.mark.django_db
     def test_create_many_to_many_if_flagged(self):
@@ -2046,6 +2120,40 @@ class TestFullClean:
         assert models.Profile.objects.count() == 0
         assert models.User.objects.count() == 0
         assert models.PaymentBill.objects.count() == 0
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize("with_signal", [False, True])
+    def test_bulk_create_with_full_clean_rejects_duplicate_related_unique_value(
+        self, with_signal
+    ):
+        def receiver(sender, instance, **kwargs):
+            pass
+
+        if with_signal:
+            pre_save.connect(receiver, sender=models.DummyUniqueIntegerFieldModel)
+        try:
+            with pytest.raises(ValidationError):
+                baker.make(
+                    models.ModelWithFkToUniqueValue,
+                    target__value=1,
+                    _quantity=2,
+                    _bulk_create=True,
+                    _full_clean=True,
+                )
+        finally:
+            pre_save.disconnect(receiver, sender=models.DummyUniqueIntegerFieldModel)
+        assert models.DummyUniqueIntegerFieldModel.objects.count() == 0
+
+    @pytest.mark.django_db
+    def test_bulk_create_with_full_clean_saves_related_object_with_pk_set_in_clean(
+        self,
+    ):
+        obj = baker.make(
+            models.ModelWithFkToPkInClean, _bulk_create=True, _full_clean=True
+        )
+
+        assert obj.target_id == "cleaned"
+        assert models.ModelAssigningPkInClean.objects.filter(pk="cleaned").exists()
 
     @pytest.mark.django_db
     def test_bulk_create_with_full_clean_does_not_validate_existing_related_objects(

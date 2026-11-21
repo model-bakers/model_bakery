@@ -13,7 +13,7 @@ from typing import (
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist
-from django.db import router, transaction
+from django.db import connections, router, transaction
 from django.db.models import (
     AutoField,
     BooleanField,
@@ -23,6 +23,7 @@ from django.db.models import (
     ManyToManyField,
     Model,
     OneToOneField,
+    signals,
 )
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.proxy import OrderWrt
@@ -1096,8 +1097,6 @@ def filter_rel_attrs(field_name: str, **rel_attrs) -> dict[str, Any]:
 
 def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
     """Recursively save all related foreign keys for each entry."""
-    _save_kwargs = {"using": _using} if _using else {}
-
     fk_fields = [
         f for f in model._meta.fields if isinstance(f, (OneToOneField, ForeignKey))
     ]
@@ -1110,20 +1109,60 @@ def _save_related_objs(model, objects, _using=None, _full_clean=False) -> None:
                 fk_targets.append((obj, fk_obj))
 
         if fk_targets:
-            fk_objects = [fk_obj for _, fk_obj in fk_targets]
+            # The same unsaved object may be shared by several entries.
+            fk_objects = list({id(fk_obj): fk_obj for _, fk_obj in fk_targets}.values())
             _save_related_objs(
                 fk.related_model,
                 fk_objects,
                 _using=_using,
                 _full_clean=_full_clean,
             )
-            for obj, fk_obj in fk_targets:
-                if _using:
+            if _using:
+                for fk_obj in fk_objects:
                     fk_obj._state.db = _using
-                if _full_clean:
-                    fk_obj.full_clean()
-                fk_obj.save(**_save_kwargs)
+            _insert_objs(fk.related_model, fk_objects, _using, _full_clean)
+            for obj, fk_obj in fk_targets:
                 setattr(obj, fk.name, fk_obj)
+
+
+def _insert_objs(model, objects, _using=None, _full_clean=False) -> None:
+    # A self-referencing FK may have saved some of them during the recursion.
+    # Not the PK alone: clean() may assign the PK of an object that was never
+    # saved, and a loaded object whose PK was cleared is no longer `adding`.
+    objects = [obj for obj in objects if obj._state.adding or not obj._is_pk_set()]
+    dbs = {_using or router.db_for_write(model, instance=obj) for obj in objects}
+    # _full_clean saves one by one, so validate_unique() sees the rows saved before.
+    # A preset PK (e.g. pk=0) may name an existing row: only save() updates it.
+    if (
+        not _full_clean
+        and not any(obj._is_pk_set() for obj in objects)
+        and len(dbs) == 1
+        and _can_bulk_insert(model, objects, db := dbs.pop())
+    ):
+        model._base_manager.using(db).bulk_create(objects)
+    else:
+        _save_kwargs = {"using": _using} if _using else {}
+        for obj in objects:
+            if _full_clean:
+                obj.full_clean()
+            obj.save(**_save_kwargs)
+
+
+def _can_bulk_insert(model, objects, db) -> bool:
+    """Whether ``objects`` can be inserted with one query without skipping user code.
+
+    bulk_create() bypasses save() and the pre/post_save signals, and only sets
+    primary keys on backends that return rows from a bulk insert.
+    """
+    return (
+        connections[db].features.can_return_rows_from_bulk_insert
+        and all(type(obj) is model for obj in objects)
+        and model.save is Model.save
+        and not model._meta.parents
+        and not model._meta.order_with_respect_to
+        and not signals.pre_save.has_listeners(model)
+        and not signals.post_save.has_listeners(model)
+    )
 
 
 def bulk_create(  # noqa: C901
