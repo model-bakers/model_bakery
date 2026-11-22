@@ -1199,12 +1199,8 @@ def bulk_create(  # noqa: C901
 
         # set many-to-many relations that are specified using related name from kwargs
         for field in baker.model._meta.get_fields():
-            if field.many_to_many and hasattr(field, "related_model"):
-                reverse_relation_name = (
-                    field.related_query_name
-                    or field.related_name
-                    or f"{field.related_model._meta.model_name}_set"
-                )
+            if field.many_to_many and isinstance(field, ForeignObjectRel):
+                reverse_relation_name = field.get_accessor_name()
                 if reverse_relation_name in kwargs:
                     getattr(entry, reverse_relation_name).set(
                         kwargs[reverse_relation_name]
